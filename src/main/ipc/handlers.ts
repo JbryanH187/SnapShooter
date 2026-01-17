@@ -107,4 +107,23 @@ export function setupHandlers() {
         const capturesPath = persistenceManager.getCapturesDir();
         await shell.openPath(capturesPath);
     });
+
+    // Show native save dialog
+    ipcMain.handle('dialog:showSaveDialog', async (_event, options: { defaultPath: string; filters: any[] }) => {
+        const win = BrowserWindow.getFocusedWindow();
+        if (!win) return null;
+
+        const { dialog } = require('electron');
+        const result = await dialog.showSaveDialog(win, {
+            defaultPath: options.defaultPath,
+            filters: options.filters
+        });
+
+        return result.canceled ? null : result.filePath;
+    });
+
+    // Reveal file in file explorer
+    ipcMain.handle('shell:showItemInFolder', async (_event, filePath: string) => {
+        shell.showItemInFolder(filePath);
+    });
 }
