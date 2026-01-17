@@ -1,0 +1,107 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Orbitron:wght@700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+    /* Brand Primary - Inspirado en Linear */
+    --primary-50: #f0f4ff;
+    --primary-100: #e0e7ff;
+    --primary-500: #6366f1;
+    /* Acción principal */
+    --primary-600: #4f46e5;
+    /* Hover states */
+    --primary-700: #4338ca;
+    /* Active states */
+    --primary-900: #312e81;
+    /* Text emphasis */
+
+    /* Grises Modernos - Base Notion (Darkened for Legibility) */
+    --gray-25: #fcfcfd;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-400: #9ca3af;
+    --gray-500: #6b7280;
+    --gray-600: #4b5563;
+    --gray-700: #374151;
+    --gray-800: #1f2937;
+    --gray-900: #0f172a;
+    /* Slate 900 - Deeper Black */
+
+    /* Estados QA Específicos */
+    --success-50: #f0fdf4;
+    --success-500: #22c55e;
+    --success-600: #16a34a;
+
+    --error-50: #fef2f2;
+    --error-500: #ef4444;
+    --error-600: #dc2626;
+
+    --warning-50: #fffbeb;
+    --warning-500: #f59e0b;
+    --warning-600: #d97706;
+
+    /* Typography */
+    --font-primary: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-mono: 'JetBrains Mono', 'SF Mono', 'Cascadia Code', monospace;
+}
+
+body {
+    font-family: var(--font-primary);
+    background-color: var(--gray-25);
+    color: var(--gray-900);
+    -webkit-font-smoothing: antialiased;
+    /* Crisp text */
+}
+
+/* Custom Components */
+@layer components {
+    .btn-primary {
+        @apply bg-primary-500 text-white px-4 py-3 rounded-lg text-sm font-medium border-none transition-all duration-150 hover:bg-primary-600 hover:-translate-y-[1px];
+    }
+
+    .btn-ghost {
+        @apply bg-transparent text-gray-700 border border-gray-200 px-3 py-2 rounded-md;
+    }
+
+    .card {
+        @apply bg-white border border-gray-200 rounded-xl p-6 shadow-sm transition-all duration-200 hover:shadow-md hover:border-gray-300;
+    }
+
+    .input {
+        @apply bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-900 transition-all duration-150 focus:outline-none focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 focus:bg-white;
+    }
+
+    .checkerboard-bg {
+        background-color: var(--gray-50);
+        background-image:
+            linear-gradient(45deg, #e5e7eb 25%, transparent 25%),
+            linear-gradient(-45deg, #e5e7eb 25%, transparent 25%),
+            linear-gradient(45deg, transparent 75%, #e5e7eb 75%),
+            linear-gradient(-45deg, transparent 75%, #e5e7eb 75%);
+        background-size: 20px 20px;
+        background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+    }
+
+    /* Dark mode checkerboard */
+    :global(.dark) .checkerboard-bg {
+        background-color: var(--gray-900);
+        background-image:
+            linear-gradient(45deg, #1f2937 25%, transparent 25%),
+            linear-gradient(-45deg, #1f2937 25%, transparent 25%),
+            linear-gradient(45deg, transparent 75%, #1f2937 75%),
+            linear-gradient(-45deg, transparent 75%, #1f2937 75%);
+    }
+}
+
+/* Electron Window Drag */
+.app-drag {
+    -webkit-app-region: drag;
+}
+
+.app-no-drag {
+    -webkit-app-region: no-drag;
+}
