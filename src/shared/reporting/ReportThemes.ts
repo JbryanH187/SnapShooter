@@ -62,7 +62,8 @@ export type LogoAlignment = 'left' | 'center' | 'right' | 'split';
 export type LogoGap = 'small' | 'medium' | 'large';
 
 export interface ReportConfig {
-    layout: ReportLayout;
+    layout: ReportLayout; // Deprecated: use templateId instead
+    templateId?: 'classic' | 'modern' | 'creative'; // New template system
     theme: keyof typeof REPORT_THEMES;
     title: string;
     titleColor?: string; // Optional custom color for title

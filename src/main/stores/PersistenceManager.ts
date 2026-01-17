@@ -2,7 +2,7 @@ import Store from 'electron-store';
 import path from 'path';
 import { app } from 'electron';
 import fs from 'fs-extra';
-import { CaptureItem } from '../../renderer/stores/captureStore'; // We'll need a shared type definition later, but using this for now or defining strict interface
+import { CaptureItem } from '../../shared/types';
 
 // Define the shape of our store
 interface AppValidation {

@@ -8,8 +8,10 @@ import {
     X,
     ChevronRight,
     FileEdit,
-    Home // Added Home icon
+    Home, // Added Home icon
+    FolderKanban
 } from 'lucide-react';
+import { SmartFoldersList } from '../Views/SmartFoldersList';
 
 export type ViewType = 'home' | 'recents' | 'flows' | 'history' | 'drafts';
 
@@ -100,43 +102,60 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
                         </div>
 
                         {/* Navigation Items */}
-                        <nav className="flex-1 p-4 space-y-2">
-                            {menuItems.map((item) => (
-                                <motion.button
-                                    key={item.id}
-                                    whileHover={{ x: 4 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    onClick={() => {
-                                        item.onClick();
-                                        onClose();
-                                    }}
-                                    className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${currentView === item.id
-                                        ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 border border-primary-200 dark:border-primary-800'
-                                        : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'
-                                        }`}
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className={`p-2 rounded-lg ${currentView === item.id
-                                            ? 'bg-primary-100 dark:bg-primary-900/40'
-                                            : 'bg-gray-100 dark:bg-gray-800'
-                                            }`}>
-                                            <item.icon size={18} />
-                                        </div>
-                                        <span className="font-medium">{item.label}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        {item.count !== null && (
-                                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${currentView === item.id
-                                                ? 'bg-primary-200 dark:bg-primary-800 text-primary-700 dark:text-primary-300'
-                                                : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                        <nav className="flex-1 overflow-y-auto">
+                            <div className="p-4 space-y-2">
+                                {menuItems.map((item) => (
+                                    <motion.button
+                                        key={item.id}
+                                        whileHover={{ x: 4 }}
+                                        whileTap={{ scale: 0.98 }}
+                                        onClick={() => {
+                                            item.onClick();
+                                            onClose();
+                                        }}
+                                        className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${currentView === item.id
+                                            ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 border border-primary-200 dark:border-primary-800'
+                                            : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'
+                                            }`}
+                                        data-tour={item.id === 'flows' ? 'flows-tab' : undefined}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className={`p-2 rounded-lg ${currentView === item.id
+                                                ? 'bg-primary-100 dark:bg-primary-900/40'
+                                                : 'bg-gray-100 dark:bg-gray-800'
                                                 }`}>
-                                                {item.count}
-                                            </span>
-                                        )}
-                                        <ChevronRight size={16} className="opacity-50" />
-                                    </div>
-                                </motion.button>
-                            ))}
+                                                <item.icon size={18} />
+                                            </div>
+                                            <span className="font-medium">{item.label}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            {item.count !== null && (
+                                                <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${currentView === item.id
+                                                    ? 'bg-primary-200 dark:bg-primary-800 text-primary-700 dark:text-primary-300'
+                                                    : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                                                    }`}>
+                                                    {item.count}
+                                                </span>
+                                            )}
+                                            <ChevronRight size={16} className="opacity-50" />
+                                        </div>
+                                    </motion.button>
+                                ))}
+                            </div>
+
+                            {/* Smart Folders Section */}
+                            <div className="px-4 pb-4">
+                                <div className="flex items-center gap-2 mb-2 px-1">
+                                    <FolderKanban size={14} className="text-gray-400" />
+                                    <span className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                                        Carpetas Inteligentes
+                                    </span>
+                                </div>
+                                <SmartFoldersList
+                                    compact
+                                    onFolderSelect={() => onClose()}
+                                />
+                            </div>
                         </nav>
 
                         {/* Settings at Bottom */}

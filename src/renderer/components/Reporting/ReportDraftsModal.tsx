@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Modal } from '../UI/Modal';
 import { FileText, Trash2, Edit3, Calendar, Clock, User } from 'lucide-react';
 import { format } from 'date-fns';
+import { logger } from '../../services/Logger';
 
 export interface ReportDraft {
     id: string;
@@ -35,13 +36,13 @@ export const ReportDraftsModal: React.FC<ReportDraftsModalProps> = ({ isOpen, on
     const loadDrafts = async () => {
         setLoading(true);
         try {
-            if ((window as any).electron?.getReportDrafts) {
-                const result = await (window as any).electron.getReportDrafts();
+            if (window.electron?.getReportDrafts) {
+                const result = await window.electron.getReportDrafts();
                 // Sort by updatedAt desc
                 setDrafts((result || []).sort((a: ReportDraft, b: ReportDraft) => b.updatedAt - a.updatedAt));
             }
         } catch (error) {
-            console.error("Failed to load drafts:", error);
+            logger.error("Failed to load drafts:", error);
         } finally {
             setLoading(false);
         }
@@ -55,10 +56,10 @@ export const ReportDraftsModal: React.FC<ReportDraftsModalProps> = ({ isOpen, on
     const confirmDelete = async () => {
         if (deleteConfirm.id) {
             try {
-                await (window as any).electron?.deleteReportDraft?.(deleteConfirm.id);
+                await window.electron?.deleteReportDraft?.(deleteConfirm.id);
                 setDrafts(prev => prev.filter(d => d.id !== deleteConfirm.id));
             } catch (error) {
-                console.error("Failed to delete draft:", error);
+                logger.error("Failed to delete draft:", error);
             }
         }
         setDeleteConfirm({ isOpen: false, id: null });

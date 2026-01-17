@@ -1,0 +1,4 @@
+src/renderer/components/UI/VirtualGrid.tsx(3,10): error TS2305: Module '"react-window"' has no exported member 'FixedSizeList'.
+src/renderer/components/UI/VirtualGrid.tsx(4,8): error TS1192: Module '"C:/Users/jesus.bojorquezh/Desktop/BryanDevStuff/Project/SnapProof/node_modules/react-virtualized-auto-sizer/dist/react-virtualized-auto-sizer"' has no default export.
+src/renderer/components/UI/VirtualGrid.tsx(63,42): error TS2304: Cannot find name 'AnimatePresence'.
+src/renderer/components/UI/VirtualGrid.tsx(69,43): error TS2304: Cannot find name 'AnimatePresence'.

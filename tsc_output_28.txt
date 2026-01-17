@@ -1,0 +1,36 @@
+src/renderer/components/Flows/FlowEditorModal.tsx(1,3): error TS1443: Module declaration names may only use ' or " quoted strings.
+src/renderer/components/Flows/FlowEditorModal.tsx(73,71): error TS1005: ';' expected.
+src/renderer/components/Flows/FlowEditorModal.tsx(75,54): error TS1005: ';' expected.
+src/renderer/components/Flows/FlowEditorModal.tsx(75,71): error TS1005: ';' expected.
+src/renderer/components/Flows/FlowEditorModal.tsx(75,84): error TS1005: ';' expected.
+src/renderer/components/Flows/FlowEditorModal.tsx(77,61): error TS1005: ';' expected.
+src/renderer/components/Flows/FlowEditorModal.tsx(77,74): error TS1005: ';' expected.
+src/renderer/components/Flows/FlowEditorModal.tsx(77,87): error TS1005: ';' expected.
+src/renderer/components/Flows/FlowEditorModal.tsx(80,52): error TS1005: ';' expected.
+src/renderer/components/Flows/FlowEditorModal.tsx(80,71): error TS1005: ';' expected.
+src/renderer/components/Flows/FlowEditorModal.tsx(80,84): error TS1005: ';' expected.
+src/renderer/components/Flows/FlowEditorModal.tsx(133,47): error TS1005: ';' expected.
+src/renderer/components/Flows/FlowEditorModal.tsx(134,8): error TS1136: Property assignment expected.
+src/renderer/components/Flows/FlowEditorModal.tsx(134,25): error TS1128: Declaration or statement expected.
+src/renderer/components/Flows/FlowEditorModal.tsx(136,6): error TS1109: Expression expected.
+src/renderer/components/Flows/FlowEditorModal.tsx(152,33): error TS1128: Declaration or statement expected.
+src/renderer/components/Flows/FlowEditorModal.tsx(155,11): error TS1005: ';' expected.
+src/renderer/components/Flows/FlowEditorModal.tsx(156,37): error TS2657: JSX expressions must have one parent element.
+src/renderer/components/Flows/FlowEditorModal.tsx(178,33): error TS1128: Declaration or statement expected.
+src/renderer/components/Flows/FlowEditorModal.tsx(182,12): error TS1136: Property assignment expected.
+src/renderer/components/Flows/FlowEditorModal.tsx(182,15): error TS1005: ';' expected.
+src/renderer/components/Flows/FlowEditorModal.tsx(182,49): error TS1128: Declaration or statement expected.
+src/renderer/components/Flows/FlowEditorModal.tsx(187,33): error TS1128: Declaration or statement expected.
+src/renderer/components/Flows/FlowEditorModal.tsx(188,29): error TS1109: Expression expected.
+src/renderer/components/Flows/FlowEditorModal.tsx(189,25): error TS1109: Expression expected.
+src/renderer/components/Flows/FlowEditorModal.tsx(189,26): error TS1128: Declaration or statement expected.
+src/renderer/components/Flows/FlowEditorModal.tsx(189,27): error TS1128: Declaration or statement expected.
+src/renderer/components/Flows/FlowEditorModal.tsx(190,21): error TS1128: Declaration or statement expected.
+src/renderer/components/Flows/FlowEditorModal.tsx(191,17): error TS1109: Expression expected.
+src/renderer/components/Flows/FlowEditorModal.tsx(194,11): error TS1005: ';' expected.
+src/renderer/components/Flows/FlowEditorModal.tsx(195,21): error TS2657: JSX expressions must have one parent element.
+src/renderer/components/Flows/FlowEditorModal.tsx(208,17): error TS1128: Declaration or statement expected.
+src/renderer/components/Flows/FlowEditorModal.tsx(209,13): error TS1109: Expression expected.
+src/renderer/components/Flows/FlowEditorModal.tsx(210,9): error TS1109: Expression expected.
+src/renderer/components/Flows/FlowEditorModal.tsx(211,5): error TS1109: Expression expected.
+src/renderer/components/Flows/FlowEditorModal.tsx(212,1): error TS1128: Declaration or statement expected.

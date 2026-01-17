@@ -1,0 +1,2 @@
+src/renderer/components/Layout/AppShell.tsx(161,6): error TS1005: ')' expected.
+src/renderer/components/Layout/AppShell.tsx(272,1): error TS1005: '}' expected.

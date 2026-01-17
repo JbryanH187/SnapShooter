@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Trash2, FolderOpen, Keyboard, Info, Moon, Sun } from 'lucide-react';
 import { useCaptureStore } from '../stores/captureStore';
+import { logger } from '../services/Logger';
 import { useTheme } from '../contexts/ThemeContext';
 import { toast, confirm } from '../utils/toast';
 
@@ -34,7 +35,7 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
                 await window.electron.openCapturesFolder();
                 toast.success('Carpeta abierta en explorador de archivos');
             } catch (error) {
-                console.error('Error opening folder:', error);
+                logger.error('Error opening folder:', error);
                 toast.error('Error al abrir la carpeta');
             }
         } else {

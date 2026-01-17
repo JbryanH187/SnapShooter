@@ -1,0 +1,2 @@
+src/renderer/components/UI/VirtualGrid.tsx(82,27): error TS17002: Expected corresponding JSX closing tag for 'VirtualList'.
+src/renderer/components/UI/VirtualGrid.tsx(85,15): error TS17002: Expected corresponding JSX closing tag for 'VirtualAutoSizer'.

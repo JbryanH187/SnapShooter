@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Modal } from '../UI/Modal';
 import { FileText, Trash2, ExternalLink, Calendar, Search, File } from 'lucide-react';
 import { format } from 'date-fns';
+import { logger } from '../../services/Logger';
 
 export interface ReportHistoryItem {
     id: string;
@@ -33,13 +34,13 @@ export const ReportsHistoryModal: React.FC<ReportsHistoryModalProps> = ({ isOpen
     const loadReports = async () => {
         setLoading(true);
         try {
-            if ((window as any).electron?.getReportHistory) {
-                const history = await (window as any).electron.getReportHistory();
+            if (window.electron?.getReportHistory) {
+                const history = await window.electron.getReportHistory();
                 // Sort by date desc
                 setReports((history || []).sort((a: any, b: any) => b.date - a.date));
             }
         } catch (error) {
-            console.error("Failed to load report history:", error);
+            logger.error("Failed to load report history:", error);
         } finally {
             setLoading(false);
         }
@@ -50,7 +51,7 @@ export const ReportsHistoryModal: React.FC<ReportsHistoryModalProps> = ({ isOpen
             setInfoModal({ isOpen: true, message: 'Este reporte fue descargado a tu carpeta de Descargas. No tenemos la ubicación exacta guardada.' });
             return;
         }
-        (window as any).electron?.openPath?.(filePath);
+        window.electron?.openPath?.(filePath);
     };
 
     const handleDeleteReport = async (id: string, e: React.MouseEvent) => {
@@ -61,10 +62,10 @@ export const ReportsHistoryModal: React.FC<ReportsHistoryModalProps> = ({ isOpen
     const confirmDelete = async () => {
         if (deleteConfirm.id) {
             try {
-                await (window as any).electron?.deleteReportFromHistory?.(deleteConfirm.id);
+                await window.electron?.deleteReportFromHistory?.(deleteConfirm.id);
                 setReports(prev => prev.filter(r => r.id !== deleteConfirm.id));
             } catch (error) {
-                console.error("Failed to delete report:", error);
+                logger.error("Failed to delete report:", error);
             }
         }
         setDeleteConfirm({ isOpen: false, id: null });
