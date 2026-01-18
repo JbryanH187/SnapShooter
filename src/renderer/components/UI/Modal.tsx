@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { AlertTriangle, CheckCircle, Info, Trash2, X } from 'lucide-react';
-import clsx from 'clsx';
+import { LiquidGlass } from './LiquidGlass';
+import { RippleButton } from './Animations';
 
 export type ModalType = 'success' | 'danger' | 'warning' | 'info';
 
@@ -19,25 +20,19 @@ interface ModalProps {
     maxWidth?: string;
 }
 
+// Use semantic tokens
 const icons = {
-    success: <CheckCircle className="text-green-500 dark:text-green-400" size={32} />,
-    danger: <Trash2 className="text-red-500 dark:text-red-400" size={32} />,
-    warning: <AlertTriangle className="text-amber-500 dark:text-amber-400" size={32} />,
-    info: <Info className="text-blue-500 dark:text-blue-400" size={32} />
+    success: <CheckCircle style={{ color: 'var(--system-green)' }} size={32} />,
+    danger: <Trash2 style={{ color: 'var(--system-red)' }} size={32} />,
+    warning: <AlertTriangle style={{ color: 'var(--system-orange)' }} size={32} />,
+    info: <Info style={{ color: 'var(--system-blue)' }} size={32} />
 };
 
-const colors = {
-    success: 'bg-green-50 border-green-100 dark:bg-green-900/20 dark:border-green-800',
-    danger: 'bg-red-50 border-red-100 dark:bg-red-900/20 dark:border-red-800',
-    warning: 'bg-amber-50 border-amber-100 dark:bg-amber-900/20 dark:border-amber-800',
-    info: 'bg-blue-50 border-blue-100 dark:bg-blue-900/20 dark:border-blue-800'
-};
-
-const buttonColors = {
-    success: 'bg-green-600 hover:bg-green-700 focus:ring-green-500 dark:bg-green-600 dark:hover:bg-green-700',
-    danger: 'bg-red-600 hover:bg-red-700 focus:ring-red-500 dark:bg-red-600 dark:hover:bg-red-700',
-    warning: 'bg-amber-600 hover:bg-amber-700 focus:ring-amber-500 dark:bg-amber-600 dark:hover:bg-amber-700',
-    info: 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500 dark:bg-blue-600 dark:hover:bg-blue-700'
+const semanticColors: Record<ModalType, string> = {
+    success: 'var(--system-green)',
+    danger: 'var(--system-red)',
+    warning: 'var(--system-orange)',
+    info: 'var(--system-blue)'
 };
 
 export const Modal: React.FC<ModalProps> = ({
@@ -65,34 +60,59 @@ export const Modal: React.FC<ModalProps> = ({
 
     if (!isOpen) return null;
 
+    const accentColor = semanticColors[type];
+
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            {/* Backdrop with blur - enhanced for dark mode */}
+            {/* Backdrop with blur - Liquid Glass style */}
             <div
-                className="absolute inset-0 bg-black/60 dark:bg-black/70 backdrop-blur-[4px] transition-opacity"
+                className="absolute inset-0 transition-opacity"
+                style={{
+                    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                    backdropFilter: 'blur(20px)',
+                    WebkitBackdropFilter: 'blur(20px)'
+                }}
                 onClick={onCancel}
             />
 
-            {/* Modal Content */}
-            <div className={`relative bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 w-full ${maxWidth} overflow-hidden transform transition-all scale-100`}>
-
-                {/* Header Pattern / Decoration */}
-                <div className={clsx("h-2 w-full", buttonColors[type].replace('hover:', '').split(' ')[0])} />
+            {/* Modal Content with LiquidGlass */}
+            <LiquidGlass
+                material="thick"
+                className={`relative w-full ${maxWidth} overflow-hidden transform transition-all scale-100`}
+                style={{
+                    borderRadius: 'var(--radius-modal)',
+                    boxShadow: '0 16px 48px rgba(0, 0, 0, 0.2)'
+                }}
+            >
+                {/* Header Accent Strip */}
+                <div
+                    className="h-1 w-full"
+                    style={{ background: accentColor }}
+                />
 
                 <div className="p-6">
                     {/* Icon Container */}
-                    <div className={clsx(
-                        "mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4 border",
-                        colors[type]
-                    )}>
+                    <div
+                        className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4"
+                        style={{
+                            backgroundColor: 'var(--fill-secondary)',
+                            border: '1px solid var(--separator-non-opaque)'
+                        }}
+                    >
                         {icons[type]}
                     </div>
 
                     <div className="text-center mb-6">
-                        <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2 font-display">
+                        <h3
+                            className="text-xl font-bold mb-2"
+                            style={{ color: 'var(--label-primary)' }}
+                        >
                             {title}
                         </h3>
-                        <div className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
+                        <div
+                            className="text-sm leading-relaxed"
+                            style={{ color: 'var(--label-secondary)' }}
+                        >
                             {description}
                         </div>
                     </div>
@@ -102,26 +122,22 @@ export const Modal: React.FC<ModalProps> = ({
                     {showFooter && (onCancel || onConfirm) && (
                         <div className="flex gap-3 justify-center mt-6">
                             {onCancel && (
-                                <button
+                                <RippleButton
                                     onClick={onCancel}
-                                    className="px-5 py-2.5 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:focus:ring-gray-500 transition-colors"
+                                    variant="secondary"
                                 >
                                     {cancelText}
-                                </button>
+                                </RippleButton>
                             )}
 
                             {onConfirm && (
-                                <button
+                                <RippleButton
                                     onClick={onConfirm}
+                                    variant="primary"
                                     disabled={isLoading}
-                                    className={clsx(
-                                        "px-5 py-2.5 rounded-lg text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition-all flex items-center gap-2",
-                                        buttonColors[type],
-                                        isLoading && "opacity-75 cursor-not-allowed"
-                                    )}
                                 >
                                     {isLoading ? 'Processing...' : confirmText}
-                                </button>
+                                </RippleButton>
                             )}
                         </div>
                     )}
@@ -130,11 +146,17 @@ export const Modal: React.FC<ModalProps> = ({
                 {/* Close X top right */}
                 <button
                     onClick={onCancel}
-                    className="absolute top-4 right-4 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                    className="absolute top-4 right-4 transition-colors"
+                    style={{
+                        color: 'var(--label-tertiary)',
+                        cursor: 'pointer'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.color = 'var(--label-primary)'}
+                    onMouseLeave={(e) => e.currentTarget.style.color = 'var(--label-tertiary)'}
                 >
                     <X size={20} />
                 </button>
-            </div>
+            </LiquidGlass>
         </div>
     );
 };
