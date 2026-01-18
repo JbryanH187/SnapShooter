@@ -1,4 +1,3 @@
-
 import React from 'react';
 import './styles/index.css';
 
@@ -19,9 +18,13 @@ import { KeyboardShortcutsModal } from './components/UI/KeyboardShortcutsModal';
 import { useCaptureStore } from './stores/captureStore';
 import { useUndoRedo } from './hooks/useUndoRedo';
 import { useGlobalShortcuts } from './hooks/useGlobalShortcuts';
+import { useLiquidTheme } from './hooks/useTheme'; // NEW: Liquid Glass theme system
 
 // App Content - runs inside providers
 const AppContent: React.FC = () => {
+    // Enable Liquid Glass theme system (injects CSS variables)
+    const { theme, isDark } = useLiquidTheme();
+
     // Enable global undo/redo keyboard shortcuts
     useUndoRedo();
 
