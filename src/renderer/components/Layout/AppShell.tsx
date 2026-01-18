@@ -118,20 +118,29 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
     }, [tutorial.hasSeenOnboarding, tutorial.isActive, startTutorial]);
 
     return (
-        <div className="min-h-screen p-8 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans selection:bg-primary-100 selection:text-primary-900 transition-colors duration-200">
+        <div
+            className="min-h-screen p-8 font-sans transition-colors duration-200"
+            style={{
+                background: 'var(--system-background)',
+                color: 'var(--label-primary)'
+            }}
+        >
             {/* Window Drag Handle */}
             <div className="fixed top-0 left-0 right-0 h-8 z-50 app-drag" />
 
             <RecoveryBanner />
             <OnboardingOverlay />
             <CapturePreview />
-            <Toaster position="bottom-center" toastOptions={{
-                className: 'dark:bg-gray-800 dark:text-white',
-                style: {
-                    background: '#333',
-                    color: '#fff',
-                },
-            }} />
+            <Toaster
+                position="bottom-center"
+                toastOptions={{
+                    style: {
+                        background: 'var(--system-background-secondary)',
+                        color: 'var(--label-primary)',
+                        border: '1px solid var(--separator-non-opaque)'
+                    },
+                }}
+            />
 
             <AppHeader />
 
@@ -216,16 +225,25 @@ const AppHeader: React.FC = () => {
     };
 
     return (
-        <header className="mb-8 border-b border-gray-200 dark:border-gray-700 pb-4 flex justify-between items-center relative z-40">
+        <header
+            className="mb-8 border-b pb-4 flex justify-between items-center relative z-40"
+            style={{ borderColor: 'var(--separator-non-opaque)' }}
+        >
             <div className="flex items-center gap-4">
                 <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setMenuOpen(true)}
-                    className="p-2.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-xl transition-colors border border-gray-200 dark:border-gray-700 app-no-drag"
+                    className="p-2.5 rounded-xl transition-colors border app-no-drag"
+                    style={{
+                        background: 'var(--fill-secondary)',
+                        borderColor: 'var(--separator-opaque)'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'var(--fill-primary)'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'var(--fill-secondary)'}
                     data-tour="menu-btn"
                 >
-                    <Menu size={20} className="text-gray-600 dark:text-gray-400" />
+                    <Menu size={20} style={{ color: 'var(--label-secondary)' }} />
                 </motion.button>
 
                 <motion.button
@@ -244,7 +262,13 @@ const AppHeader: React.FC = () => {
                         whileHover={{ rotate: [0, -5, 5, 0] }}
                         transition={{ duration: 0.3 }}
                     />
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tight" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+                    <h1
+                        className="text-2xl font-bold tracking-tight"
+                        style={{
+                            fontFamily: "'Orbitron', sans-serif",
+                            color: 'var(--label-primary)'
+                        }}
+                    >
                         SnapProof
                     </h1>
                 </motion.button>
@@ -267,7 +291,21 @@ const AppHeader: React.FC = () => {
                             placeholder="Search captures..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm group-hover:shadow-md"
+                            className="w-full rounded-xl py-2 pl-10 pr-4 text-sm focus:outline-none transition-all shadow-sm group-hover:shadow-md"
+                            style={{
+                                background: 'var(--system-background-secondary)',
+                                border: '1px solid var(--separator-opaque)',
+                                color: 'var(--label-primary)',
+                                borderRadius: 'var(--radius-base)'
+                            }}
+                            onFocus={(e) => {
+                                e.currentTarget.style.borderColor = 'var(--system-blue)';
+                                e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0, 122, 255, 0.1)';
+                            }}
+                            onBlur={(e) => {
+                                e.currentTarget.style.borderColor = 'var(--separator-opaque)';
+                                e.currentTarget.style.boxShadow = '';
+                            }}
                         />
                     </div>
                 </div>
