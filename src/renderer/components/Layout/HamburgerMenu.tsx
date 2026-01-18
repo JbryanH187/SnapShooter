@@ -8,10 +8,11 @@ import {
     X,
     ChevronRight,
     FileEdit,
-    Home, // Added Home icon
+    Home,
     FolderKanban
 } from 'lucide-react';
 import { SmartFoldersList } from '../Views/SmartFoldersList';
+import { LiquidGlass } from '../UI/LiquidGlass';
 
 export type ViewType = 'home' | 'recents' | 'flows' | 'history' | 'drafts';
 
@@ -75,106 +76,163 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.2 }}
-                        className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
+                        className="fixed inset-0 z-40"
+                        style={{
+                            backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                            backdropFilter: 'blur(8px)',
+                            WebkitBackdropFilter: 'blur(8px)'
+                        }}
                         onClick={onClose}
                     />
 
-                    {/* Menu Panel - Slides from LEFT */}
+                    {/* Menu Panel - Slides from LEFT with LiquidGlass */}
                     <motion.aside
                         initial={{ x: -280 }}
                         animate={{ x: 0 }}
                         exit={{ x: -280 }}
                         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                        className="fixed left-0 top-0 bottom-0 w-[280px] bg-white dark:bg-gray-900 shadow-2xl z-50 flex flex-col border-r border-gray-200 dark:border-gray-700"
+                        className="fixed left-0 top-0 bottom-0 w-[280px] shadow-2xl z-50 flex flex-col"
                     >
-                        {/* Header */}
-                        <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-800">
-                            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                                <Camera className="text-primary-500" size={22} />
-                                SnapProof
-                            </h2>
-                            <button
-                                onClick={onClose}
-                                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                        <LiquidGlass
+                            material="thick"
+                            className="h-full flex flex-col"
+                            style={{
+                                borderRight: '1px solid var(--separator-non-opaque)'
+                            }}
+                        >
+                            {/* Header */}
+                            <div
+                                className="flex items-center justify-between p-5 border-b"
+                                style={{ borderColor: 'var(--separator-non-opaque)' }}
                             >
-                                <X size={20} className="text-gray-500" />
-                            </button>
-                        </div>
+                                <h2
+                                    className="text-lg font-bold flex items-center gap-2"
+                                    style={{ color: 'var(--label-primary)' }}
+                                >
+                                    <Camera style={{ color: 'var(--system-blue)' }} size={22} />
+                                    SnapProof
+                                </h2>
+                                <button
+                                    onClick={onClose}
+                                    className="p-2 rounded-lg transition-colors"
+                                    style={{ color: 'var(--label-secondary)' }}
+                                    onMouseEnter={(e) => e.currentTarget.style.background = 'var(--fill-secondary)'}
+                                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                                >
+                                    <X size={20} />
+                                </button>
+                            </div>
 
-                        {/* Navigation Items */}
-                        <nav className="flex-1 overflow-y-auto">
-                            <div className="p-4 space-y-2">
-                                {menuItems.map((item) => (
-                                    <motion.button
-                                        key={item.id}
-                                        whileHover={{ x: 4 }}
-                                        whileTap={{ scale: 0.98 }}
-                                        onClick={() => {
-                                            item.onClick();
-                                            onClose();
-                                        }}
-                                        className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${currentView === item.id
-                                            ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 border border-primary-200 dark:border-primary-800'
-                                            : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'
-                                            }`}
-                                        data-tour={item.id === 'flows' ? 'flows-tab' : undefined}
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <div className={`p-2 rounded-lg ${currentView === item.id
-                                                ? 'bg-primary-100 dark:bg-primary-900/40'
-                                                : 'bg-gray-100 dark:bg-gray-800'
-                                                }`}>
-                                                <item.icon size={18} />
+                            {/* Navigation Items */}
+                            <nav className="flex-1 overflow-y-auto">
+                                <div className="p-4 space-y-2">
+                                    {menuItems.map((item) => (
+                                        <motion.button
+                                            key={item.id}
+                                            whileHover={{ x: 4 }}
+                                            whileTap={{ scale: 0.98 }}
+                                            onClick={() => {
+                                                item.onClick();
+                                                onClose();
+                                            }}
+                                            className="w-full flex items-center justify-between p-3 rounded-xl transition-all"
+                                            style={{
+                                                background: currentView === item.id ? 'var(--system-blue)' : 'transparent',
+                                                color: currentView === item.id ? 'white' : 'var(--label-primary)',
+                                                border: currentView === item.id ? '1px solid var(--system-blue)' : '1px solid transparent'
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                if (currentView !== item.id) {
+                                                    e.currentTarget.style.background = 'var(--fill-secondary)';
+                                                }
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                if (currentView !== item.id) {
+                                                    e.currentTarget.style.background = 'transparent';
+                                                }
+                                            }}
+                                            data-tour={item.id === 'flows' ? 'flows-tab' : undefined}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div
+                                                    className="p-2 rounded-lg"
+                                                    style={{
+                                                        background: currentView === item.id
+                                                            ? 'rgba(255, 255, 255, 0.2)'
+                                                            : 'var(--fill-secondary)'
+                                                    }}
+                                                >
+                                                    <item.icon size={18} />
+                                                </div>
+                                                <span className="font-medium">{item.label}</span>
                                             </div>
-                                            <span className="font-medium">{item.label}</span>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            {item.count !== null && (
-                                                <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${currentView === item.id
-                                                    ? 'bg-primary-200 dark:bg-primary-800 text-primary-700 dark:text-primary-300'
-                                                    : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
-                                                    }`}>
-                                                    {item.count}
-                                                </span>
-                                            )}
-                                            <ChevronRight size={16} className="opacity-50" />
-                                        </div>
-                                    </motion.button>
-                                ))}
-                            </div>
-
-                            {/* Smart Folders Section */}
-                            <div className="px-4 pb-4">
-                                <div className="flex items-center gap-2 mb-2 px-1">
-                                    <FolderKanban size={14} className="text-gray-400" />
-                                    <span className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
-                                        Carpetas Inteligentes
-                                    </span>
+                                            <div className="flex items-center gap-2">
+                                                {item.count !== null && (
+                                                    <span
+                                                        className="px-2.5 py-0.5 rounded-full text-xs font-bold"
+                                                        style={{
+                                                            background: currentView === item.id
+                                                                ? 'rgba(255, 255, 255, 0.3)'
+                                                                : 'var(--fill-primary)',
+                                                            color: currentView === item.id
+                                                                ? 'white'
+                                                                : 'var(--label-secondary)'
+                                                        }}
+                                                    >
+                                                        {item.count}
+                                                    </span>
+                                                )}
+                                                <ChevronRight size={16} className="opacity-50" />
+                                            </div>
+                                        </motion.button>
+                                    ))}
                                 </div>
-                                <SmartFoldersList
-                                    compact
-                                    onFolderSelect={() => onClose()}
-                                />
-                            </div>
-                        </nav>
 
-                        {/* Settings at Bottom */}
-                        <div className="p-4 border-t border-gray-100 dark:border-gray-800">
-                            <motion.button
-                                whileHover={{ x: 4 }}
-                                whileTap={{ scale: 0.98 }}
-                                onClick={() => {
-                                    onSettingsClick();
-                                    onClose();
-                                }}
-                                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 transition-all"
+                                {/* Smart Folders Section */}
+                                <div className="px-4 pb-4">
+                                    <div className="flex items-center gap-2 mb-2 px-1">
+                                        <FolderKanban size={14} style={{ color: 'var(--label-tertiary)' }} />
+                                        <span
+                                            className="text-xs font-semibold uppercase tracking-wider"
+                                            style={{ color: 'var(--label-tertiary)' }}
+                                        >
+                                            Carpetas Inteligentes
+                                        </span>
+                                    </div>
+                                    <SmartFoldersList
+                                        compact
+                                        onFolderSelect={() => onClose()}
+                                    />
+                                </div>
+                            </nav>
+
+                            {/* Settings at Bottom */}
+                            <div
+                                className="p-4 border-t"
+                                style={{ borderColor: 'var(--separator-non-opaque)' }}
                             >
-                                <div className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800">
-                                    <Settings size={18} />
-                                </div>
-                                <span className="font-medium">Settings</span>
-                            </motion.button>
-                        </div>
+                                <motion.button
+                                    whileHover={{ x: 4 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={() => {
+                                        onSettingsClick();
+                                        onClose();
+                                    }}
+                                    className="w-full flex items-center gap-3 p-3 rounded-xl transition-all"
+                                    style={{ color: 'var(--label-primary)' }}
+                                    onMouseEnter={(e) => e.currentTarget.style.background = 'var(--fill-secondary)'}
+                                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                                >
+                                    <div
+                                        className="p-2 rounded-lg"
+                                        style={{ background: 'var(--fill-secondary)' }}
+                                    >
+                                        <Settings size={18} />
+                                    </div>
+                                    <span className="font-medium">Settings</span>
+                                </motion.button>
+                            </div>
+                        </LiquidGlass>
                     </motion.aside>
                 </>
             )}
