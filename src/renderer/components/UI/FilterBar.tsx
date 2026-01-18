@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Calendar, Filter as FilterIcon, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { DateFilter, StatusFilter } from '../../hooks/useCaptureSearch';
+import { LiquidGlass } from './LiquidGlass';
 
 interface FilterBarProps {
     dateFilter: DateFilter;
@@ -34,18 +35,24 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         { value: 'month', label: 'Past Month', icon: <Calendar size={14} /> },
     ];
 
-    const statusOptions: { value: StatusFilter; label: string; icon: React.ReactNode; color: string }[] = [
-        { value: 'all', label: 'All Status', icon: <FilterIcon size={14} />, color: 'text-gray-600' },
-        { value: 'success', label: 'Success', icon: <CheckCircle size={14} />, color: 'text-green-600' },
-        { value: 'failure', label: 'Failure', icon: <XCircle size={14} />, color: 'text-red-600' },
-        { value: 'pending', label: 'Pending', icon: <Clock size={14} />, color: 'text-gray-600' },
+    const statusOptions: { value: StatusFilter; label: string; icon: React.ReactNode; colorVar: string }[] = [
+        { value: 'all', label: 'All Status', icon: <FilterIcon size={14} />, colorVar: 'var(--label-secondary)' },
+        { value: 'success', label: 'Success', icon: <CheckCircle size={14} />, colorVar: 'var(--system-green)' },
+        { value: 'failure', label: 'Failure', icon: <XCircle size={14} />, colorVar: 'var(--system-red)' },
+        { value: 'pending', label: 'Pending', icon: <Clock size={14} />, colorVar: 'var(--system-orange)' },
     ];
 
     const activeDate = dateOptions.find(o => o.value === dateFilter);
     const activeStatus = statusOptions.find(o => o.value === statusFilter);
 
     return (
-        <div className="flex items-center justify-between px-6 py-3 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700/50">
+        <div
+            className="flex items-center justify-between px-6 py-3 border-b"
+            style={{
+                background: 'var(--system-background-secondary)',
+                borderColor: 'var(--separator-non-opaque)'
+            }}
+        >
             {/* Left: Filter Controls */}
             <div className="flex items-center gap-2">
                 {/* Date Filter */}
@@ -54,12 +61,17 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => setShowDateMenu(!showDateMenu)}
-                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${dateFilter !== 'all'
-                                ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 border border-primary-300 dark:border-primary-700'
-                                : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700'
-                            }`}
+                        className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium transition-all"
+                        style={{
+                            background: dateFilter !== 'all' ? 'var(--system-blue)' : 'var(--fill-secondary)',
+                            color: dateFilter !== 'all' ? 'white' : 'var(--label-primary)',
+                            border: `1px solid ${dateFilter !== 'all' ? 'var(--system-blue)' : 'var(--separator-opaque)'}`,
+                            borderRadius: 'var(--radius-base)'
+                        }}
                     >
-                        {activeDate?.icon}
+                        <span style={{ color: dateFilter !== 'all' ? 'white' : 'var(--label-secondary)' }}>
+                            {activeDate?.icon}
+                        </span>
                         <span>{activeDate?.label}</span>
                     </motion.button>
 
@@ -67,29 +79,48 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                         {showDateMenu && (
                             <>
                                 <div className="fixed inset-0 z-10" onClick={() => setShowDateMenu(false)} />
-                                <motion.div
-                                    initial={{ opacity: 0, y: -10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -10 }}
-                                    className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden z-20"
+                                <LiquidGlass
+                                    material="regular"
+                                    className="absolute top-full left-0 mt-2 w-48 overflow-hidden z-20"
+                                    style={{
+                                        borderRadius: 'var(--radius-card)',
+                                        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)'
+                                    }}
                                 >
-                                    {dateOptions.map((option) => (
-                                        <button
-                                            key={option.value}
-                                            onClick={() => {
-                                                onDateFilterChange(option.value);
-                                                setShowDateMenu(false);
-                                            }}
-                                            className={`w-full flex items-center gap-2 px-4 py-2 text-sm transition-colors ${dateFilter === option.value
-                                                    ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300'
-                                                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
-                                                }`}
-                                        >
-                                            {option.icon}
-                                            <span>{option.label}</span>
-                                        </button>
-                                    ))}
-                                </motion.div>
+                                    <motion.div
+                                        initial={{ opacity: 0, y: -10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                    >
+                                        {dateOptions.map((option) => (
+                                            <button
+                                                key={option.value}
+                                                onClick={() => {
+                                                    onDateFilterChange(option.value);
+                                                    setShowDateMenu(false);
+                                                }}
+                                                className="w-full flex items-center gap-2 px-4 py-2 text-sm transition-colors"
+                                                style={{
+                                                    background: dateFilter === option.value ? 'var(--fill-tertiary)' : 'transparent',
+                                                    color: 'var(--label-primary)'
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    if (dateFilter !== option.value) {
+                                                        e.currentTarget.style.background = 'var(--fill-secondary)';
+                                                    }
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    if (dateFilter !== option.value) {
+                                                        e.currentTarget.style.background = 'transparent';
+                                                    }
+                                                }}
+                                            >
+                                                <span style={{ color: 'var(--label-secondary)' }}>{option.icon}</span>
+                                                <span>{option.label}</span>
+                                            </button>
+                                        ))}
+                                    </motion.div>
+                                </LiquidGlass>
                             </>
                         )}
                     </AnimatePresence>
@@ -101,12 +132,17 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => setShowStatusMenu(!showStatusMenu)}
-                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${statusFilter !== 'all'
-                                ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 border border-primary-300 dark:border-primary-700'
-                                : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700'
-                            }`}
+                        className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium transition-all"
+                        style={{
+                            background: statusFilter !== 'all' ? activeStatus?.colorVar : 'var(--fill-secondary)',
+                            color: statusFilter !== 'all' ? 'white' : 'var(--label-primary)',
+                            border: `1px solid ${statusFilter !== 'all' ? activeStatus?.colorVar : 'var(--separator-opaque)'}`,
+                            borderRadius: 'var(--radius-base)'
+                        }}
                     >
-                        <span className={activeStatus?.color}>{activeStatus?.icon}</span>
+                        <span style={{ color: statusFilter !== 'all' ? 'white' : activeStatus?.colorVar }}>
+                            {activeStatus?.icon}
+                        </span>
                         <span>{activeStatus?.label}</span>
                     </motion.button>
 
@@ -114,29 +150,48 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                         {showStatusMenu && (
                             <>
                                 <div className="fixed inset-0 z-10" onClick={() => setShowStatusMenu(false)} />
-                                <motion.div
-                                    initial={{ opacity: 0, y: -10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -10 }}
-                                    className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden z-20"
+                                <LiquidGlass
+                                    material="regular"
+                                    className="absolute top-full left-0 mt-2 w-48 overflow-hidden z-20"
+                                    style={{
+                                        borderRadius: 'var(--radius-card)',
+                                        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)'
+                                    }}
                                 >
-                                    {statusOptions.map((option) => (
-                                        <button
-                                            key={option.value}
-                                            onClick={() => {
-                                                onStatusFilterChange(option.value);
-                                                setShowStatusMenu(false);
-                                            }}
-                                            className={`w-full flex items-center gap-2 px-4 py-2 text-sm transition-colors ${statusFilter === option.value
-                                                    ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300'
-                                                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
-                                                }`}
-                                        >
-                                            <span className={option.color}>{option.icon}</span>
-                                            <span>{option.label}</span>
-                                        </button>
-                                    ))}
-                                </motion.div>
+                                    <motion.div
+                                        initial={{ opacity: 0, y: -10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                    >
+                                        {statusOptions.map((option) => (
+                                            <button
+                                                key={option.value}
+                                                onClick={() => {
+                                                    onStatusFilterChange(option.value);
+                                                    setShowStatusMenu(false);
+                                                }}
+                                                className="w-full flex items-center gap-2 px-4 py-2 text-sm transition-colors"
+                                                style={{
+                                                    background: statusFilter === option.value ? 'var(--fill-tertiary)' : 'transparent',
+                                                    color: 'var(--label-primary)'
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    if (statusFilter !== option.value) {
+                                                        e.currentTarget.style.background = 'var(--fill-secondary)';
+                                                    }
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    if (statusFilter !== option.value) {
+                                                        e.currentTarget.style.background = 'transparent';
+                                                    }
+                                                }}
+                                            >
+                                                <span style={{ color: option.colorVar }}>{option.icon}</span>
+                                                <span>{option.label}</span>
+                                            </button>
+                                        ))}
+                                    </motion.div>
+                                </LiquidGlass>
                             </>
                         )}
                     </AnimatePresence>
@@ -151,7 +206,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={onClearFilters}
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors"
+                        style={{ color: 'var(--label-secondary)' }}
+                        onMouseEnter={(e) => e.currentTarget.style.color = 'var(--label-primary)'}
+                        onMouseLeave={(e) => e.currentTarget.style.color = 'var(--label-secondary)'}
                     >
                         <X size={14} />
                         Clear filters
@@ -160,14 +218,14 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             </div>
 
             {/* Right: Result Count */}
-            <div className="text-sm text-gray-500 dark:text-gray-400">
+            <div className="text-sm" style={{ color: 'var(--label-secondary)' }}>
                 {hasActiveFilters ? (
                     <span>
-                        Showing <strong className="text-gray-900 dark:text-gray-100">{resultCount}</strong> of {totalCount}
+                        Showing <strong style={{ color: 'var(--label-primary)' }}>{resultCount}</strong> of {totalCount}
                     </span>
                 ) : (
                     <span>
-                        <strong className="text-gray-900 dark:text-gray-100">{totalCount}</strong> {totalCount === 1 ? 'capture' : 'captures'}
+                        <strong style={{ color: 'var(--label-primary)' }}>{totalCount}</strong> {totalCount === 1 ? 'capture' : 'captures'}
                     </span>
                 )}
             </div>
