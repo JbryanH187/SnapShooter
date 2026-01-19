@@ -51,7 +51,7 @@ export const LiquidGlass: React.FC<LiquidGlassProps> = ({
         WebkitBackdropFilter: `blur(${blur}px) saturate(calc(var(--material-saturation, 1.2)))`,
         backgroundColor: tint
             ? `${tint}${Math.round(opacity * 255).toString(16).padStart(2, '0')}`
-            : `rgba(var(--glass-tint, 255, 255, 255), ${opacity})`,
+            : `color-mix(in srgb, var(--system-background) ${Math.round(opacity * 100)}%, transparent)`,
         border: '1px solid var(--separator-non-opaque)',
         ...style
     };
