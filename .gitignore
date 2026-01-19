@@ -1,14 +1,12 @@
 # Dependencies
 node_modules/
-package-lock.json
 
 # AI/Steering files
 .gemini/
 steering/
-*.md
-*.mkd
-
-# Build outputs
+steeringFiles/
+.antigravityignore
+*.txt# Build outputs
 dist/
 dist-electron/
 release/
