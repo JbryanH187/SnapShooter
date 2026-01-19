@@ -27,7 +27,7 @@ export const FlowsView: React.FC = () => {
                         thumbnail = base64Image;
                     }
                 } catch (e) {
-                    logger.error("Failed to load flow image:", e);
+                    logger.error('CAPTURE', 'Failed to load flow image', { error: e });
                 }
             }
 
@@ -56,11 +56,14 @@ export const FlowsView: React.FC = () => {
             className="flex-1 flex flex-col overflow-hidden p-6"
         >
             <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                <h2 className="text-xl font-semibold flex items-center gap-2" style={{ color: 'var(--label-primary)' }}>
                     <Layers size={20} className="text-amber-500" />
                     Flow Badges
                 </h2>
-                <span className="bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 px-2.5 py-0.5 rounded-full text-xs font-bold">
+                <span
+                    className="px-2.5 py-0.5 rounded-full text-xs font-bold"
+                    style={{ background: 'color-mix(in srgb, var(--system-orange) 15%, transparent)', color: 'var(--system-orange)' }}
+                >
                     {flows.length} flujos
                 </span>
             </div>
@@ -69,16 +72,59 @@ export const FlowsView: React.FC = () => {
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="flex-1 flex flex-col items-center justify-center text-gray-400 dark:text-gray-500 border-2 border-dashed border-gray-100 dark:border-gray-700 rounded-xl bg-gray-50/30 dark:bg-gray-800/30 p-8 text-center"
+                    className="flex-1 flex flex-col items-center justify-center text-center"
                 >
-                    <Layers size={64} className="mb-6 opacity-40" />
-                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No flows yet</h3>
-                    <p className="text-sm mb-6 max-w-xs mx-auto text-gray-500 dark:text-gray-400">Create flows by using Quick Flow mode to capture a sequence of steps.</p>
-                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm text-sm text-gray-600 dark:text-gray-300">
-                        <span>Press</span>
-                        <kbd className="font-bold text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded border border-gray-200 dark:border-gray-600 text-xs font-mono">Ctrl+Shift+Q</kbd>
-                        <span>for Quick Flow</span>
-                    </div>
+                    {/* Animated Logo with Glow */}
+                    <motion.div
+                        className="relative mb-8"
+                        animate={{ scale: [1, 1.02, 1] }}
+                        transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                    >
+                        {/* Glow Effect */}
+                        <div
+                            className="absolute inset-0 rounded-full blur-2xl opacity-30"
+                            style={{ background: 'var(--system-orange)', transform: 'scale(1.2)' }}
+                        />
+                        <Layers size={80} style={{ color: 'var(--system-orange)', opacity: 0.8 }} />
+                    </motion.div>
+
+                    {/* Title */}
+                    <h3
+                        className="text-2xl font-bold mb-3"
+                        style={{ color: 'var(--label-primary)' }}
+                    >
+                        No tienes flujos aún
+                    </h3>
+
+                    {/* Description */}
+                    <p
+                        className="text-base mb-8 max-w-sm mx-auto leading-relaxed"
+                        style={{ color: 'var(--label-secondary)' }}
+                    >
+                        Crea flujos capturando secuencias de pasos con el modo Quick Flow.
+                    </p>
+
+                    {/* Keyboard Shortcut Pill */}
+                    <motion.div
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="inline-flex items-center gap-3 px-5 py-3 rounded-2xl cursor-default"
+                        style={{
+                            background: 'color-mix(in srgb, var(--system-orange) 10%, var(--fill-secondary))',
+                            border: '1px solid color-mix(in srgb, var(--system-orange) 20%, transparent)'
+                        }}
+                    >
+                        <span style={{ color: 'var(--label-secondary)' }}>Presiona</span>
+                        <kbd
+                            className="font-bold px-2.5 py-1 rounded-lg text-xs font-mono"
+                            style={{
+                                color: 'var(--system-orange)',
+                                background: 'color-mix(in srgb, var(--system-orange) 15%, transparent)',
+                                border: '1px solid color-mix(in srgb, var(--system-orange) 30%, transparent)'
+                            }}
+                        >Ctrl+Shift+Q</kbd>
+                        <span style={{ color: 'var(--label-secondary)' }}>para Quick Flow</span>
+                    </motion.div>
                 </motion.div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 overflow-y-auto content-start pr-2 pb-4">

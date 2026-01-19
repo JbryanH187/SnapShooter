@@ -10,7 +10,7 @@ import { FilterBar } from '../UI/FilterBar';
 import { confirm, toast } from '../../utils/toast';
 import { toast as hotToast } from 'react-hot-toast';
 import { Camera, CheckCircle, XCircle, Trash2 } from 'lucide-react';
-import OnlyEyesSnapProof from '../../../assets/OnlyEyesSnapProof.jpg';
+import OnlyEyesSnapProof from '../../../assets/OnlyEyesSnapProof.png';
 import { logger } from '../../services/Logger';
 
 import { RecentsSkeleton } from '../UI/Skeletons';
@@ -57,7 +57,12 @@ export const RecentsView: React.FC = () => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 10 }}
-                    className="bg-gray-900 dark:bg-gray-800 text-white px-4 py-3 rounded-xl shadow-xl flex items-center justify-between gap-4 min-w-[320px] border border-gray-700 pointer-events-auto"
+                    className="px-4 py-3 rounded-xl shadow-xl flex items-center justify-between gap-4 min-w-[320px] pointer-events-auto"
+                    style={{
+                        background: 'var(--system-background-secondary)',
+                        border: '1px solid var(--separator-opaque)',
+                        color: 'var(--label-primary)'
+                    }}
                 >
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-red-500/10 rounded-lg">
@@ -72,7 +77,10 @@ export const RecentsView: React.FC = () => {
                                 useCaptureStore.getState().undoLastDelete();
                                 hotToast.dismiss(t.id);
                             }}
-                            className="text-primary-400 hover:text-primary-300 hover:bg-white/5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors"
+                            className="px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors"
+                            style={{ color: 'var(--system-blue)' }}
+                            onMouseEnter={(e) => e.currentTarget.style.background = 'var(--fill-secondary)'}
+                            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                         >
                             Undo
                         </button>
@@ -92,17 +100,22 @@ export const RecentsView: React.FC = () => {
     const renderCard = (c: any, index: number, style: React.CSSProperties) => (
         <motion.div
             layout
-            style={style}
             key={c.id}
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
             transition={{ duration: 0.2 }}
             whileHover={{ scale: 1.02 }}
-            className={`flex flex-col p-4 border border-gray-100 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 shadow-sm hover:shadow-md hover:border-primary-200 dark:hover:border-primary-700 transition-all group relative h-full
+            className={`flex flex-col p-4 border rounded-xl shadow-sm hover:shadow-md transition-all group relative h-full
                 ${c.status === 'success' ? 'border-l-4 border-l-success-500' : ''}
                 ${c.status === 'failure' ? 'border-l-4 border-l-error-500' : ''}
             `}
+            style={{
+                ...style,
+                background: 'var(--system-background-secondary)',
+                borderColor: 'var(--separator-non-opaque)',
+                borderRadius: 'var(--radius-card)'
+            }}
         >
             {/* Step Badge */}
             <div className={`absolute top-3 left-3 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shadow-md z-10 border-2 border-white
@@ -126,25 +139,53 @@ export const RecentsView: React.FC = () => {
 
             {/* Info */}
             <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-1 truncate text-sm">{c.title || 'Untitled Capture'}</h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mb-2">{c.description || 'No description.'}</p>
-                <span className="text-[10px] bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 px-2 py-0.5 rounded-full font-medium">
+                <h3 className="font-semibold mb-1 truncate text-sm" style={{ color: 'var(--label-primary)' }}>{c.title || 'Untitled Capture'}</h3>
+                <p className="text-xs line-clamp-2 mb-2" style={{ color: 'var(--label-secondary)' }}>{c.description || 'No description.'}</p>
+                <span
+                    className="text-[10px] px-2 py-0.5 rounded-full font-medium"
+                    style={{
+                        background: 'var(--fill-secondary)',
+                        color: 'var(--label-secondary)'
+                    }}
+                >
                     {new Date(c.timestamp).toLocaleTimeString()}
                 </span>
             </div>
 
             {/* Status Toggles */}
-            <div className="absolute bottom-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white dark:bg-gray-700 p-1 rounded-lg shadow-sm border border-gray-100 dark:border-gray-600">
+            <div
+                className="absolute bottom-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg shadow-sm border"
+                style={{
+                    background: 'var(--system-background-secondary)',
+                    borderColor: 'var(--separator-opaque)'
+                }}
+            >
                 <button
                     onClick={(e) => { e.stopPropagation(); updateCapture(c.id, { status: 'success' }); }}
-                    className={`p-1 rounded-md hover:bg-success-50 dark:hover:bg-success-900/30 transition-colors ${c.status === 'success' ? 'text-success-600 dark:text-success-400 bg-success-50 dark:bg-success-900/30' : 'text-gray-300 dark:text-gray-500 hover:text-success-600 dark:hover:text-success-400'}`}
+                    className="p-1 rounded-md transition-colors"
+                    style={c.status === 'success' ? {
+                        color: 'var(--system-green)',
+                        background: 'color-mix(in srgb, var(--system-green) 15%, transparent)'
+                    } : {
+                        color: 'var(--label-quaternary)'
+                    }}
+                    onMouseEnter={(e) => { if (c.status !== 'success') { e.currentTarget.style.color = 'var(--system-green)'; e.currentTarget.style.background = 'color-mix(in srgb, var(--system-green) 10%, transparent)'; } }}
+                    onMouseLeave={(e) => { if (c.status !== 'success') { e.currentTarget.style.color = 'var(--label-quaternary)'; e.currentTarget.style.background = 'transparent'; } }}
                     title="Mark as Success"
                 >
                     <CheckCircle size={14} />
                 </button>
                 <button
                     onClick={(e) => { e.stopPropagation(); updateCapture(c.id, { status: 'failure' }); }}
-                    className={`p-1 rounded-md hover:bg-error-50 dark:hover:bg-error-900/30 transition-colors ${c.status === 'failure' ? 'text-error-600 dark:text-error-400 bg-error-50 dark:bg-error-900/30' : 'text-gray-300 dark:text-gray-500 hover:text-error-600 dark:hover:text-error-400'}`}
+                    className="p-1 rounded-md transition-colors"
+                    style={c.status === 'failure' ? {
+                        color: 'var(--system-red)',
+                        background: 'color-mix(in srgb, var(--system-red) 15%, transparent)'
+                    } : {
+                        color: 'var(--label-quaternary)'
+                    }}
+                    onMouseEnter={(e) => { if (c.status !== 'failure') { e.currentTarget.style.color = 'var(--system-red)'; e.currentTarget.style.background = 'color-mix(in srgb, var(--system-red) 10%, transparent)'; } }}
+                    onMouseLeave={(e) => { if (c.status !== 'failure') { e.currentTarget.style.color = 'var(--label-quaternary)'; e.currentTarget.style.background = 'transparent'; } }}
                     title="Mark as Failure"
                 >
                     <XCircle size={14} />
@@ -157,7 +198,8 @@ export const RecentsView: React.FC = () => {
                     e.stopPropagation();
                     await handleDeleteCapture(c.id);
                 }}
-                className="absolute top-3 right-3 p-1.5 text-gray-300 dark:text-gray-600 hover:text-error-600 dark:hover:text-error-400 hover:bg-error-50 dark:hover:bg-error-900/30 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
+                className="absolute top-3 right-3 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all hover:text-error-600 hover:bg-error-50"
+                style={{ color: 'var(--label-tertiary)' }}
                 title="Delete Capture"
             >
                 <Trash2 size={14} />
@@ -176,11 +218,17 @@ export const RecentsView: React.FC = () => {
         >
             {/* Header */}
             <div className="flex items-center justify-between px-6 pt-6 pb-3">
-                <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                    <Camera size={20} className="text-primary-500" />
+                <h2 className="text-xl font-semibold flex items-center gap-2" style={{ color: 'var(--label-primary)' }}>
+                    <Camera size={20} style={{ color: 'var(--system-blue)' }} />
                     Recents
                 </h2>
-                <span className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 px-2.5 py-0.5 rounded-full text-xs font-bold">
+                <span
+                    className="px-2.5 py-0.5 rounded-full text-xs font-bold"
+                    style={{
+                        background: 'var(--fill-secondary)',
+                        color: 'var(--label-secondary)'
+                    }}
+                >
                     {filteredCaptures.length} / {captures.length}
                 </span>
             </div>
@@ -207,20 +255,67 @@ export const RecentsView: React.FC = () => {
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="flex-1 flex flex-col items-center justify-center text-gray-400 dark:text-gray-500 border-2 border-dashed border-gray-100 dark:border-gray-700 rounded-xl bg-gray-50/30 dark:bg-gray-800/30 p-8 text-center mx-6"
+                    className="flex-1 flex flex-col items-center justify-center text-center mx-6"
                 >
-                    <img
-                        src={OnlyEyesSnapProof}
-                        alt="No captures"
-                        className="w-32 h-32 object-contain mb-6 opacity-60 dark:opacity-60 rounded-full"
-                    />
-                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No captures yet</h3>
-                    <p className="text-sm mb-6 max-w-xs mx-auto text-gray-500 dark:text-gray-400">Your captured evidence will appear here properly organized.</p>
-                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm text-sm text-gray-600 dark:text-gray-300">
-                        <span>Press</span>
-                        <kbd className="font-bold text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded border border-gray-200 dark:border-gray-600 text-xs font-mono">Ctrl+Shift+1</kbd>
-                        <span>to start</span>
-                    </div>
+                    {/* Animated Logo with Glow */}
+                    <motion.div
+                        className="relative mb-8"
+                        animate={{ scale: [1, 1.02, 1] }}
+                        transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                    >
+                        {/* Glow Effect */}
+                        <div
+                            className="absolute inset-0 rounded-full blur-3xl opacity-40"
+                            style={{ background: 'var(--system-blue)', transform: 'scale(1.5)' }}
+                        />
+                        <img
+                            src={OnlyEyesSnapProof}
+                            alt="SnapProof"
+                            className="w-28 h-28 object-contain rounded-2xl relative z-10"
+                            style={{
+                                filter: 'drop-shadow(0 8px 24px rgba(0,0,0,0.2))',
+                                borderRadius: 'var(--radius-card)'
+                            }}
+                        />
+                    </motion.div>
+
+                    {/* Title */}
+                    <h3
+                        className="text-2xl font-bold mb-3"
+                        style={{ color: 'var(--label-primary)' }}
+                    >
+                        No tienes capturas aún
+                    </h3>
+
+                    {/* Description */}
+                    <p
+                        className="text-base mb-8 max-w-sm mx-auto leading-relaxed"
+                        style={{ color: 'var(--label-secondary)' }}
+                    >
+                        Tu evidencia capturada aparecerá aquí, organizada cronológicamente.
+                    </p>
+
+                    {/* Keyboard Shortcut Pill */}
+                    <motion.div
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="inline-flex items-center gap-3 px-5 py-3 rounded-2xl cursor-default"
+                        style={{
+                            background: 'color-mix(in srgb, var(--system-blue) 10%, var(--fill-secondary))',
+                            border: '1px solid color-mix(in srgb, var(--system-blue) 20%, transparent)'
+                        }}
+                    >
+                        <span style={{ color: 'var(--label-secondary)' }}>Presiona</span>
+                        <kbd
+                            className="font-bold px-2.5 py-1 rounded-lg text-xs font-mono"
+                            style={{
+                                color: 'var(--system-blue)',
+                                background: 'color-mix(in srgb, var(--system-blue) 15%, transparent)',
+                                border: '1px solid color-mix(in srgb, var(--system-blue) 30%, transparent)'
+                            }}
+                        >Ctrl+Shift+1</kbd>
+                        <span style={{ color: 'var(--label-secondary)' }}>para capturar</span>
+                    </motion.div>
                 </motion.div>
             ) : (
                 <div data-tour="captures-list" className="flex-1 overflow-hidden px-6">
