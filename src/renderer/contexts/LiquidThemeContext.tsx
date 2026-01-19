@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { LIQUID_THEMES, DEFAULT_THEME, LiquidGlassThemeConfig, SemanticToken } from '../themes/themeConfig';
 
 const THEME_STORAGE_KEY = 'snapproof-liquid-theme';
 
-interface ThemeHook {
+interface LiquidThemeContextType {
     theme: LiquidGlassThemeConfig;
     themeId: string;
     setTheme: (themeId: string) => void;
@@ -12,6 +12,8 @@ interface ThemeHook {
     systemPrefersDark: boolean;
     highContrast: boolean;
 }
+
+const LiquidThemeContext = createContext<LiquidThemeContextType | undefined>(undefined);
 
 /**
  * Resolve semantic token to actual color based on conditions
@@ -22,26 +24,24 @@ const resolveToken = (
     highContrast: boolean,
     supportsP3: boolean
 ): string => {
-    // High contrast takes precedence
     if (highContrast && token.highContrast) {
         return token.highContrast;
     }
-
-    // P3 wide gamut for OLED displays
     if (supportsP3 && token.p3 && !isDark) {
         return token.p3;
     }
-
-    // Standard dark/light
     return isDark ? token.dark : token.light;
 };
 
+interface LiquidThemeProviderProps {
+    children: ReactNode;
+}
+
 /**
- * useLiquidTheme Hook - iOS 26 Semantic Theme Management
- * Handles dynamic token resolution, system preference detection, andCSS injection
+ * LiquidThemeProvider - Shared context for Liquid Glass theme system
+ * All components using useLiquidTheme will share this state
  */
-export const useLiquidTheme = (): ThemeHook => {
-    // Detect system preferences
+export const LiquidThemeProvider: React.FC<LiquidThemeProviderProps> = ({ children }) => {
     const [systemPrefersDark, setSystemPrefersDark] = useState(
         window.matchMedia('(prefers-color-scheme: dark)').matches
     );
@@ -199,7 +199,7 @@ export const useLiquidTheme = (): ThemeHook => {
         }
     }, []);
 
-    return {
+    const value: LiquidThemeContextType = {
         theme,
         themeId,
         setTheme: setThemeById,
@@ -208,6 +208,24 @@ export const useLiquidTheme = (): ThemeHook => {
         systemPrefersDark,
         highContrast
     };
+
+    return (
+        <LiquidThemeContext.Provider value={value}>
+            {children}
+        </LiquidThemeContext.Provider>
+    );
+};
+
+/**
+ * useLiquidTheme Hook - Access the shared Liquid Glass theme context
+ * Must be used within a LiquidThemeProvider
+ */
+export const useLiquidTheme = (): LiquidThemeContextType => {
+    const context = useContext(LiquidThemeContext);
+    if (!context) {
+        throw new Error('useLiquidTheme must be used within a LiquidThemeProvider');
+    }
+    return context;
 };
 
 // Backward compatibility export

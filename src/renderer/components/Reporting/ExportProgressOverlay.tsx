@@ -39,7 +39,8 @@ export const ExportProgressOverlay: React.FC<ExportProgressOverlayProps> = ({
                         initial={{ scale: 0.9, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         exit={{ scale: 0.9, opacity: 0 }}
-                        className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4"
+                        className="rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4"
+                        style={{ background: 'var(--system-background)' }}
                     >
                         {/* Header */}
                         <div className="text-center mb-6">
@@ -50,10 +51,8 @@ export const ExportProgressOverlay: React.FC<ExportProgressOverlayProps> = ({
                                     repeat: currentStep !== 'complete' ? Infinity : 0,
                                     ease: 'linear'
                                 }}
-                                className={`inline-flex p-4 rounded-full mb-4 ${currentStep === 'complete'
-                                        ? 'bg-green-100 dark:bg-green-900/30'
-                                        : 'bg-primary-100 dark:bg-primary-900/30'
-                                    }`}
+                                className="inline-flex p-4 rounded-full mb-4"
+                                style={{ background: currentStep === 'complete' ? 'color-mix(in srgb, var(--system-green) 15%, transparent)' : 'color-mix(in srgb, var(--system-blue) 15%, transparent)' }}
                             >
                                 {currentStep === 'complete' ? (
                                     <CheckCircle2 size={32} className="text-green-500" />
@@ -61,11 +60,11 @@ export const ExportProgressOverlay: React.FC<ExportProgressOverlayProps> = ({
                                     <Loader2 size={32} className="text-primary-500 animate-spin" />
                                 )}
                             </motion.div>
-                            <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                            <h3 className="text-xl font-bold" style={{ color: 'var(--label-primary)' }}>
                                 {currentStep === 'complete' ? 'Exportación Completa' : 'Exportando Reporte'}
                             </h3>
                             {fileName && (
-                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 truncate">
+                                <p className="text-sm mt-1 truncate" style={{ color: 'var(--label-secondary)' }}>
                                     {fileName}
                                 </p>
                             )}
@@ -84,20 +83,27 @@ export const ExportProgressOverlay: React.FC<ExportProgressOverlayProps> = ({
                                         initial={{ opacity: 0, x: -20 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         transition={{ delay: index * 0.1 }}
-                                        className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${isActive
-                                                ? 'bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800'
-                                                : isComplete
-                                                    ? 'bg-green-50 dark:bg-green-900/10'
-                                                    : 'bg-gray-50 dark:bg-gray-800/50'
-                                            }`}
+                                        className="flex items-center gap-3 p-3 rounded-lg transition-colors"
+                                        style={isActive ? {
+                                            background: 'color-mix(in srgb, var(--system-blue) 10%, transparent)',
+                                            border: '1px solid color-mix(in srgb, var(--system-blue) 30%, transparent)'
+                                        } : isComplete ? {
+                                            background: 'color-mix(in srgb, var(--system-green) 10%, transparent)'
+                                        } : {
+                                            background: 'var(--fill-quaternary)'
+                                        }}
                                     >
                                         {/* Step Icon */}
-                                        <div className={`p-2 rounded-full ${isComplete
-                                                ? 'bg-green-100 dark:bg-green-900/30'
-                                                : isActive
-                                                    ? 'bg-primary-100 dark:bg-primary-900/40'
-                                                    : 'bg-gray-200 dark:bg-gray-700'
-                                            }`}>
+                                        <div
+                                            className="p-2 rounded-full"
+                                            style={isComplete ? {
+                                                background: 'color-mix(in srgb, var(--system-green) 15%, transparent)'
+                                            } : isActive ? {
+                                                background: 'color-mix(in srgb, var(--system-blue) 15%, transparent)'
+                                            } : {
+                                                background: 'var(--fill-tertiary)'
+                                            }}
+                                        >
                                             {isComplete ? (
                                                 <Check size={16} className="text-green-500" />
                                             ) : isActive ? (
@@ -108,12 +114,10 @@ export const ExportProgressOverlay: React.FC<ExportProgressOverlayProps> = ({
                                         </div>
 
                                         {/* Step Label */}
-                                        <span className={`font-medium ${isComplete
-                                                ? 'text-green-600 dark:text-green-400'
-                                                : isActive
-                                                    ? 'text-primary-600 dark:text-primary-400'
-                                                    : 'text-gray-400 dark:text-gray-500'
-                                            }`}>
+                                        <span
+                                            className="font-medium"
+                                            style={{ color: isComplete ? 'var(--system-green)' : isActive ? 'var(--system-blue)' : 'var(--label-tertiary)' }}
+                                        >
                                             {step.label}
                                         </span>
                                     </motion.div>
@@ -123,10 +127,16 @@ export const ExportProgressOverlay: React.FC<ExportProgressOverlayProps> = ({
 
                         {/* Format Badge */}
                         <div className="mt-6 flex justify-center">
-                            <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${format === 'pdf'
-                                    ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
-                                    : 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
-                                }`}>
+                            <span
+                                className="px-3 py-1 rounded-full text-xs font-bold uppercase"
+                                style={format === 'pdf' ? {
+                                    background: 'color-mix(in srgb, var(--system-red) 15%, transparent)',
+                                    color: 'var(--system-red)'
+                                } : {
+                                    background: 'color-mix(in srgb, var(--system-blue) 15%, transparent)',
+                                    color: 'var(--system-blue)'
+                                }}
+                            >
                                 {format}
                             </span>
                         </div>

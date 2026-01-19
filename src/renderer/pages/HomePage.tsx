@@ -92,7 +92,10 @@ export const HomePage: React.FC = () => {
                             paddingBottom: '32px'
                         }}
                     >
-                        <div className="w-full h-full bg-gradient-to-br from-primary-100 to-primary-200 dark:from-gray-700 dark:to-gray-600 flex items-center justify-center rounded-sm">
+                        <div
+                            className="w-full h-full flex items-center justify-center rounded-sm"
+                            style={{ background: 'linear-gradient(to bottom right, var(--fill-secondary), var(--fill-tertiary))' }}
+                        >
                             <img
                                 src={LogoSnapProof}
                                 className="w-16 h-16 object-cover rounded-full opacity-30"
@@ -133,7 +136,8 @@ export const HomePage: React.FC = () => {
                 <AnimatePresence mode="wait">
                     <motion.p
                         key={currentTaglineIndex}
-                        className="text-2xl text-gray-700 dark:text-gray-300 font-light max-w-lg mx-auto"
+                        className="text-2xl font-light max-w-lg mx-auto"
+                        style={{ color: 'var(--label-secondary)' }}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
@@ -149,13 +153,13 @@ export const HomePage: React.FC = () => {
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.6 }}
                 >
-                    <div className="px-4 py-2 bg-white dark:bg-gray-800 rounded-full shadow-sm">
-                        <span className="text-sm text-gray-600 dark:text-gray-400">Presiona</span>
-                        <kbd className="ml-2 px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs font-mono">Ctrl+Shift+1</kbd>
-                        <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">para capturar</span>
+                    <div className="px-4 py-2 rounded-full shadow-sm" style={{ background: 'var(--system-background)' }}>
+                        <span className="text-sm" style={{ color: 'var(--label-secondary)' }}>Presiona</span>
+                        <kbd className="ml-2 px-2 py-1 rounded text-xs font-mono" style={{ background: 'var(--fill-secondary)' }}>Ctrl+Shift+1</kbd>
+                        <span className="ml-2 text-sm" style={{ color: 'var(--label-secondary)' }}>para capturar</span>
                     </div>
                 </motion.div>
             </div>
-        </div>
+        </div >
     );
 };

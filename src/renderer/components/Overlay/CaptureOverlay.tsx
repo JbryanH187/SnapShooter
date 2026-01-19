@@ -53,8 +53,8 @@ export const CaptureOverlay = memo(() => {
 
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in duration-200">
-            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl p-0 w-[500px] border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col">
-                <div className="relative h-48 bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+            <div className="rounded-xl shadow-2xl p-0 w-[500px] border overflow-hidden flex flex-col" style={{ background: 'var(--system-background)', borderColor: 'var(--separator-opaque)' }}>
+                <div className="relative h-48 flex items-center justify-center" style={{ background: 'var(--fill-tertiary)' }}>
                     <img src={currentCapture.thumbnail} className="max-h-full max-w-full object-contain" />
                     <div className="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
                         {new Date(currentCapture.timestamp).toLocaleTimeString()}
@@ -62,10 +62,10 @@ export const CaptureOverlay = memo(() => {
                 </div>
 
                 <div className="p-6">
-                    <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Add Context</h3>
+                    <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--label-primary)' }}>Add Context</h3>
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title <span className="text-red-500">*</span></label>
+                            <label className="block text-sm font-medium mb-1" style={{ color: 'var(--label-secondary)' }}>Title <span className="text-red-500">*</span></label>
                             <input
                                 className="input w-full"
                                 value={title}
@@ -75,7 +75,7 @@ export const CaptureOverlay = memo(() => {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+                            <label className="block text-sm font-medium mb-1" style={{ color: 'var(--label-secondary)' }}>Description</label>
                             <textarea
                                 className="input w-full min-h-[80px]"
                                 value={description}
@@ -86,22 +86,52 @@ export const CaptureOverlay = memo(() => {
 
                         {/* Status Selection */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Result Status</label>
+                            <label className="block text-sm font-medium mb-2" style={{ color: 'var(--label-secondary)' }}>Result Status</label>
                             <div className="flex gap-3">
                                 <button
                                     type="button"
                                     onClick={() => setStatus('success')}
-                                    className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border transition-all duration-200 font-medium ${status === 'success' ? 'bg-success-50 dark:bg-success-500/20 border-success-500 text-success-700 dark:text-success-300 ring-2 ring-success-500 dark:ring-success-500/50 shadow-lg shadow-success-500/10' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-750 hover:border-gray-300 dark:hover:border-gray-600'}`}
+                                    className="flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border transition-all duration-200 font-medium"
+                                    style={status === 'success' ? {
+                                        background: 'color-mix(in srgb, var(--system-green) 15%, transparent)',
+                                        borderColor: 'var(--system-green)',
+                                        color: 'var(--system-green)',
+                                        boxShadow: '0 0 0 2px color-mix(in srgb, var(--system-green) 30%, transparent)'
+                                    } : {
+                                        background: 'var(--system-background)',
+                                        borderColor: 'var(--separator-opaque)',
+                                        color: 'var(--label-secondary)'
+                                    }}
+                                    onMouseEnter={(e) => { if (status !== 'success') e.currentTarget.style.background = 'var(--fill-secondary)'; }}
+                                    onMouseLeave={(e) => { if (status !== 'success') e.currentTarget.style.background = 'var(--system-background)'; }}
                                 >
-                                    <div className={`w-2.5 h-2.5 rounded-full shadow-sm ${status === 'success' ? 'bg-success-500 dark:bg-success-400' : 'bg-gray-300 dark:bg-gray-600'}`} />
+                                    <div
+                                        className="w-2.5 h-2.5 rounded-full shadow-sm"
+                                        style={{ background: status === 'success' ? 'var(--system-green)' : 'var(--fill-tertiary)' }}
+                                    />
                                     Success
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => setStatus('failure')}
-                                    className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border transition-all duration-200 font-medium ${status === 'failure' ? 'bg-error-50 dark:bg-error-500/20 border-error-500 text-error-700 dark:text-error-300 ring-2 ring-error-500 dark:ring-error-500/50 shadow-lg shadow-error-500/10' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-750 hover:border-gray-300 dark:hover:border-gray-600'}`}
+                                    className="flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border transition-all duration-200 font-medium"
+                                    style={status === 'failure' ? {
+                                        background: 'color-mix(in srgb, var(--system-red) 15%, transparent)',
+                                        borderColor: 'var(--system-red)',
+                                        color: 'var(--system-red)',
+                                        boxShadow: '0 0 0 2px color-mix(in srgb, var(--system-red) 30%, transparent)'
+                                    } : {
+                                        background: 'var(--system-background)',
+                                        borderColor: 'var(--separator-opaque)',
+                                        color: 'var(--label-secondary)'
+                                    }}
+                                    onMouseEnter={(e) => { if (status !== 'failure') e.currentTarget.style.background = 'var(--fill-secondary)'; }}
+                                    onMouseLeave={(e) => { if (status !== 'failure') e.currentTarget.style.background = 'var(--system-background)'; }}
                                 >
-                                    <div className={`w-2.5 h-2.5 rounded-full shadow-sm ${status === 'failure' ? 'bg-error-500 dark:bg-error-400' : 'bg-gray-300 dark:bg-gray-600'}`} />
+                                    <div
+                                        className="w-2.5 h-2.5 rounded-full shadow-sm"
+                                        style={{ background: status === 'failure' ? 'var(--system-red)' : 'var(--fill-tertiary)' }}
+                                    />
                                     Failure
                                 </button>
                             </div>

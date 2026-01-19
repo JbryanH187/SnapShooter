@@ -92,25 +92,28 @@ export const TemplateBuilder: React.FC<TemplateBuilderProps> = ({
                         className="fixed inset-0 z-50 flex items-center justify-center p-4"
                     >
                         <div
-                            className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col"
+                            className="rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col"
+                            style={{ background: 'var(--system-background)' }}
                             onClick={(e) => e.stopPropagation()}
                         >
                             {/* Header */}
-                            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+                            <div className="flex items-center justify-between p-6 border-b" style={{ borderColor: 'var(--separator-opaque)' }}>
                                 <div className="flex items-center gap-3">
                                     <Wand2 className="text-primary-500" size={24} />
                                     <div>
-                                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                                        <h2 className="text-2xl font-bold" style={{ color: 'var(--label-primary)' }}>
                                             Template Builder
                                         </h2>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                                        <p className="text-sm" style={{ color: 'var(--label-secondary)' }}>
                                             Design your custom report template
                                         </p>
                                     </div>
                                 </div>
                                 <button
                                     onClick={onClose}
-                                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                                    className="p-2 rounded-lg transition-colors"
+                                    onMouseEnter={(e) => e.currentTarget.style.background = 'var(--fill-secondary)'}
+                                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                                 >
                                     <X size={20} />
                                 </button>
@@ -123,12 +126,13 @@ export const TemplateBuilder: React.FC<TemplateBuilderProps> = ({
                                     value={currentTemplate.name}
                                     onChange={(e) => updateTemplate({ name: e.target.value })}
                                     placeholder="Template Name"
-                                    className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-lg font-semibold focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                                    className="w-full px-4 py-2 border rounded-lg text-lg font-semibold focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                                    style={{ background: 'var(--fill-secondary)', borderColor: 'var(--separator-opaque)', color: 'var(--label-primary)' }}
                                 />
                             </div>
 
                             {/* Tabs */}
-                            <div className="flex gap-1 px-6 pt-4 border-b border-gray-200 dark:border-gray-700">
+                            <div className="flex gap-1 px-6 pt-4 border-b" style={{ borderColor: 'var(--separator-opaque)' }}>
                                 <TabButton
                                     active={activeTab === 'layout'}
                                     onClick={() => setActiveTab('layout')}
@@ -175,15 +179,16 @@ export const TemplateBuilder: React.FC<TemplateBuilderProps> = ({
                             </div>
 
                             {/* Footer */}
-                            <div className="flex items-center justify-between p-6 border-t border-gray-200 dark:border-gray-700">
-                                <button className="flex items-center gap-2 px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
+                            <div className="flex items-center justify-between p-6 border-t" style={{ borderColor: 'var(--separator-opaque)' }}>
+                                <button className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors" style={{ color: 'var(--label-secondary)' }} onMouseEnter={(e) => e.currentTarget.style.background = 'var(--fill-secondary)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
                                     <Eye size={16} />
                                     Preview
                                 </button>
                                 <div className="flex gap-3">
                                     <button
                                         onClick={onClose}
-                                        className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-medium"
+                                        className="px-4 py-2 font-medium"
+                                        style={{ color: 'var(--label-secondary)' }}
                                     >
                                         Cancel
                                     </button>
@@ -213,10 +218,16 @@ const TabButton: React.FC<{
 }> = ({ active, onClick, icon, label }) => (
     <button
         onClick={onClick}
-        className={`flex items-center gap-2 px-4 py-2 rounded-t-lg font-medium transition-colors ${active
-                ? 'bg-white dark:bg-gray-900 text-primary-600 dark:text-primary-400 border-b-2 border-primary-500'
-                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-            }`}
+        className="flex items-center gap-2 px-4 py-2 rounded-t-lg font-medium transition-colors"
+        style={active ? {
+            background: 'var(--system-background)',
+            color: 'var(--system-blue)',
+            borderBottom: '2px solid var(--system-blue)'
+        } : {
+            color: 'var(--label-secondary)'
+        }}
+        onMouseEnter={(e) => { if (!active) e.currentTarget.style.color = 'var(--label-primary)'; }}
+        onMouseLeave={(e) => { if (!active) e.currentTarget.style.color = 'var(--label-secondary)'; }}
     >
         {icon}
         {label}
@@ -235,7 +246,7 @@ const LayoutTab: React.FC<any> = ({ template, captures, onUpdate, onDragEnd, sen
         <div className="space-y-6">
             {/* Layout Type */}
             <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                <label className="block text-sm font-semibold mb-3" style={{ color: 'var(--label-secondary)' }}>
                     Layout Type
                 </label>
                 <div className="grid grid-cols-3 gap-3">
@@ -243,10 +254,15 @@ const LayoutTab: React.FC<any> = ({ template, captures, onUpdate, onDragEnd, sen
                         <button
                             key={layout}
                             onClick={() => onUpdate({ layout })}
-                            className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all ${template.layout === layout
-                                    ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
-                                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
-                                }`}
+                            className="flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all"
+                            style={template.layout === layout ? {
+                                borderColor: 'var(--system-blue)',
+                                background: 'color-mix(in srgb, var(--system-blue) 10%, transparent)'
+                            } : {
+                                borderColor: 'var(--separator-opaque)'
+                            }}
+                            onMouseEnter={(e) => { if (template.layout !== layout) e.currentTarget.style.borderColor = 'var(--label-tertiary)'; }}
+                            onMouseLeave={(e) => { if (template.layout !== layout) e.currentTarget.style.borderColor = 'var(--separator-opaque)'; }}
                         >
                             {layoutIcons[layout]}
                             <span className="text-sm font-medium capitalize">{layout}</span>
@@ -258,7 +274,7 @@ const LayoutTab: React.FC<any> = ({ template, captures, onUpdate, onDragEnd, sen
             {/* Columns (for grid) */}
             {template.layout === 'grid' && (
                 <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                    <label className="block text-sm font-semibold mb-3" style={{ color: 'var(--label-secondary)' }}>
                         Columns: {template.columnsPerRow}
                     </label>
                     <input
@@ -274,10 +290,10 @@ const LayoutTab: React.FC<any> = ({ template, captures, onUpdate, onDragEnd, sen
 
             {/* Capture Order */}
             <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                <label className="block text-sm font-semibold mb-3" style={{ color: 'var(--label-secondary)' }}>
                     Capture Order ({captures.length} items)
                 </label>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                <p className="text-xs mb-3" style={{ color: 'var(--label-tertiary)' }}>
                     Drag to reorder captures in your report
                 </p>
 
@@ -294,7 +310,8 @@ const LayoutTab: React.FC<any> = ({ template, captures, onUpdate, onDragEnd, sen
                             {captures.map((capture: any, idx: number) => (
                                 <div
                                     key={capture.id}
-                                    className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                                    className="flex items-center gap-3 p-3 rounded-lg"
+                                    style={{ background: 'var(--fill-secondary)' }}
                                 >
                                     <span className="text-sm font-bold text-gray-500">{idx + 1}</span>
                                     <span className="text-sm flex-1">{capture.title || 'Untitled'}</span>
@@ -317,7 +334,7 @@ const StyleTab: React.FC<any> = ({ template, onUpdate }) => {
         <div className="space-y-6">
             {/* Cover Style */}
             <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                <label className="block text-sm font-semibold mb-3" style={{ color: 'var(--label-secondary)' }}>
                     Cover Style
                 </label>
                 <div className="grid grid-cols-3 gap-3">
@@ -325,10 +342,13 @@ const StyleTab: React.FC<any> = ({ template, onUpdate }) => {
                         <button
                             key={style}
                             onClick={() => onUpdate({ coverStyle: style })}
-                            className={`p-4 rounded-lg border-2 transition-all capitalize ${template.coverStyle === style
-                                    ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
-                                    : 'border-gray-200 dark:border-gray-700'
-                                }`}
+                            className="p-4 rounded-lg border-2 transition-all capitalize"
+                            style={template.coverStyle === style ? {
+                                borderColor: 'var(--system-blue)',
+                                background: 'color-mix(in srgb, var(--system-blue) 10%, transparent)'
+                            } : {
+                                borderColor: 'var(--separator-opaque)'
+                            }}
                         >
                             {style}
                         </button>
@@ -338,13 +358,14 @@ const StyleTab: React.FC<any> = ({ template, onUpdate }) => {
 
             {/* Font Family */}
             <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                <label className="block text-sm font-semibold mb-3" style={{ color: 'var(--label-secondary)' }}>
                     Font Family
                 </label>
                 <select
                     value={template.fontFamily}
                     onChange={(e) => onUpdate({ fontFamily: e.target.value })}
-                    className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg"
+                    className="w-full px-4 py-2 border rounded-lg"
+                    style={{ background: 'var(--fill-secondary)', borderColor: 'var(--separator-opaque)', color: 'var(--label-primary)' }}
                 >
                     {fonts.map(font => (
                         <option key={font} value={font}>{font}</option>
@@ -354,7 +375,7 @@ const StyleTab: React.FC<any> = ({ template, onUpdate }) => {
 
             {/* Spacing */}
             <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                <label className="block text-sm font-semibold mb-3" style={{ color: 'var(--label-secondary)' }}>
                     Spacing
                 </label>
                 <div className="grid grid-cols-3 gap-3">
@@ -362,10 +383,13 @@ const StyleTab: React.FC<any> = ({ template, onUpdate }) => {
                         <button
                             key={spacing}
                             onClick={() => onUpdate({ spacing })}
-                            className={`p-3 rounded-lg border-2 transition-all capitalize ${template.spacing === spacing
-                                    ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
-                                    : 'border-gray-200 dark:border-gray-700'
-                                }`}
+                            className="p-3 rounded-lg border-2 transition-all capitalize"
+                            style={template.spacing === spacing ? {
+                                borderColor: 'var(--system-blue)',
+                                background: 'color-mix(in srgb, var(--system-blue) 10%, transparent)'
+                            } : {
+                                borderColor: 'var(--separator-opaque)'
+                            }}
                         >
                             {spacing}
                         </button>
@@ -390,7 +414,10 @@ const ContentTab: React.FC<any> = ({ template, onUpdate }) => {
             {options.map(option => (
                 <label
                     key={option.key}
-                    className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    className="flex items-center gap-3 p-4 rounded-lg cursor-pointer transition-colors"
+                    style={{ background: 'var(--fill-secondary)' }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'var(--fill-tertiary)'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'var(--fill-secondary)'}
                 >
                     <input
                         type="checkbox"
@@ -398,7 +425,7 @@ const ContentTab: React.FC<any> = ({ template, onUpdate }) => {
                         onChange={(e) => onUpdate({ [option.key]: e.target.checked })}
                         className="w-5 h-5 text-primary-600 rounded focus:ring-2 focus:ring-primary-500"
                     />
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                    <span className="text-sm font-medium" style={{ color: 'var(--label-primary)' }}>
                         {option.label}
                     </span>
                 </label>

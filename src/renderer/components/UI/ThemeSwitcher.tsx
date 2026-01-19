@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useLiquidTheme } from '../../hooks/useTheme';
+import { useLiquidTheme } from '../../contexts/LiquidThemeContext';
 import { Sun, Moon, Contrast, Check } from 'lucide-react';
 import { LiquidGlass } from './LiquidGlass';
 

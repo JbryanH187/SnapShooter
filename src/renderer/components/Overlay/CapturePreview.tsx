@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCaptureStore } from '../../stores/captureStore';
 import { useFlowStore } from '../../stores/flowStore';
@@ -11,20 +11,22 @@ import { toast } from 'react-hot-toast';
 export const CapturePreview: React.FC = () => {
     const previewCapture = useCaptureStore(state => state.previewCapture);
     const setPreviewCapture = useCaptureStore(state => state.setPreviewCapture);
+    const updateCapture = useCaptureStore(state => state.updateCapture);
     const deleteCapture = useCaptureStore(state => state.deleteCapture);
     const { flows } = useFlowStore();
     const { openImageEditor } = useGlobalModal();
     const [isHovered, setIsHovered] = useState(false);
+    const [isEditing, setIsEditing] = useState(false); // New state to pause dismiss
 
-    // Auto-dismiss after 5 seconds (unless hovered)
+    // Auto-dismiss after 5 seconds (unless hovered or editing)
     useEffect(() => {
-        if (previewCapture && !isHovered) {
+        if (previewCapture && !isHovered && !isEditing) {
             const timer = setTimeout(() => {
                 setPreviewCapture(null);
             }, 5000);
             return () => clearTimeout(timer);
         }
-    }, [previewCapture, isHovered, setPreviewCapture]);
+    }, [previewCapture, isHovered, isEditing, setPreviewCapture]);
 
     const handleEdit = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -39,7 +41,6 @@ export const CapturePreview: React.FC = () => {
         e.stopPropagation();
         if (previewCapture) {
             logger.info('UI', 'Add to flow requested from preview', { captureId: previewCapture.id });
-            // TODO: Implement flow selector modal in next iteration
             toast('Feature coming soon: Select flow to add capture', {
                 icon: '🚧'
             });
@@ -62,6 +63,19 @@ export const CapturePreview: React.FC = () => {
         setPreviewCapture(null);
     };
 
+    // Metadata handlers
+    const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (previewCapture) {
+            updateCapture(previewCapture.id, { title: e.target.value });
+        }
+    };
+
+    const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        if (previewCapture) {
+            updateCapture(previewCapture.id, { description: e.target.value });
+        }
+    };
+
     if (!previewCapture) return null;
 
     return (
@@ -76,25 +90,35 @@ export const CapturePreview: React.FC = () => {
                 className="fixed bottom-6 right-6 z-[100] flex flex-col gap-2"
             >
                 {/* Main Preview Card */}
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200/80 dark:border-gray-700/80 overflow-hidden backdrop-blur-xl">
+                <div
+                    className="rounded-xl shadow-2xl border overflow-hidden backdrop-blur-xl"
+                    style={{
+                        background: 'var(--system-background)',
+                        borderColor: 'var(--separator-opaque)',
+                        width: '340px'
+                    }}
+                >
                     {/* Header with Dismiss */}
-                    <div className="flex items-center justify-between px-4 py-2 border-b border-gray-100 dark:border-gray-700/50 bg-gray-50/50 dark:bg-gray-900/50">
+                    <div className="flex items-center justify-between px-4 py-2 border-b" style={{ borderColor: 'var(--separator-non-opaque)', background: 'var(--fill-quaternary)' }}>
                         <div className="flex items-center gap-2">
                             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                            <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">Screenshot Saved</span>
+                            <span className="text-xs font-semibold" style={{ color: 'var(--label-primary)' }}>Screenshot Saved</span>
                         </div>
                         <button
                             onClick={handleDismiss}
-                            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
+                            className="p-1 rounded transition-colors"
+                            style={{ color: 'var(--label-tertiary)' }}
+                            onMouseEnter={(e) => e.currentTarget.style.background = 'var(--fill-secondary)'}
+                            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                             title="Dismiss"
                         >
                             <X size={14} />
                         </button>
                     </div>
 
-                    {/* Preview Image */}
-                    <div className="p-4">
-                        <div className="relative w-72 h-48 bg-gray-100 dark:bg-gray-900 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                    {/* Preview Image & Inputs */}
+                    <div className="p-4 flex flex-col gap-3">
+                        <div className="relative w-full h-40 rounded-lg overflow-hidden border" style={{ background: 'var(--fill-tertiary)', borderColor: 'var(--separator-opaque)' }}>
                             <img
                                 src={previewCapture.thumbnail}
                                 className="w-full h-full object-contain"
@@ -111,24 +135,60 @@ export const CapturePreview: React.FC = () => {
                             </motion.div>
                         </div>
 
-                        {/* Capture Info */}
-                        <div className="mt-3">
-                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                                {previewCapture.title || 'Untitled Screenshot'}
-                            </p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                                {new Date(previewCapture.timestamp).toLocaleTimeString()}
-                            </p>
+                        {/* Capture Info Inputs */}
+                        <div className="flex flex-col gap-2">
+                            <input
+                                type="text"
+                                placeholder="Capture Title"
+                                value={previewCapture.title || ''}
+                                onChange={handleTitleChange}
+                                onFocus={() => setIsEditing(true)}
+                                onBlur={() => setIsEditing(false)}
+                                className="w-full px-3 py-1.5 text-sm rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                                style={{
+                                    background: 'var(--fill-tertiary)',
+                                    border: '1px solid var(--separator-opaque)',
+                                    color: 'var(--label-primary)'
+                                }}
+                            />
+                            <textarea
+                                placeholder="Add a description..."
+                                value={previewCapture.description || ''}
+                                onChange={handleDescriptionChange}
+                                onFocus={() => setIsEditing(true)}
+                                onBlur={() => setIsEditing(false)}
+                                rows={2}
+                                className="w-full px-3 py-1.5 text-xs rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-primary-500/20 resize-none"
+                                style={{
+                                    background: 'var(--fill-tertiary)',
+                                    border: '1px solid var(--separator-opaque)',
+                                    color: 'var(--label-secondary)'
+                                }}
+                            />
                         </div>
                     </div>
 
+
                     {/* Quick Actions - macOS Style */}
-                    <div className="px-4 py-3 bg-gray-50/80 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-700/50 flex items-center justify-end gap-2">
+                    <div className="px-4 py-3 border-t flex items-center justify-end gap-2" style={{ background: 'var(--fill-quaternary)', borderColor: 'var(--separator-non-opaque)' }}>
                         <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={handleDelete}
-                            className="px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors flex items-center gap-1.5"
+                            className="px-3 py-1.5 text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5 shadow-sm"
+                            style={{
+                                background: 'rgba(239, 68, 68, 0.1)', // Red tint background
+                                color: 'var(--system-red)',
+                                border: '1px solid rgba(239, 68, 68, 0.2)'
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.9)';
+                                e.currentTarget.style.color = 'white';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                                e.currentTarget.style.color = 'var(--system-red)';
+                            }}
                             title="Delete"
                         >
                             <Trash2 size={13} />
@@ -140,7 +200,10 @@ export const CapturePreview: React.FC = () => {
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={handleAddToFlow}
-                                className="px-3 py-1.5 text-xs font-medium text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-colors flex items-center gap-1.5"
+                                className="px-3 py-1.5 text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5"
+                                style={{ color: 'var(--system-blue)' }}
+                                onMouseEnter={(e) => e.currentTarget.style.background = 'color-mix(in srgb, var(--system-blue) 10%, transparent)'}
+                                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                                 title="Add to Flow"
                             >
                                 <FolderPlus size={13} />
@@ -152,7 +215,10 @@ export const CapturePreview: React.FC = () => {
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={handleEdit}
-                            className="px-3 py-1.5 text-xs font-semibold text-white bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 rounded-lg transition-colors flex items-center gap-1.5 shadow-sm"
+                            className="px-3 py-1.5 text-xs font-semibold text-white rounded-lg transition-colors flex items-center gap-1.5 shadow-sm"
+                            style={{ background: 'var(--system-blue)' }}
+                            onMouseEnter={(e) => e.currentTarget.style.filter = 'brightness(1.1)'}
+                            onMouseLeave={(e) => e.currentTarget.style.filter = 'brightness(1)'}
                             title="Edit Details"
                         >
                             <Edit3 size={13} />
@@ -162,7 +228,7 @@ export const CapturePreview: React.FC = () => {
                 </div>
 
                 {/* Auto-dismiss indicator */}
-                {!isHovered && (
+                {!isHovered && !isEditing && (
                     <motion.div
                         initial={{ width: '100%' }}
                         animate={{ width: '0%' }}

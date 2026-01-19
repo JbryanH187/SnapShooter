@@ -137,7 +137,7 @@ export const ReportWizardModal: React.FC<ReportWizardModalProps> = ({ isOpen, on
             const url = URL.createObjectURL(blob);
             setPreviewUrl(url);
         } catch (error) {
-            logger.error("Failed to generate preview", error);
+            logger.error('REPORT', 'Failed to generate preview', { error });
         } finally {
             setIsGeneratingPreview(false);
         }
@@ -164,7 +164,7 @@ export const ReportWizardModal: React.FC<ReportWizardModalProps> = ({ isOpen, on
                 toast.success('Borrador guardado correctamente');
             }
         } catch (error) {
-            logger.error("Failed to save draft:", error);
+            logger.error('REPORT', 'Failed to save draft', { error });
             toast.error('Error al guardar el borrador');
         } finally {
             setIsSavingDraft(false);
@@ -193,7 +193,7 @@ export const ReportWizardModal: React.FC<ReportWizardModalProps> = ({ isOpen, on
             if (blob) {
                 // A. Trigger Download
                 const fileName = `Reporte_${config.title.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.${exportFormat}`;
-                logger.info('[ReportWizard] Triggering download:', fileName, 'Size:', blob.size);
+                logger.info('REPORT', `Triggering download: ${fileName}, Size: ${blob.size}`);
 
                 // Let's handle download here. 
                 // I need `file-saver`.
@@ -249,7 +249,7 @@ export const ReportWizardModal: React.FC<ReportWizardModalProps> = ({ isOpen, on
                         savedFilePath = (await window.electron.saveReportFile(fileName, arrayBuffer)) as unknown as string;
                     }
                 } catch (err) {
-                    logger.error("Failed to save report file:", err);
+                    logger.error('REPORT', 'Failed to save report file', { err });
                 }
 
                 // Step 3: Trigger download
@@ -279,7 +279,7 @@ export const ReportWizardModal: React.FC<ReportWizardModalProps> = ({ isOpen, on
 
             onClose();
         } catch (error) {
-            logger.error("Failed to export", error);
+            logger.error('REPORT', 'Failed to export', { error });
         } finally {
             setIsExporting(false);
         }
@@ -321,24 +321,59 @@ export const ReportWizardModal: React.FC<ReportWizardModalProps> = ({ isOpen, on
                                     className="flex-1 flex overflow-hidden"
                                 >
                                     {/* Sidebar - Configuration Panel */}
-                                    <div className="w-64 lg:w-72 bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 overflow-y-auto p-4 lg:p-6 space-y-4 lg:space-y-6">
-                                        <div className="flex items-center gap-2 text-xs lg:text-sm font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wide pb-2 lg:pb-3 border-b border-gray-300 dark:border-gray-700">
-                                            <Settings size={16} /> Configuración
+                                    <div
+                                        className="w-64 lg:w-72 border-r overflow-y-auto p-4 lg:p-6 space-y-4 lg:space-y-6"
+                                        style={{
+                                            background: 'var(--system-background-secondary)',
+                                            borderColor: 'var(--separator-opaque)'
+                                        }}
+                                    >
+                                        <div
+                                            className="flex items-center gap-2 text-xs lg:text-sm font-bold uppercase tracking-wide pb-2 lg:pb-3 border-b"
+                                            style={{
+                                                color: 'var(--label-primary)',
+                                                borderColor: 'var(--separator-opaque)'
+                                            }}
+                                        >
+                                            <Settings size={16} />
+                                            Configuración
                                         </div>
 
                                         {/* Layout Selection */}
                                         <div>
-                                            <label className="block text-xs font-bold mb-2 text-gray-600 dark:text-gray-400 uppercase">Diseño</label>
+                                            <label className="block text-xs font-bold mb-2 uppercase" style={{ color: 'var(--label-secondary)' }}>Diseño</label>
                                             <div className="grid grid-cols-2 gap-2">
                                                 <button
                                                     onClick={() => updateConfig('layout', 'A')}
-                                                    className={`p-2 lg:p-3 border-2 rounded-lg transition-all text-xs ${config.layout === 'A' ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 font-bold' : 'border-gray-200 dark:border-gray-700 hover:border-primary-200 dark:hover:border-primary-700 text-gray-700 dark:text-gray-300'}`}
+                                                    className="p-2 lg:p-3 border-2 rounded-lg transition-all text-xs"
+                                                    style={config.layout === 'A' ? {
+                                                        borderColor: 'var(--system-blue)',
+                                                        background: 'color-mix(in srgb, var(--system-blue) 15%, transparent)',
+                                                        color: 'var(--system-blue)',
+                                                        fontWeight: 'bold'
+                                                    } : {
+                                                        borderColor: 'var(--separator-opaque)',
+                                                        color: 'var(--label-secondary)'
+                                                    }}
+                                                    onMouseEnter={(e) => { if (config.layout !== 'A') e.currentTarget.style.borderColor = 'var(--system-blue)'; }}
+                                                    onMouseLeave={(e) => { if (config.layout !== 'A') e.currentTarget.style.borderColor = 'var(--separator-opaque)'; }}
                                                 >
                                                     Clásico
                                                 </button>
                                                 <button
                                                     onClick={() => updateConfig('layout', 'B')}
-                                                    className={`p-2 lg:p-3 border-2 rounded-lg transition-all text-xs ${config.layout === 'B' ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 font-bold' : 'border-gray-200 dark:border-gray-700 hover:border-primary-200 dark:hover:border-primary-700 text-gray-700 dark:text-gray-300'}`}
+                                                    className="p-2 lg:p-3 border-2 rounded-lg transition-all text-xs"
+                                                    style={config.layout === 'B' ? {
+                                                        borderColor: 'var(--system-blue)',
+                                                        background: 'color-mix(in srgb, var(--system-blue) 15%, transparent)',
+                                                        color: 'var(--system-blue)',
+                                                        fontWeight: 'bold'
+                                                    } : {
+                                                        borderColor: 'var(--separator-opaque)',
+                                                        color: 'var(--label-secondary)'
+                                                    }}
+                                                    onMouseEnter={(e) => { if (config.layout !== 'B') e.currentTarget.style.borderColor = 'var(--system-blue)'; }}
+                                                    onMouseLeave={(e) => { if (config.layout !== 'B') e.currentTarget.style.borderColor = 'var(--separator-opaque)'; }}
                                                 >
                                                     Moderno
                                                 </button>
@@ -347,7 +382,7 @@ export const ReportWizardModal: React.FC<ReportWizardModalProps> = ({ isOpen, on
 
                                         {/* Theme Selection */}
                                         <div>
-                                            <label className="block text-xs font-bold mb-2 text-gray-600 dark:text-gray-400 uppercase flex items-center gap-1">
+                                            <label className="block text-xs font-bold mb-2 uppercase flex items-center gap-1" style={{ color: 'var(--label-secondary)' }}>
                                                 <Palette size={14} /> Tema
                                             </label>
                                             <div className="flex gap-1.5 lg:gap-2 flex-wrap">
@@ -368,7 +403,7 @@ export const ReportWizardModal: React.FC<ReportWizardModalProps> = ({ isOpen, on
 
                                         {/* Title Color */}
                                         <div>
-                                            <label className="block text-xs font-bold mb-2 text-gray-600 dark:text-gray-400 uppercase">Color Título</label>
+                                            <label className="block text-xs font-bold mb-2 uppercase" style={{ color: 'var(--label-secondary)' }}>Color Título</label>
                                             <div className="flex gap-1.5 items-center flex-wrap">
                                                 {[
                                                     { color: undefined, label: 'Auto', display: config.layout === 'A' ? REPORT_THEMES[config.theme].primary : REPORT_THEMES[config.theme].textMain },
@@ -380,8 +415,8 @@ export const ReportWizardModal: React.FC<ReportWizardModalProps> = ({ isOpen, on
                                                     <button
                                                         key={idx}
                                                         onClick={() => updateConfig('titleColor', option.color)}
-                                                        className={`w-7 h-7 rounded-full border-2 transition-all ${config.titleColor === option.color ? 'border-primary-500 scale-110 shadow-lg' : 'border-gray-300 dark:border-gray-600 hover:scale-105'}`}
-                                                        style={{ backgroundColor: option.display }}
+                                                        className={`w-7 h-7 rounded-full border-2 transition-all ${config.titleColor === option.color ? 'border-primary-500 scale-110 shadow-lg' : 'hover:scale-105'}`}
+                                                        style={{ backgroundColor: option.display, borderColor: config.titleColor === option.color ? undefined : 'var(--separator-opaque)' }}
                                                         title={option.label}
                                                     />
                                                 ))}
@@ -389,7 +424,8 @@ export const ReportWizardModal: React.FC<ReportWizardModalProps> = ({ isOpen, on
                                                     type="color"
                                                     value={config.titleColor || (config.layout === 'A' ? REPORT_THEMES[config.theme].primary : REPORT_THEMES[config.theme].textMain)}
                                                     onChange={(e) => updateConfig('titleColor', e.target.value)}
-                                                    className="w-7 h-7 rounded cursor-pointer border border-gray-300 dark:border-gray-600"
+                                                    className="w-7 h-7 rounded cursor-pointer border"
+                                                    style={{ borderColor: 'var(--separator-opaque)' }}
                                                     title="Color personalizado"
                                                 />
                                             </div>
@@ -397,7 +433,7 @@ export const ReportWizardModal: React.FC<ReportWizardModalProps> = ({ isOpen, on
 
                                         {/* Subtitle Color */}
                                         <div>
-                                            <label className="block text-xs font-bold mb-2 text-gray-600 dark:text-gray-400 uppercase">Color Subtítulo</label>
+                                            <label className="block text-xs font-bold mb-2 uppercase" style={{ color: 'var(--label-secondary)' }}>Color Subtítulo</label>
                                             <div className="flex gap-1.5 items-center flex-wrap">
                                                 {/* Preset colors */}
                                                 {[
@@ -410,8 +446,8 @@ export const ReportWizardModal: React.FC<ReportWizardModalProps> = ({ isOpen, on
                                                     <button
                                                         key={idx}
                                                         onClick={() => updateConfig('subtitleColor', option.color)}
-                                                        className={`w-7 h-7 rounded-full border-2 transition-all ${config.subtitleColor === option.color ? 'border-primary-500 scale-110 shadow-lg' : 'border-gray-300 dark:border-gray-600 hover:scale-105'}`}
-                                                        style={{ backgroundColor: option.display }}
+                                                        className={`w-7 h-7 rounded-full border-2 transition-all ${config.subtitleColor === option.color ? 'border-primary-500 scale-110 shadow-lg' : 'hover:scale-105'}`}
+                                                        style={{ backgroundColor: option.display, borderColor: config.subtitleColor === option.color ? undefined : 'var(--separator-opaque)' }}
                                                         title={option.label}
                                                     />
                                                 ))}
@@ -420,7 +456,8 @@ export const ReportWizardModal: React.FC<ReportWizardModalProps> = ({ isOpen, on
                                                     type="color"
                                                     value={config.subtitleColor || (config.layout === 'B' ? '#ffffff' : REPORT_THEMES[config.theme].textLight)}
                                                     onChange={(e) => updateConfig('subtitleColor', e.target.value)}
-                                                    className="w-7 h-7 rounded cursor-pointer border border-gray-300 dark:border-gray-600"
+                                                    className="w-7 h-7 rounded cursor-pointer border"
+                                                    style={{ borderColor: 'var(--separator-opaque)' }}
                                                     title="Color personalizado"
                                                 />
                                             </div>
@@ -428,11 +465,17 @@ export const ReportWizardModal: React.FC<ReportWizardModalProps> = ({ isOpen, on
 
                                         {/* Logo Configuration */}
                                         <div className="space-y-2 lg:space-y-3">
-                                            <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">Logos</label>
+                                            <label className="block text-xs font-bold uppercase" style={{ color: 'var(--label-secondary)' }}>Logos</label>
 
-                                            <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-2 lg:p-3 bg-white dark:bg-gray-800">
+                                            <div
+                                                className="border rounded-lg p-2 lg:p-3"
+                                                style={{
+                                                    background: 'var(--system-background)',
+                                                    borderColor: 'var(--separator-opaque)'
+                                                }}
+                                            >
                                                 <div className="flex items-center justify-between mb-2">
-                                                    <span className="text-xs font-semibold text-gray-700 dark:text-gray-200">Símbolo</span>
+                                                    <span className="text-xs font-semibold" style={{ color: 'var(--label-primary)' }}>Símbolo</span>
                                                     <input
                                                         type="checkbox"
                                                         checked={config.showLogoSymbol}
@@ -452,14 +495,26 @@ export const ReportWizardModal: React.FC<ReportWizardModalProps> = ({ isOpen, on
                                                         {!config.customLogoSymbol ? (
                                                             <button
                                                                 onClick={() => fileInputSymbolRef.current?.click()}
-                                                                className="w-full text-xs flex items-center justify-center gap-2 border-2 border-dashed border-gray-300 dark:border-gray-600 p-2 rounded hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400"
+                                                                className="w-full text-xs flex items-center justify-center gap-2 border-2 border-dashed p-2 rounded"
+                                                                style={{
+                                                                    borderColor: 'var(--separator-opaque)',
+                                                                    color: 'var(--label-secondary)'
+                                                                }}
+                                                                onMouseEnter={(e) => e.currentTarget.style.background = 'var(--fill-secondary)'}
+                                                                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                                                             >
                                                                 <Upload size={12} /> Subir
                                                             </button>
                                                         ) : (
-                                                            <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 p-2 rounded">
+                                                            <div
+                                                                className="flex items-center gap-2 border p-2 rounded"
+                                                                style={{
+                                                                    background: 'var(--fill-secondary)',
+                                                                    borderColor: 'var(--separator-opaque)'
+                                                                }}
+                                                            >
                                                                 <img src={config.customLogoSymbol} alt="Preview" className="w-6 h-6 object-contain" />
-                                                                <span className="text-xs text-gray-500 dark:text-gray-400 truncate flex-1">Custom</span>
+                                                                <span className="text-xs truncate flex-1" style={{ color: 'var(--label-secondary)' }}>Custom</span>
                                                                 <button onClick={() => clearCustomLogo('customLogoSymbol')} className="text-red-400 hover:text-red-600 dark:hover:text-red-500">
                                                                     <X size={12} />
                                                                 </button>
@@ -469,9 +524,15 @@ export const ReportWizardModal: React.FC<ReportWizardModalProps> = ({ isOpen, on
                                                 )}
                                             </div>
 
-                                            <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 bg-white dark:bg-gray-800">
+                                            <div
+                                                className="border rounded-lg p-3"
+                                                style={{
+                                                    background: 'var(--system-background)',
+                                                    borderColor: 'var(--separator-opaque)'
+                                                }}
+                                            >
                                                 <div className="flex items-center justify-between mb-2">
-                                                    <span className="text-xs font-semibold text-gray-700 dark:text-gray-200">Texto</span>
+                                                    <span className="text-xs font-semibold" style={{ color: 'var(--label-primary)' }}>Texto</span>
                                                     <input
                                                         type="checkbox"
                                                         checked={config.showLogoText}
@@ -491,15 +552,27 @@ export const ReportWizardModal: React.FC<ReportWizardModalProps> = ({ isOpen, on
                                                         {!config.customLogoText ? (
                                                             <button
                                                                 onClick={() => fileInputTextRef.current?.click()}
-                                                                className="w-full text-xs flex items-center justify-center gap-2 border-2 border-dashed border-gray-300 dark:border-gray-600 p-2 rounded hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400"
+                                                                className="w-full text-xs flex items-center justify-center gap-2 border-2 border-dashed p-2 rounded"
+                                                                style={{
+                                                                    borderColor: 'var(--separator-opaque)',
+                                                                    color: 'var(--label-secondary)'
+                                                                }}
+                                                                onMouseEnter={(e) => e.currentTarget.style.background = 'var(--fill-secondary)'}
+                                                                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                                                             >
                                                                 <Upload size={12} /> Subir
                                                             </button>
                                                         ) : (
-                                                            <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 p-2 rounded">
+                                                            <div
+                                                                className="flex items-center gap-2 border p-2 rounded"
+                                                                style={{
+                                                                    background: 'var(--fill-secondary)',
+                                                                    borderColor: 'var(--separator-opaque)'
+                                                                }}
+                                                            >
                                                                 <img src={config.customLogoText} alt="Preview" className="w-12 h-4 object-contain" />
-                                                                <span className="text-xs text-gray-500 dark:text-gray-400 truncate flex-1">Custom</span>
-                                                                <button onClick={() => clearCustomLogo('customLogoText')} className="text-red-400 hover:text-red-600 dark:hover:text-red-500">
+                                                                <span className="text-xs truncate flex-1" style={{ color: 'var(--label-secondary)' }}>Custom</span>
+                                                                <button onClick={() => clearCustomLogo('customLogoText')} className="text-red-400 hover:text-red-600">
                                                                     <X size={12} />
                                                                 </button>
                                                             </div>
@@ -512,35 +585,39 @@ export const ReportWizardModal: React.FC<ReportWizardModalProps> = ({ isOpen, on
                                         {/* Text Fields */}
                                         <div className="space-y-2 lg:space-y-3">
                                             <div>
-                                                <label className="block text-xs font-semibold mb-1 text-gray-600 dark:text-gray-400">Título</label>
+                                                <label className="block text-xs font-semibold mb-1" style={{ color: 'var(--label-secondary)' }}>Título</label>
                                                 <input
                                                     value={config.title}
                                                     onChange={(e) => updateConfig('title', e.target.value)}
-                                                    className="w-full border border-gray-300 dark:border-gray-600 rounded p-1.5 lg:p-2 text-xs lg:text-sm focus:ring-2 focus:ring-primary-500 outline-none bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                                                    className="w-full border rounded p-1.5 lg:p-2 text-xs lg:text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+                                                    style={{ background: 'var(--fill-secondary)', borderColor: 'var(--separator-opaque)', color: 'var(--label-primary)' }}
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-xs font-semibold mb-1 text-gray-600 dark:text-gray-400">Subtítulo</label>
+                                                <label className="block text-xs font-semibold mb-1" style={{ color: 'var(--label-secondary)' }}>Subtítulo</label>
                                                 <input
                                                     value={config.subtitle}
                                                     onChange={(e) => updateConfig('subtitle', e.target.value)}
-                                                    className="w-full border border-gray-300 dark:border-gray-600 rounded p-1.5 lg:p-2 text-xs lg:text-sm focus:ring-2 focus:ring-primary-500 outline-none bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                                                    className="w-full border rounded p-1.5 lg:p-2 text-xs lg:text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+                                                    style={{ background: 'var(--fill-secondary)', borderColor: 'var(--separator-opaque)', color: 'var(--label-primary)' }}
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-xs font-semibold mb-1 text-gray-600 dark:text-gray-400">Proyecto</label>
+                                                <label className="block text-xs font-semibold mb-1" style={{ color: 'var(--label-secondary)' }}>Proyecto</label>
                                                 <input
                                                     value={config.projectName || ''}
                                                     onChange={(e) => updateConfig('projectName', e.target.value)}
-                                                    className="w-full border border-gray-300 dark:border-gray-600 rounded p-1.5 lg:p-2 text-xs lg:text-sm focus:ring-2 focus:ring-primary-500 outline-none bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                                                    className="w-full border rounded p-1.5 lg:p-2 text-xs lg:text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+                                                    style={{ background: 'var(--fill-secondary)', borderColor: 'var(--separator-opaque)', color: 'var(--label-primary)' }}
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-xs font-semibold mb-1 text-gray-600 dark:text-gray-400">Autor</label>
+                                                <label className="block text-xs font-semibold mb-1" style={{ color: 'var(--label-secondary)' }}>Autor</label>
                                                 <input
                                                     value={config.author}
                                                     onChange={(e) => updateConfig('author', e.target.value)}
-                                                    className="w-full border border-gray-300 dark:border-gray-600 rounded p-1.5 lg:p-2 text-xs lg:text-sm focus:ring-2 focus:ring-primary-500 outline-none bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                                                    className="w-full border rounded p-1.5 lg:p-2 text-xs lg:text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+                                                    style={{ background: 'var(--fill-secondary)', borderColor: 'var(--separator-opaque)', color: 'var(--label-primary)' }}
                                                 />
                                             </div>
                                         </div>
@@ -549,7 +626,10 @@ export const ReportWizardModal: React.FC<ReportWizardModalProps> = ({ isOpen, on
                                         <button
                                             onClick={generatePreview}
                                             disabled={isGeneratingPreview}
-                                            className="w-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 py-1.5 lg:py-2 rounded-lg text-xs lg:text-sm font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+                                            className="w-full py-1.5 lg:py-2 rounded-lg text-xs lg:text-sm font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+                                            style={{ background: 'var(--fill-secondary)', color: 'var(--label-primary)' }}
+                                            onMouseEnter={(e) => e.currentTarget.style.background = 'var(--fill-tertiary)'}
+                                            onMouseLeave={(e) => e.currentTarget.style.background = 'var(--fill-secondary)'}
                                         >
                                             <RefreshCw size={12} className={isGeneratingPreview ? 'animate-spin' : ''} />
                                             {isGeneratingPreview ? 'Actualizando...' : 'Actualizar Vista'}
@@ -557,16 +637,19 @@ export const ReportWizardModal: React.FC<ReportWizardModalProps> = ({ isOpen, on
                                     </div>
 
                                     {/* Preview Area */}
-                                    <div className="flex-1 bg-gray-100 dark:bg-gray-800 flex flex-col items-center justify-center p-3 lg:p-6 relative">
+                                    <div className="flex-1 flex flex-col items-center justify-center p-3 lg:p-6 relative" style={{ background: 'var(--fill-tertiary)' }}>
                                         {isGeneratingPreview && !previewUrl ? (
-                                            <div className="flex flex-col items-center gap-3 text-gray-500 dark:text-gray-400">
-                                                <div className="w-10 h-10 lg:w-12 lg:h-12 border-4 border-primary-200 dark:border-primary-800 border-t-primary-600 dark:border-t-primary-400 rounded-full animate-spin"></div>
+                                            <div className="flex flex-col items-center gap-3" style={{ color: 'var(--label-tertiary)' }}>
+                                                <div className="w-10 h-10 lg:w-12 lg:h-12 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
                                                 <p className="text-xs lg:text-sm">Generando Vista Previa...</p>
                                             </div>
                                         ) : previewUrl ? (
                                             <>
                                                 {isGeneratingPreview && (
-                                                    <div className="absolute top-2 right-2 lg:top-4 lg:right-4 bg-white dark:bg-gray-700 px-2 py-1 lg:px-3 lg:py-1 rounded-full shadow-md flex items-center gap-1.5 lg:gap-2 text-xs text-gray-600 dark:text-gray-300">
+                                                    <div
+                                                        className="absolute top-2 right-2 lg:top-4 lg:right-4 px-2 py-1 lg:px-3 lg:py-1 rounded-full shadow-md flex items-center gap-1.5 lg:gap-2 text-xs"
+                                                        style={{ background: 'var(--system-background)', color: 'var(--label-secondary)' }}
+                                                    >
                                                         <RefreshCw size={10} className="animate-spin" />
                                                         Actualizando...
                                                     </div>
@@ -578,7 +661,7 @@ export const ReportWizardModal: React.FC<ReportWizardModalProps> = ({ isOpen, on
                                                 />
                                             </>
                                         ) : (
-                                            <div className="text-error-500 dark:text-error-400 text-xs lg:text-sm">
+                                            <div className="text-error-500 text-xs lg:text-sm">
                                                 Error al cargar vista previa.
                                             </div>
                                         )}
@@ -590,33 +673,72 @@ export const ReportWizardModal: React.FC<ReportWizardModalProps> = ({ isOpen, on
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
-                                    className="flex-1 flex items-center justify-center p-8 bg-gray-50 dark:bg-gray-900"
+                                    className="flex-1 flex items-center justify-center p-8"
+                                    style={{ background: 'var(--fill-quaternary)' }}
                                 >
                                     <div className="grid grid-cols-2 gap-6 w-full max-w-lg">
                                         <button
                                             onClick={() => setExportFormat('docx')}
-                                            className={`p-6 rounded-xl border-2 transition-all flex flex-col items-center gap-4 group relative ${exportFormat === 'docx' ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30 ring-1 ring-primary-500 dark:ring-primary-400' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-primary-200 dark:hover:border-primary-700 hover:bg-gray-50 dark:hover:bg-gray-750'}`}
+                                            className="p-6 rounded-xl border-2 transition-all flex flex-col items-center gap-4 group relative"
+                                            style={exportFormat === 'docx' ? {
+                                                borderColor: 'var(--system-blue)',
+                                                background: 'color-mix(in srgb, var(--system-blue) 10%, var(--system-background))',
+                                                boxShadow: '0 0 0 1px var(--system-blue)'
+                                            } : {
+                                                borderColor: 'var(--separator-opaque)',
+                                                background: 'var(--system-background)'
+                                            }}
+                                            onMouseEnter={(e) => { if (exportFormat !== 'docx') { e.currentTarget.style.borderColor = 'var(--system-blue)'; e.currentTarget.style.background = 'var(--fill-secondary)'; } }}
+                                            onMouseLeave={(e) => { if (exportFormat !== 'docx') { e.currentTarget.style.borderColor = 'var(--separator-opaque)'; e.currentTarget.style.background = 'var(--system-background)'; } }}
                                         >
-                                            <div className={`w-16 h-16 rounded-full flex items-center justify-center ${exportFormat === 'docx' ? 'bg-primary-100 dark:bg-primary-800 text-primary-600 dark:text-primary-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 group-hover:text-primary-500 dark:group-hover:text-primary-400'}`}>
+                                            <div
+                                                className="w-16 h-16 rounded-full flex items-center justify-center"
+                                                style={exportFormat === 'docx' ? {
+                                                    background: 'color-mix(in srgb, var(--system-blue) 20%, transparent)',
+                                                    color: 'var(--system-blue)'
+                                                } : {
+                                                    background: 'var(--fill-secondary)',
+                                                    color: 'var(--label-tertiary)'
+                                                }}
+                                            >
                                                 <FileText size={32} />
                                             </div>
                                             <div className="text-center">
-                                                <h3 className={`font-bold ${exportFormat === 'docx' ? 'text-primary-900 dark:text-primary-100' : 'text-gray-700 dark:text-gray-300'}`}>Word Document</h3>
-                                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">.docx format</p>
+                                                <h3 className="font-bold" style={{ color: exportFormat === 'docx' ? 'var(--system-blue)' : 'var(--label-primary)' }}>Word Document</h3>
+                                                <p className="text-xs mt-1" style={{ color: 'var(--label-tertiary)' }}>.docx format</p>
                                             </div>
                                             {exportFormat === 'docx' && <div className="absolute top-4 right-4 text-primary-500"><Check size={20} /></div>}
                                         </button>
 
                                         <button
                                             onClick={() => setExportFormat('pdf')}
-                                            className={`p-6 rounded-xl border-2 transition-all flex flex-col items-center gap-4 group relative ${exportFormat === 'pdf' ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30 ring-1 ring-primary-500 dark:ring-primary-400' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-primary-200 dark:hover:border-primary-700 hover:bg-gray-50 dark:hover:bg-gray-750'}`}
+                                            className="p-6 rounded-xl border-2 transition-all flex flex-col items-center gap-4 group relative"
+                                            style={exportFormat === 'pdf' ? {
+                                                borderColor: 'var(--system-blue)',
+                                                background: 'color-mix(in srgb, var(--system-blue) 10%, var(--system-background))',
+                                                boxShadow: '0 0 0 1px var(--system-blue)'
+                                            } : {
+                                                borderColor: 'var(--separator-opaque)',
+                                                background: 'var(--system-background)'
+                                            }}
+                                            onMouseEnter={(e) => { if (exportFormat !== 'pdf') { e.currentTarget.style.borderColor = 'var(--system-blue)'; e.currentTarget.style.background = 'var(--fill-secondary)'; } }}
+                                            onMouseLeave={(e) => { if (exportFormat !== 'pdf') { e.currentTarget.style.borderColor = 'var(--separator-opaque)'; e.currentTarget.style.background = 'var(--system-background)'; } }}
                                         >
-                                            <div className={`w-16 h-16 rounded-full flex items-center justify-center ${exportFormat === 'pdf' ? 'bg-primary-100 dark:bg-primary-800 text-primary-600 dark:text-primary-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 group-hover:text-primary-500 dark:group-hover:text-primary-400'}`}>
+                                            <div
+                                                className="w-16 h-16 rounded-full flex items-center justify-center"
+                                                style={exportFormat === 'pdf' ? {
+                                                    background: 'color-mix(in srgb, var(--system-blue) 20%, transparent)',
+                                                    color: 'var(--system-blue)'
+                                                } : {
+                                                    background: 'var(--fill-secondary)',
+                                                    color: 'var(--label-tertiary)'
+                                                }}
+                                            >
                                                 <FileType size={32} />
                                             </div>
                                             <div className="text-center">
-                                                <h3 className={`font-bold ${exportFormat === 'pdf' ? 'text-primary-900 dark:text-primary-100' : 'text-gray-700 dark:text-gray-300'}`}>PDF Document</h3>
-                                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">.pdf format</p>
+                                                <h3 className="font-bold" style={{ color: exportFormat === 'pdf' ? 'var(--system-blue)' : 'var(--label-primary)' }}>PDF Document</h3>
+                                                <p className="text-xs mt-1" style={{ color: 'var(--label-tertiary)' }}>.pdf format</p>
                                             </div>
                                             {exportFormat === 'pdf' && <div className="absolute top-4 right-4 text-primary-500"><Check size={20} /></div>}
                                         </button>
@@ -684,7 +806,7 @@ export const ReportWizardModal: React.FC<ReportWizardModalProps> = ({ isOpen, on
 
                     </SectionErrorBoundary>
                 </div>
-            </Modal>
+            </Modal >
         </>
     );
 };

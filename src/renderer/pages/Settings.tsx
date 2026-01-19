@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Trash2, FolderOpen, Keyboard, Info, Moon, Sun } from 'lucide-react';
 import { useCaptureStore } from '../stores/captureStore';
 import { logger } from '../services/Logger';
-import { useTheme } from '../contexts/ThemeContext';
+import { useLiquidTheme } from '../contexts/LiquidThemeContext';
 import { toast, confirm } from '../utils/toast';
 
 interface SettingsProps {
@@ -12,7 +12,8 @@ interface SettingsProps {
 export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
     const captures = useCaptureStore(state => state.captures);
     const deleteCapture = useCaptureStore(state => state.deleteCapture);
-    const { theme, toggleTheme } = useTheme();
+    const { isDark, setTheme } = useLiquidTheme();
+    const toggleTheme = () => setTheme(isDark ? 'liquid-light' : 'liquid-dark');
 
     const handleClearHistory = async () => {
         const confirmed = await confirm({
@@ -65,16 +66,16 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
                         {/* Dark Mode Toggle */}
                         <div className="flex justify-between items-center">
                             <div className="flex items-center gap-2">
-                                {theme === 'dark' ? <Moon size={18} className="text-gray-600 dark:text-gray-400" /> : <Sun size={18} className="text-gray-600 dark:text-gray-400" />}
+                                {isDark ? <Moon size={18} className="text-gray-600 dark:text-gray-400" /> : <Sun size={18} className="text-gray-600 dark:text-gray-400" />}
                                 <span className="text-gray-700 dark:text-gray-300">Dark Mode</span>
                             </div>
                             <button
                                 onClick={toggleTheme}
-                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 ${theme === 'dark' ? 'bg-primary-600' : 'bg-gray-300'
+                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 ${isDark ? 'bg-primary-600' : 'bg-gray-300'
                                     }`}
                             >
                                 <span
-                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${theme === 'dark' ? 'translate-x-6' : 'translate-x-1'
+                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isDark ? 'translate-x-6' : 'translate-x-1'
                                         }`}
                                 />
                             </button>

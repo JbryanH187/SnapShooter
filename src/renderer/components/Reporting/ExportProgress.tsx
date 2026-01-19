@@ -31,10 +31,9 @@ export const ExportProgress: React.FC<ExportProgressProps> = ({
                         cx="80"
                         cy="80"
                         r={radius}
-                        stroke="currentColor"
                         strokeWidth="8"
                         fill="none"
-                        className="text-gray-200 dark:text-gray-700"
+                        style={{ stroke: 'var(--fill-tertiary)' }}
                     />
                     {/* Progress circle */}
                     <motion.circle
@@ -48,10 +47,10 @@ export const ExportProgress: React.FC<ExportProgressProps> = ({
                         strokeDashoffset={strokeDashoffset}
                         strokeLinecap="round"
                         className={`transition-all duration-300 ${status === 'complete'
-                                ? 'text-green-500'
-                                : status === 'error'
-                                    ? 'text-red-500'
-                                    : 'text-primary-500'
+                            ? 'text-green-500'
+                            : status === 'error'
+                                ? 'text-red-500'
+                                : 'text-primary-500'
                             }`}
                         initial={{ strokeDashoffset: circumference }}
                         animate={{ strokeDashoffset }}
@@ -64,7 +63,7 @@ export const ExportProgress: React.FC<ExportProgressProps> = ({
                         <CheckCircle size={48} className="text-green-500" />
                     ) : (
                         <div className="text-center">
-                            <div className="text-3xl font-bold text-gray-900 dark:text-white">
+                            <div className="text-3xl font-bold" style={{ color: 'var(--label-primary)' }}>
                                 {Math.round(progress)}%
                             </div>
                         </div>
@@ -74,14 +73,14 @@ export const ExportProgress: React.FC<ExportProgressProps> = ({
 
             {/* Status Text */}
             <div className="text-center space-y-2">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                <h3 className="text-lg font-semibold" style={{ color: 'var(--label-primary)' }}>
                     {status === 'complete' ? 'Export Complete!' : 'Exporting Report'}
                 </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm" style={{ color: 'var(--label-secondary)' }}>
                     {currentStep}
                 </p>
                 {fileName && (
-                    <p className="text-xs text-gray-500 dark:text-gray-500 font-mono">
+                    <p className="text-xs font-mono" style={{ color: 'var(--label-tertiary)' }}>
                         {fileName}
                     </p>
                 )}
@@ -91,7 +90,10 @@ export const ExportProgress: React.FC<ExportProgressProps> = ({
             {status !== 'complete' && onCancel && (
                 <button
                     onClick={onCancel}
-                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors"
+                    style={{ color: 'var(--label-secondary)' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--fill-secondary)'; e.currentTarget.style.color = 'var(--label-primary)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--label-secondary)'; }}
                 >
                     <X size={16} />
                     Cancel Export

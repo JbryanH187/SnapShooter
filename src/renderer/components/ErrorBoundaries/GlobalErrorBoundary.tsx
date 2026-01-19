@@ -70,23 +70,26 @@ export class GlobalErrorBoundary extends Component<Props, State> {
             }
 
             return (
-                <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
-                    <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-8 text-center">
-                        <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <AlertTriangle className="text-red-600 dark:text-red-400" size={32} />
+                <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--system-background-secondary)' }}>
+                    <div className="max-w-md w-full rounded-xl shadow-lg border p-8 text-center" style={{ background: 'var(--system-background)', borderColor: 'var(--separator-opaque)' }}>
+                        <div
+                            className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6"
+                            style={{ background: 'color-mix(in srgb, var(--system-red) 15%, transparent)' }}
+                        >
+                            <AlertTriangle style={{ color: 'var(--system-red)' }} size={32} />
                         </div>
 
-                        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                        <h1 className="text-2xl font-bold mb-2" style={{ color: 'var(--label-primary)' }}>
                             Ups, algo salió mal
                         </h1>
 
-                        <p className="text-gray-500 dark:text-gray-400 mb-6">
+                        <p className="mb-6" style={{ color: 'var(--label-secondary)' }}>
                             SnapProof ha encontrado un error inesperado. Hemos registrado este problema.
                         </p>
 
                         {this.state.error && (
-                            <div className="mb-6 p-4 bg-gray-100 dark:bg-gray-900 rounded-lg text-left overflow-auto max-h-32">
-                                <p className="font-mono text-xs text-red-600 dark:text-red-400 break-words">
+                            <div className="mb-6 p-4 rounded-lg text-left overflow-auto max-h-32" style={{ background: 'var(--fill-tertiary)' }}>
+                                <p className="font-mono text-xs break-words" style={{ color: 'var(--system-red)' }}>
                                     {this.state.error.toString()}
                                 </p>
                             </div>
@@ -103,7 +106,10 @@ export class GlobalErrorBoundary extends Component<Props, State> {
 
                             <button
                                 onClick={this.handleGoHome}
-                                className="flex items-center justify-center gap-2 w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg transition-colors font-medium"
+                                className="flex items-center justify-center gap-2 w-full px-4 py-2 border rounded-lg transition-colors font-medium"
+                                style={{ background: 'var(--system-background)', borderColor: 'var(--separator-opaque)', color: 'var(--label-primary)' }}
+                                onMouseEnter={(e) => e.currentTarget.style.background = 'var(--fill-secondary)'}
+                                onMouseLeave={(e) => e.currentTarget.style.background = 'var(--system-background)'}
                             >
                                 <Home size={18} />
                                 Intentar Continuar
@@ -111,7 +117,10 @@ export class GlobalErrorBoundary extends Component<Props, State> {
 
                             <button
                                 onClick={this.handleCopyError}
-                                className="flex items-center justify-center gap-2 w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 rounded-lg transition-colors font-medium text-sm"
+                                className="flex items-center justify-center gap-2 w-full px-4 py-2 rounded-lg transition-colors font-medium text-sm"
+                                style={{ background: 'var(--fill-secondary)', color: 'var(--label-secondary)' }}
+                                onMouseEnter={(e) => e.currentTarget.style.background = 'var(--fill-tertiary)'}
+                                onMouseLeave={(e) => e.currentTarget.style.background = 'var(--fill-secondary)'}
                             >
                                 <Clipboard size={16} />
                                 Copiar Detalles del Error

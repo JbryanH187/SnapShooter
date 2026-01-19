@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
 import { Modal } from '../UI/Modal';
+import React, { useEffect, useState } from 'react';
 import { FileText, Trash2, ExternalLink, Calendar, Search, File } from 'lucide-react';
 import { format } from 'date-fns';
 import { logger } from '../../services/Logger';
@@ -40,7 +40,7 @@ export const ReportsHistoryModal: React.FC<ReportsHistoryModalProps> = ({ isOpen
                 setReports((history || []).sort((a: any, b: any) => b.date - a.date));
             }
         } catch (error) {
-            logger.error("Failed to load report history:", error);
+            logger.error('REPORT', 'Failed to load report history', { error });
         } finally {
             setLoading(false);
         }
@@ -65,7 +65,7 @@ export const ReportsHistoryModal: React.FC<ReportsHistoryModalProps> = ({ isOpen
                 await window.electron?.deleteReportFromHistory?.(deleteConfirm.id);
                 setReports(prev => prev.filter(r => r.id !== deleteConfirm.id));
             } catch (error) {
-                logger.error("Failed to delete report:", error);
+                logger.error('REPORT', 'Failed to delete report', { error });
             }
         }
         setDeleteConfirm({ isOpen: false, id: null });
@@ -90,64 +90,76 @@ export const ReportsHistoryModal: React.FC<ReportsHistoryModalProps> = ({ isOpen
                     {/* Search Bar */}
                     <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <Search size={16} className="text-gray-400" />
+                            <Search size={16} style={{ color: 'var(--label-tertiary)' }} />
                         </div>
                         <input
                             type="text"
                             placeholder="Search reports..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="input w-full pl-10 bg-gray-50 dark:bg-gray-800 dark:border-gray-700"
+                            className="input w-full pl-10"
+                            style={{ background: 'var(--fill-secondary)', borderColor: 'var(--separator-opaque)', color: 'var(--label-primary)' }}
                         />
                     </div>
 
                     {/* List */}
-                    <div className="flex-1 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900/50">
+                    <div className="flex-1 overflow-y-auto border rounded-lg" style={{ borderColor: 'var(--separator-opaque)', background: 'var(--fill-quaternary)' }}>
                         {loading ? (
-                            <div className="flex items-center justify-center h-40 text-gray-400">
+                            <div className="flex items-center justify-center h-40" style={{ color: 'var(--label-tertiary)' }}>
                                 Loading history...
                             </div>
                         ) : filteredReports.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center h-40 text-gray-400 gap-2">
+                            <div className="flex flex-col items-center justify-center h-40 gap-2" style={{ color: 'var(--label-tertiary)' }}>
                                 <FileText size={32} className="opacity-20" />
                                 <p>No reports found</p>
                             </div>
                         ) : (
-                            <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                            <div className="divide-y" style={{ borderColor: 'var(--separator-opaque)' }}>
                                 {filteredReports.map((report) => (
                                     <div
                                         key={report.id}
-                                        className="p-4 hover:bg-white dark:hover:bg-gray-800 transition-colors flex items-center gap-4 cursor-pointer group"
+                                        className="p-4 transition-colors flex items-center gap-4 cursor-pointer group"
+                                        onMouseEnter={(e) => e.currentTarget.style.background = 'var(--system-background)'}
+                                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                                         onClick={() => handleOpenReport(report.filePath)}
                                     >
-                                        <div className="w-10 h-10 rounded-lg bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 dark:text-primary-400 flex-shrink-0">
+                                        <div
+                                            className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                                            style={{ background: 'color-mix(in srgb, var(--system-blue) 15%, transparent)', color: 'var(--system-blue)' }}
+                                        >
                                             <FileText size={20} />
                                         </div>
 
                                         <div className="flex-1 min-w-0">
-                                            <h4 className="font-medium text-gray-900 dark:text-gray-100 truncate">{report.title}</h4>
-                                            <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                            <h4 className="font-medium truncate" style={{ color: 'var(--label-primary)' }}>{report.title}</h4>
+                                            <div className="flex items-center gap-3 text-xs mt-1" style={{ color: 'var(--label-secondary)' }}>
                                                 <span className="flex items-center gap-1">
                                                     <Calendar size={12} />
                                                     {format(new Date(report.date), 'PP p')}
                                                 </span>
                                                 <span>•</span>
                                                 <span>{report.author}</span>
-                                                <span className="bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider">{report.format}</span>
+                                                <span className="px-1.5 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider" style={{ background: 'var(--fill-tertiary)', color: 'var(--label-secondary)' }}>{report.format}</span>
                                             </div>
                                         </div>
 
                                         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); handleOpenReport(report.filePath); }}
-                                                className="p-2 text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-colors"
+                                                className="p-2 rounded-lg transition-colors"
+                                                style={{ color: 'var(--label-tertiary)' }}
+                                                onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--system-blue)'; e.currentTarget.style.background = 'color-mix(in srgb, var(--system-blue) 10%, transparent)'; }}
+                                                onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--label-tertiary)'; e.currentTarget.style.background = 'transparent'; }}
                                                 title="Open Folder"
                                             >
                                                 <ExternalLink size={18} />
                                             </button>
                                             <button
                                                 onClick={(e) => handleDeleteReport(report.id, e)}
-                                                className="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                                className="p-2 rounded-lg transition-colors"
+                                                style={{ color: 'var(--label-tertiary)' }}
+                                                onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--system-red)'; e.currentTarget.style.background = 'color-mix(in srgb, var(--system-red) 10%, transparent)'; }}
+                                                onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--label-tertiary)'; e.currentTarget.style.background = 'transparent'; }}
                                                 title="Delete Record"
                                             >
                                                 <Trash2 size={18} />

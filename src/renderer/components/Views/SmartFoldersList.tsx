@@ -42,13 +42,22 @@ export const SmartFoldersList: React.FC<SmartFoldersListProps> = ({
                                 logger.info('UI', `Navigated to smart folder: ${folder.name}`);
                                 onFolderSelect?.(folder.id);
                             }}
-                            className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 transition-colors group"
+                            className="w-full flex items-center justify-between p-2 rounded-lg transition-colors group"
+                            style={{ color: 'var(--label-primary)' }}
+                            onMouseEnter={(e) => e.currentTarget.style.background = 'var(--fill-secondary)'}
+                            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                         >
                             <div className="flex items-center gap-2">
-                                <Icon size={14} className={folder.color || 'text-gray-500'} />
+                                <Icon size={14} style={{ color: folder.color ? undefined : 'var(--label-tertiary)' }} className={folder.color || ''} />
                                 <span className="text-sm">{folder.name}</span>
                             </div>
-                            <span className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded-full font-medium">
+                            <span
+                                className="text-xs px-2 py-0.5 rounded-full font-medium"
+                                style={{
+                                    background: 'var(--fill-secondary)',
+                                    color: 'var(--label-secondary)'
+                                }}
+                            >
                                 {count}
                             </span>
                         </button>
@@ -61,7 +70,7 @@ export const SmartFoldersList: React.FC<SmartFoldersListProps> = ({
     // Full mode: show captures grid
     if (!folderId) {
         return (
-            <div className="flex-1 flex items-center justify-center text-gray-500 dark:text-gray-400">
+            <div className="flex-1 flex items-center justify-center" style={{ color: 'var(--label-secondary)' }}>
                 <p>No folder selected</p>
             </div>
         );
@@ -72,7 +81,7 @@ export const SmartFoldersList: React.FC<SmartFoldersListProps> = ({
 
     if (!folder) {
         return (
-            <div className="flex-1 flex items-center justify-center text-gray-500 dark:text-gray-400">
+            <div className="flex-1 flex items-center justify-center" style={{ color: 'var(--label-secondary)' }}>
                 <p>Folder not found</p>
             </div>
         );
@@ -91,19 +100,25 @@ export const SmartFoldersList: React.FC<SmartFoldersListProps> = ({
             {/* Header */}
             <div className="flex items-center justify-between px-6 pt-6 pb-3">
                 <div className="flex items-center gap-3">
-                    <div className={`p-2 bg-gray-100 dark:bg-gray-800 rounded-lg`}>
-                        <Icon size={20} className={folder.color || 'text-gray-600'} />
+                    <div className="p-2 rounded-lg" style={{ background: 'var(--fill-secondary)' }}>
+                        <Icon size={20} style={{ color: folder.color ? undefined : 'var(--label-secondary)' }} className={folder.color || ''} />
                     </div>
                     <div>
-                        <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
+                        <h2 className="text-xl font-semibold" style={{ color: 'var(--label-primary)' }}>
                             {folder.name}
                         </h2>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                        <p className="text-sm" style={{ color: 'var(--label-secondary)' }}>
                             Smart Folder
                         </p>
                     </div>
                 </div>
-                <span className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 px-2.5 py-0.5 rounded-full text-xs font-bold">
+                <span
+                    className="px-2.5 py-0.5 rounded-full text-xs font-bold"
+                    style={{
+                        background: 'var(--fill-secondary)',
+                        color: 'var(--label-secondary)'
+                    }}
+                >
                     {captures.length}
                 </span>
             </div>
@@ -114,10 +129,11 @@ export const SmartFoldersList: React.FC<SmartFoldersListProps> = ({
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className="h-full flex flex-col items-center justify-center text-gray-400 dark:text-gray-500 p-8 text-center"
+                        className="h-full flex flex-col items-center justify-center p-8 text-center"
+                        style={{ color: 'var(--label-tertiary)' }}
                     >
                         <Icon size={64} className="mb-4 opacity-30" />
-                        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+                        <h3 className="text-lg font-medium mb-2" style={{ color: 'var(--label-primary)' }}>
                             No captures yet
                         </h3>
                         <p className="text-sm max-w-xs">
@@ -163,21 +179,35 @@ const CaptureCard: React.FC<{
             transition={{ duration: 0.2, delay: index * 0.02 }}
             whileHover={{ scale: 1.02 }}
             onClick={onEdit}
-            className={`flex flex-col p-4 border border-gray-100 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 shadow-sm hover:shadow-md hover:border-primary-200 dark:hover:border-primary-700 transition-all cursor-pointer group relative h-full
+            className={`flex flex-col p-4 border rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer group relative h-full
                 ${capture.status === 'success' ? 'border-l-4 border-l-success-500' : ''}
                 ${capture.status === 'failure' ? 'border-l-4 border-l-error-500' : ''}
             `}
+            style={{
+                background: 'var(--system-background-secondary)',
+                borderColor: 'var(--separator-non-opaque)',
+                borderRadius: 'var(--radius-card)'
+            }}
         >
             {/* Status Badge */}
-            <div className={`absolute top-3 left-3 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shadow-md z-10 border-2 border-white
-                ${capture.status === 'success' ? 'bg-success-500 text-white' :
-                    capture.status === 'failure' ? 'bg-error-500 text-white' : 'bg-gray-800 text-white'
-                }`}>
+            <div
+                className="absolute top-3 left-3 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shadow-md z-10 border-2 border-white"
+                style={capture.status === 'success' ? {
+                    background: 'var(--system-green)',
+                    color: 'white'
+                } : capture.status === 'failure' ? {
+                    background: 'var(--system-red)',
+                    color: 'white'
+                } : {
+                    background: 'var(--fill-primary)',
+                    color: 'white'
+                }}
+            >
                 {index + 1}
             </div>
 
             {/* Thumbnail */}
-            <div className="relative mb-3 bg-gray-100 dark:bg-gray-900 rounded-lg overflow-hidden aspect-video">
+            <div className="relative mb-3 rounded-lg overflow-hidden aspect-video" style={{ background: 'var(--fill-tertiary)' }}>
                 {capture.path ? (
                     <img
                         src={`file://${capture.path}`}
@@ -187,25 +217,25 @@ const CaptureCard: React.FC<{
                     />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                        <Camera size={48} className="text-gray-400 dark:text-gray-600" />
+                        <Camera size={48} style={{ color: 'var(--label-quaternary)' }} />
                     </div>
                 )}
             </div>
 
             {/* Info */}
             <div className="flex-1">
-                <h3 className="font-semibold text-gray-900 dark:text-white text-sm mb-1 line-clamp-2">
+                <h3 className="font-semibold text-sm mb-1 line-clamp-2" style={{ color: 'var(--label-primary)' }}>
                     {capture.title || 'Untitled Capture'}
                 </h3>
                 {capture.description && (
-                    <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mb-2">
+                    <p className="text-xs line-clamp-2 mb-2" style={{ color: 'var(--label-secondary)' }}>
                         {capture.description}
                     </p>
                 )}
-                <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                <div className="flex items-center justify-between text-xs" style={{ color: 'var(--label-secondary)' }}>
                     <span>{new Date(capture.timestamp).toLocaleDateString()}</span>
                     {capture.flowId && (
-                        <span className="text-primary-500 dark:text-primary-400 font-medium">
+                        <span style={{ color: 'var(--system-blue)' }} className="font-medium">
                             In Flow
                         </span>
                     )}

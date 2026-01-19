@@ -94,7 +94,7 @@ export const FlowEditorModal: React.FC<FlowEditorModalProps> = ({ isOpen, flow, 
             <div className="flex flex-col gap-6 max-h-[70vh] overflow-y-auto">
                 {/* Flow Name */}
                 <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--label-primary)' }}>
                         Nombre del Flujo
                     </label>
                     <input
@@ -102,13 +102,18 @@ export const FlowEditorModal: React.FC<FlowEditorModalProps> = ({ isOpen, flow, 
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder="Ej: Flujo de Login, Proceso de Checkout..."
-                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                        className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                        style={{
+                            background: 'var(--system-background)',
+                            borderColor: 'var(--separator-opaque)',
+                            color: 'var(--label-primary)'
+                        }}
                     />
                 </div>
 
                 {/* Captures Grid */}
                 <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                    <label className="block text-sm font-semibold mb-3" style={{ color: 'var(--label-primary)' }}>
                         Capturas ({captures.length} pasos)
                     </label>
 
@@ -138,10 +143,13 @@ export const FlowEditorModal: React.FC<FlowEditorModalProps> = ({ isOpen, flow, 
                 </div>
 
                 {/* Footer */}
-                <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex justify-end gap-3 pt-4 border-t" style={{ borderColor: 'var(--separator-opaque)' }}>
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-medium"
+                        className="px-4 py-2 font-medium"
+                        style={{ color: 'var(--label-secondary)' }}
+                        onMouseEnter={(e) => e.currentTarget.style.color = 'var(--label-primary)'}
+                        onMouseLeave={(e) => e.currentTarget.style.color = 'var(--label-secondary)'}
                     >
                         Cancelar
                     </button>

@@ -13,33 +13,25 @@ module.exports = {
         '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
         '\\.(jpg|jpeg|png|gif|svg)$': '<rootDir>/src/__mocks__/fileMock.js'
     },
-    setupFilesAfterEnv': ['<rootDir>/ src / __tests__ / setup.ts'],
-collectCoverageFrom: [
-    'src/**/*.{ts,tsx}',
-    '!src/**/*.d.ts',
-    '!src/**/__tests__/**',
-    '!src/**/__mocks__/**',
-    '!src/main/**', // Exclude main process from coverage
-    '!src/preload/**' // Exclude preload from coverage
-],
-    coverageThresholds: {
-    global: {
-        branches: 70,
-            functions: 70,
-                lines: 70,
-                    statements: 70
-    }
-},
-coverageDirectory: 'coverage',
+    setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.ts'],
+    collectCoverageFrom: [
+        'src/**/*.{ts,tsx}',
+        '!src/**/*.d.ts',
+        '!src/**/__tests__/**',
+        '!src/**/__mocks__/**',
+        '!src/main/**',
+        '!src/preload/**'
+    ],
+    coverageDirectory: 'coverage',
     verbose: true,
-        testTimeout: 10000,
-            transform: {
-    '^.+\\.tsx?$': ['ts-jest', {
-        tsconfig: {
-            jsx: 'react',
-            esModuleInterop: true,
-            allowSyntheticDefaultImports: true
-        }
-    }]
-}
+    testTimeout: 10000,
+    transform: {
+        '^.+\\.tsx?$': ['ts-jest', {
+            tsconfig: {
+                jsx: 'react',
+                esModuleInterop: true,
+                allowSyntheticDefaultImports: true
+            }
+        }]
+    }
 };

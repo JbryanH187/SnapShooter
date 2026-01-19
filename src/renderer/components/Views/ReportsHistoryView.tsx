@@ -32,7 +32,7 @@ export const ReportsHistoryView: React.FC = () => {
                 setReports((history || []).sort((a: any, b: any) => b.date - a.date));
             }
         } catch (error) {
-            logger.error("Failed to load report history:", error);
+            logger.error('REPORT', 'Failed to load report history', { error });
         } finally {
             setLoading(false);
         }
@@ -63,7 +63,7 @@ export const ReportsHistoryView: React.FC = () => {
                 setReports(prev => prev.filter(r => r.id !== id));
                 toast.success('Registro eliminado del historial');
             } catch (error) {
-                logger.error("Failed to delete report:", error);
+                logger.error('REPORT', 'Failed to delete report', { error });
                 toast.error('Error al eliminar el registro');
             }
         }
@@ -76,17 +76,19 @@ export const ReportsHistoryView: React.FC = () => {
 
     return (
         <div className="flex flex-col h-full animate-fade-in">
-            {/* Header / Title */}
             <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-3">
-                    <div className="p-2 bg-primary-100 dark:bg-primary-900/30 rounded-lg text-primary-600 dark:text-primary-400">
+                <h2 className="text-2xl font-bold flex items-center gap-3" style={{ color: 'var(--label-primary)' }}>
+                    <div
+                        className="p-2 rounded-lg"
+                        style={{ background: 'color-mix(in srgb, var(--system-blue) 15%, transparent)', color: 'var(--system-blue)' }}
+                    >
                         <Calendar size={24} />
                     </div>
                     Historial de Reportes
                 </h2>
 
                 {/* Statistics or Actions could go here */}
-                <div className="text-sm text-gray-500 dark:text-gray-400">
+                <div className="text-sm" style={{ color: 'var(--label-secondary)' }}>
                     {filteredReports.length} documentos
                 </div>
             </div>
@@ -94,54 +96,70 @@ export const ReportsHistoryView: React.FC = () => {
             {/* Search Bar */}
             <div className="relative mb-6">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Search size={16} className="text-gray-400" />
+                    <Search size={16} style={{ color: 'var(--label-tertiary)' }} />
                 </div>
                 <input
                     type="text"
                     placeholder="Buscar reportes..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all shadow-sm"
+                    className="w-full pl-10 pr-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all shadow-sm"
+                    style={{
+                        background: 'var(--system-background)',
+                        borderColor: 'var(--separator-opaque)',
+                        color: 'var(--label-primary)'
+                    }}
                 />
             </div>
 
             {/* List */}
             <SectionErrorBoundary title="Error al cargar historial">
-                <div className="flex-1 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 shadow-sm">
+                <div
+                    className="flex-1 overflow-y-auto border rounded-xl shadow-sm"
+                    style={{
+                        borderColor: 'var(--separator-opaque)',
+                        background: 'var(--system-background)'
+                    }}
+                >
                     {loading ? (
-                        <div className="flex items-center justify-center h-64 text-gray-400">
+                        <div className="flex items-center justify-center h-64" style={{ color: 'var(--label-tertiary)' }}>
                             <div className="flex flex-col items-center gap-3">
                                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
                                 <span>Cargando historial...</span>
                             </div>
                         </div>
                     ) : filteredReports.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center h-64 text-gray-400 gap-3">
-                            <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-full">
+                        <div className="flex flex-col items-center justify-center h-64 gap-3" style={{ color: 'var(--label-tertiary)' }}>
+                            <div className="p-4 rounded-full" style={{ background: 'var(--fill-secondary)' }}>
                                 <FileText size={32} className="opacity-40" />
                             </div>
                             <p>No se encontraron reportes</p>
                         </div>
                     ) : (
-                        <div className="divide-y divide-gray-100 dark:divide-gray-800">
+                        <div className="divide-y" style={{ borderColor: 'var(--separator-non-opaque)' }}>
                             {filteredReports.map((report) => (
                                 <div
                                     key={report.id}
-                                    className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors flex items-center gap-4 cursor-pointer group"
+                                    className="p-4 transition-colors flex items-center gap-4 cursor-pointer group"
+                                    onMouseEnter={(e) => e.currentTarget.style.background = 'var(--fill-quaternary)'}
+                                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                                     onClick={() => handleOpenReport(report.filePath)}
                                 >
-                                    <div className="w-12 h-12 rounded-xl bg-primary-50 dark:bg-primary-900/20 flex items-center justify-center text-primary-600 dark:text-primary-400 flex-shrink-0 shadow-sm">
+                                    <div
+                                        className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm"
+                                        style={{ background: 'color-mix(in srgb, var(--system-blue) 12%, transparent)', color: 'var(--system-blue)' }}
+                                    >
                                         <FileText size={24} />
                                     </div>
 
                                     <div className="flex-1 min-w-0">
-                                        <h4 className="font-semibold text-gray-900 dark:text-gray-100 truncate text-base">{report.title}</h4>
-                                        <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400 mt-1.5">
+                                        <h4 className="font-semibold truncate text-base" style={{ color: 'var(--label-primary)' }}>{report.title}</h4>
+                                        <div className="flex items-center gap-3 text-xs mt-1.5" style={{ color: 'var(--label-secondary)' }}>
                                             <span className="flex items-center gap-1.5">
                                                 <Calendar size={13} />
                                                 {format(new Date(report.date), 'PPPP p')}
                                             </span>
-                                            <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-600"></span>
+                                            <span className="w-1 h-1 rounded-full" style={{ background: 'var(--separator-opaque)' }}></span>
                                             <span className="flex items-center gap-1.5">
                                                 <File size={13} />
                                                 {report.author}
@@ -150,24 +168,36 @@ export const ReportsHistoryView: React.FC = () => {
                                     </div>
 
                                     <div className="flex items-center gap-3">
-                                        <span className={`px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider ${report.format === 'pdf'
-                                            ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                                            : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                                            }`}>
+                                        <span
+                                            className="px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider"
+                                            style={report.format === 'pdf' ? {
+                                                background: 'color-mix(in srgb, var(--system-red) 15%, transparent)',
+                                                color: 'var(--system-red)'
+                                            } : {
+                                                background: 'color-mix(in srgb, var(--system-blue) 15%, transparent)',
+                                                color: 'var(--system-blue)'
+                                            }}
+                                        >
                                             {report.format}
                                         </span>
 
                                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); handleOpenReport(report.filePath); }}
-                                                className="p-2 text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-white dark:hover:bg-gray-700 rounded-lg transition-colors shadow-sm border border-transparent hover:border-gray-200 dark:hover:border-gray-600"
+                                                className="p-2 rounded-lg transition-colors shadow-sm border"
+                                                style={{ color: 'var(--label-tertiary)', borderColor: 'transparent' }}
+                                                onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--system-blue)'; e.currentTarget.style.background = 'var(--system-background)'; e.currentTarget.style.borderColor = 'var(--separator-opaque)'; }}
+                                                onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--label-tertiary)'; e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'transparent'; }}
                                                 title="Abrir ubicación"
                                             >
                                                 <ExternalLink size={18} />
                                             </button>
                                             <button
                                                 onClick={(e) => handleDeleteReport(report.id, e)}
-                                                className="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-white dark:hover:bg-gray-700 rounded-lg transition-colors shadow-sm border border-transparent hover:border-gray-200 dark:hover:border-gray-600"
+                                                className="p-2 rounded-lg transition-colors shadow-sm border"
+                                                style={{ color: 'var(--label-tertiary)', borderColor: 'transparent' }}
+                                                onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--system-red)'; e.currentTarget.style.background = 'var(--system-background)'; e.currentTarget.style.borderColor = 'var(--separator-opaque)'; }}
+                                                onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--label-tertiary)'; e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'transparent'; }}
                                                 title="Eliminar registro"
                                             >
                                                 <Trash2 size={18} />

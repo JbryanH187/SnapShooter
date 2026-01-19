@@ -1,9 +1,10 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Canvas, Rect, Circle, IText, FabricImage, Point } from 'fabric';
 import { Check, Square, Circle as CircleIcon, Type, Trash2, Hand, MousePointer2 } from 'lucide-react';
 import { Tooltip } from '../UI/Tooltip';
 import { toast, confirm } from '../../utils/toast';
-import { CaptureItem } from '../../stores/captureStore';
+import { CaptureItem, useCaptureStore } from '../../stores/captureStore';
 
 interface ImageEditorModalProps {
     capture: CaptureItem;
@@ -19,6 +20,28 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ capture, onC
     const [activeTool, setActiveTool] = useState<'select' | 'hand' | 'rect' | 'circle' | 'text'>('select');
     const [color, setColor] = useState('#ef4444'); // Red default
     const scaleRef = useRef<number>(1); // Store original image scale
+
+    // Metadata State
+    const [title, setTitle] = useState(capture.title || '');
+    const [description, setDescription] = useState(capture.description || '');
+    const updateCapture = useCaptureStore(state => state.updateCapture);
+
+    // Sync metadata changes immediately? Or on save?
+    // User expects "Save Changes" to save everything.
+    // However, store updates for text usually happen on blur or change.
+    // Let's update on Blur to keep it snappy.
+
+    const handleTitleBlur = () => {
+        if (title !== capture.title) {
+            updateCapture(capture.id, { title });
+        }
+    };
+
+    const handleDescriptionBlur = () => {
+        if (description !== capture.description) {
+            updateCapture(capture.id, { description });
+        }
+    };
 
     // Handle Delete
     const handleDeleteCapture = async () => {
@@ -266,6 +289,9 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ capture, onC
     const handleSave = () => {
         if (!fabricCanvas) return;
 
+        // Ensure metadata is saved final time
+        updateCapture(capture.id, { title, description });
+
         // 1. Reset Viewport to contain the image 
         // Or create a temporary canvas to export only the image bounds?
         // Easiest: Export using multiplier based on original image dimensions
@@ -314,15 +340,40 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ capture, onC
     return (
         <>
             <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-                <div className="bg-white dark:bg-gray-900 rounded-xl overflow-hidden shadow-2xl flex flex-col w-[95vw] h-[90vh] border border-gray-200 dark:border-gray-700">
-                    {/* Header / Toolbar */}
-                    <div className="bg-gray-100 dark:bg-gray-800 p-2 flex items-center gap-4 border-b border-gray-200 dark:border-gray-700">
+                <div
+                    className="rounded-xl overflow-hidden shadow-2xl flex flex-col w-[95vw] h-[90vh] border"
+                    style={{
+                        background: 'var(--system-background)',
+                        borderColor: 'var(--separator-opaque)'
+                    }}
+                >
+                    <div
+                        className="p-2 flex items-center gap-4 border-b"
+                        style={{
+                            background: 'var(--system-background-secondary)',
+                            borderColor: 'var(--separator-opaque)'
+                        }}
+                    >
                         {/* Tool Selection */}
-                        <div className="flex bg-white dark:bg-gray-700 rounded-lg p-1 border border-gray-200 dark:border-gray-600 shadow-sm">
+                        <div
+                            className="flex rounded-lg p-1 border shadow-sm"
+                            style={{
+                                background: 'var(--system-background)',
+                                borderColor: 'var(--separator-opaque)'
+                            }}
+                        >
                             <Tooltip text="Select / Move Objects">
                                 <button
                                     onClick={() => setActiveTool('select')}
-                                    className={`p-2 rounded ${activeTool === 'select' ? 'bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'}`}
+                                    className="p-2 rounded"
+                                    style={activeTool === 'select' ? {
+                                        background: 'color-mix(in srgb, var(--system-blue) 15%, transparent)',
+                                        color: 'var(--system-blue)'
+                                    } : {
+                                        color: 'var(--label-secondary)'
+                                    }}
+                                    onMouseEnter={(e) => { if (activeTool !== 'select') e.currentTarget.style.background = 'var(--fill-secondary)'; }}
+                                    onMouseLeave={(e) => { if (activeTool !== 'select') e.currentTarget.style.background = 'transparent'; }}
                                 >
                                     <MousePointer2 size={20} />
                                 </button>
@@ -330,32 +381,58 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ capture, onC
                             <Tooltip text="Pan Tool (Hand)">
                                 <button
                                     onClick={() => setActiveTool('hand')}
-                                    className={`p-2 rounded ${activeTool === 'hand' ? 'bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'}`}
+                                    className="p-2 rounded"
+                                    style={activeTool === 'hand' ? {
+                                        background: 'color-mix(in srgb, var(--system-blue) 15%, transparent)',
+                                        color: 'var(--system-blue)'
+                                    } : {
+                                        color: 'var(--label-secondary)'
+                                    }}
+                                    onMouseEnter={(e) => { if (activeTool !== 'hand') e.currentTarget.style.background = 'var(--fill-secondary)'; }}
+                                    onMouseLeave={(e) => { if (activeTool !== 'hand') e.currentTarget.style.background = 'transparent'; }}
                                 >
                                     <Hand size={20} />
                                 </button>
                             </Tooltip>
                         </div>
 
-                        <div className="h-6 w-px bg-gray-300 dark:bg-gray-600 mx-2"></div>
+                        <div className="h-6 w-px mx-2" style={{ background: 'var(--separator-opaque)' }}></div>
 
                         <Tooltip text="Add Rectangle">
-                            <button onClick={addRect} className={`p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-600 dark:text-gray-300 ${activeTool === 'rect' ? 'bg-gray-200 dark:bg-gray-600' : ''}`}>
+                            <button
+                                onClick={addRect}
+                                className="p-2 rounded"
+                                style={activeTool === 'rect' ? { background: 'var(--fill-secondary)', color: 'var(--label-primary)' } : { color: 'var(--label-secondary)' }}
+                                onMouseEnter={(e) => e.currentTarget.style.background = 'var(--fill-secondary)'}
+                                onMouseLeave={(e) => { if (activeTool !== 'rect') e.currentTarget.style.background = 'transparent'; }}
+                            >
                                 <Square size={20} />
                             </button>
                         </Tooltip>
                         <Tooltip text="Add Circle">
-                            <button onClick={addCircle} className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-600 dark:text-gray-300">
+                            <button
+                                onClick={addCircle}
+                                className="p-2 rounded"
+                                style={{ color: 'var(--label-secondary)' }}
+                                onMouseEnter={(e) => e.currentTarget.style.background = 'var(--fill-secondary)'}
+                                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                            >
                                 <CircleIcon size={20} />
                             </button>
                         </Tooltip>
                         <Tooltip text="Add Text">
-                            <button onClick={addText} className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-600 dark:text-gray-300">
+                            <button
+                                onClick={addText}
+                                className="p-2 rounded"
+                                style={{ color: 'var(--label-secondary)' }}
+                                onMouseEnter={(e) => e.currentTarget.style.background = 'var(--fill-secondary)'}
+                                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                            >
                                 <Type size={20} />
                             </button>
                         </Tooltip>
 
-                        <div className="h-6 w-px bg-gray-300 dark:bg-gray-600 mx-2"></div>
+                        <div className="h-6 w-px mx-2" style={{ background: 'var(--separator-opaque)' }}></div>
 
                         {/* Colors */}
                         <div className="flex gap-1">
@@ -371,32 +448,79 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ capture, onC
 
                         <div className="flex-1"></div>
 
-                        <p className="text-xs text-gray-400 dark:text-gray-500 mr-4">Scroll to Zoom • Drag to Pan</p>
+                        <p className="text-xs mr-4" style={{ color: 'var(--label-tertiary)' }}>Scroll to Zoom • Drag to Pan</p>
 
                         <Tooltip text="Delete Selected Object" position="left">
-                            <button onClick={deleteActive} className="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 rounded">
+                            <button
+                                onClick={deleteActive}
+                                className="p-2 rounded transition-colors"
+                                style={{ color: 'var(--system-red)' }}
+                                onMouseEnter={(e) => e.currentTarget.style.background = 'color-mix(in srgb, var(--system-red) 15%, transparent)'}
+                                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                            >
                                 <Trash2 size={20} />
                             </button>
                         </Tooltip>
                     </div>
 
-                    {/* Canvas Area - Full Fill */}
-                    <div ref={containerRef} className="flex-1 bg-gray-50 dark:bg-gray-800 overflow-hidden relative checkerboard-bg">
+                    <div ref={containerRef} className="flex-1 overflow-hidden relative checkerboard-bg" style={{ background: 'var(--fill-tertiary)' }}>
                         <canvas ref={canvasRef} />
                     </div>
 
-                    {/* Footer */}
-                    <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex justify-between gap-3 flex-shrink-0">
-                        <button
-                            onClick={handleDeleteCapture}
-                            className="px-4 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors flex items-center gap-2"
-                        >
-                            <Trash2 size={18} /> Delete Capture
-                        </button>
-                        <div className="flex gap-3">
+                    {/* Bottom Bar: Metadata & Actions */}
+                    <div
+                        className="p-4 border-t flex justify-between gap-3 flex-shrink-0 items-end"
+                        style={{
+                            borderColor: 'var(--separator-opaque)',
+                            background: 'var(--system-background)'
+                        }}
+                    >
+                        {/* Metadata Inputs */}
+                        <div className="flex-1 flex flex-col gap-2 max-w-xl mr-4">
+                            <input
+                                type="text"
+                                placeholder="Capture Title (optional)"
+                                value={title}
+                                onChange={(e) => setTitle(e.target.value)}
+                                onBlur={handleTitleBlur}
+                                className="w-full px-3 py-1.5 text-sm rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                                style={{
+                                    background: 'var(--fill-tertiary)',
+                                    border: '1px solid var(--separator-opaque)',
+                                    color: 'var(--label-primary)'
+                                }}
+                            />
+                            <textarea
+                                placeholder="Description (optional)"
+                                value={description}
+                                onChange={(e) => setDescription(e.target.value)}
+                                onBlur={handleDescriptionBlur}
+                                rows={1}
+                                className="w-full px-3 py-1.5 text-xs rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-primary-500/20 resize-none h-[32px] focus:h-[64px]"
+                                style={{
+                                    background: 'var(--fill-tertiary)',
+                                    border: '1px solid var(--separator-opaque)',
+                                    color: 'var(--label-secondary)'
+                                }}
+                            />
+                        </div>
+
+                        <div className="flex gap-3 items-center">
+                            <button
+                                onClick={handleDeleteCapture}
+                                className="px-3 py-2 rounded-lg transition-colors flex items-center gap-2 hover:bg-red-500/10"
+                                style={{ color: 'var(--system-red)' }}
+                                title="Delete Capture"
+                            >
+                                <Trash2 size={18} />
+                            </button>
+                            <div className="w-px h-8 bg-gray-200 dark:bg-gray-700 mx-2"></div>
                             <button
                                 onClick={onClose}
-                                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                                className="px-4 py-2 rounded-lg transition-colors"
+                                style={{ color: 'var(--label-primary)' }}
+                                onMouseEnter={(e) => e.currentTarget.style.background = 'var(--fill-secondary)'}
+                                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                             >
                                 Cancel
                             </button>
@@ -404,7 +528,7 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ capture, onC
                                 onClick={handleSave}
                                 className="px-4 py-2 bg-primary-600 text-white hover:bg-primary-700 rounded-lg transition-colors flex items-center gap-2"
                             >
-                                <Check size={18} /> Save Changes
+                                <Check size={18} /> Save & Close
                             </button>
                         </div>
                     </div>
@@ -413,3 +537,4 @@ export const ImageEditorModal: React.FC<ImageEditorModalProps> = ({ capture, onC
         </>
     );
 };
+

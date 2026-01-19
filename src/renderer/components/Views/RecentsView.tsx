@@ -192,17 +192,31 @@ export const RecentsView: React.FC = () => {
                 </button>
             </div>
 
-            {/* Delete Button */}
             <button
                 onClick={async (e) => {
                     e.stopPropagation();
                     await handleDeleteCapture(c.id);
                 }}
-                className="absolute top-3 right-3 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all hover:text-error-600 hover:bg-error-50"
-                style={{ color: 'var(--label-tertiary)' }}
+                className="absolute top-3 right-3 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all shadow-sm"
+                style={{
+                    background: 'rgba(239, 68, 68, 0.1)', // Red tint background
+                    color: 'var(--system-red)',
+                    backdropFilter: 'blur(8px)',
+                    border: '1px solid rgba(239, 68, 68, 0.2)'
+                }}
+                onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(239, 68, 68, 0.9)';
+                    e.currentTarget.style.color = 'white';
+                    e.currentTarget.style.transform = 'scale(1.05)';
+                }}
+                onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                    e.currentTarget.style.color = 'var(--system-red)';
+                    e.currentTarget.style.transform = 'scale(1)';
+                }}
                 title="Delete Capture"
             >
-                <Trash2 size={14} />
+                <Trash2 size={16} />
             </button>
         </motion.div>
     );

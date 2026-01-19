@@ -2,7 +2,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUI } from '../../contexts/UIContext';
-import { useTheme } from '../../contexts/ThemeContext';
+import { useLiquidTheme } from '../../contexts/LiquidThemeContext';
 import { useCaptureStore } from '../../stores/captureStore';
 import { Settings } from '../../pages/Settings';
 import LogoSnapProof from '../../../assets/LogoSnapProof.jpg';
@@ -34,7 +34,8 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
         navigateToHome
     } = useUI();
 
-    const { theme, toggleTheme } = useTheme();
+    const { isDark, setTheme } = useLiquidTheme();
+    const toggleTheme = () => setTheme(isDark ? 'liquid-light' : 'liquid-dark');
     const { captures, userProfile, loadCaptures, setCurrentCapture, tutorial, startTutorial, setTutorialState } = useCaptureStore();
     const { flows, loadFlows, quickFlowActive, setQuickFlowActive } = useFlowStore();
     const { openFlowEditor, closeReportWizard } = useGlobalModal();
@@ -195,7 +196,8 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
 // Extracted Header Component
 const AppHeader: React.FC = () => {
     const { setMenuOpen, contentView, setView, setContentView, searchQuery, setSearchQuery } = useUI();
-    const { theme, toggleTheme } = useTheme();
+    const { isDark, setTheme } = useLiquidTheme();
+    const toggleTheme = () => setTheme(isDark ? 'liquid-light' : 'liquid-dark');
     const { userProfile, loadCaptures, captures } = useCaptureStore();
     const { openReportWizard } = useGlobalModal();
 
@@ -253,7 +255,10 @@ const AppHeader: React.FC = () => {
                     }}
                     whileHover={{ y: -2, scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-xl transition-all group app-no-drag hover:shadow-lg hover:bg-gradient-to-r from-primary-50 to-transparent dark:from-gray-800 dark:to-transparent"
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-xl transition-all group app-no-drag hover:shadow-lg"
+                    style={{ background: 'transparent' }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'var(--fill-quaternary)'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                 >
                     <motion.img
                         src={LogoSnapProof}
@@ -285,7 +290,7 @@ const AppHeader: React.FC = () => {
             {contentView !== 'home' && (
                 <div className="flex-1 max-w-md mx-4 hidden md:block app-no-drag">
                     <div className="relative group">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary-500 transition-colors" size={18} />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 transition-colors" style={{ color: 'var(--label-tertiary)' }} size={18} />
                         <input
                             type="text"
                             placeholder="Search captures..."
@@ -328,18 +333,27 @@ const AppHeader: React.FC = () => {
 
                 <button
                     onClick={toggleTheme}
-                    className={`relative inline-flex h-9 w-9 items-center justify-center rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 ${theme === 'dark'
-                        ? 'bg-gray-800 text-yellow-400 hover:bg-gray-700'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                        } app-no-drag`}
-                    title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                    className="relative inline-flex h-9 w-9 items-center justify-center rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-primary-500 app-no-drag"
+                    style={{
+                        background: isDark ? 'var(--fill-secondary)' : 'var(--fill-secondary)',
+                        color: isDark ? 'var(--system-orange)' : 'var(--label-secondary)'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'var(--fill-tertiary)'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'var(--fill-secondary)'}
+                    title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
                 >
-                    {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+                    {isDark ? <Sun size={18} /> : <Moon size={18} />}
                 </button>
 
                 <button
                     onClick={handleNameChange}
-                    className="flex items-center gap-3 bg-white dark:bg-gray-800 px-3 py-1.5 rounded-full border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all cursor-pointer app-no-drag"
+                    className="flex items-center gap-3 px-3 py-1.5 rounded-full border shadow-sm hover:shadow-md transition-all cursor-pointer app-no-drag"
+                    style={{
+                        background: 'var(--system-background)',
+                        borderColor: 'var(--separator-opaque)'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'var(--fill-quaternary)'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'var(--system-background)'}
                 >
                     <Avatar
                         size={28}
@@ -347,7 +361,7 @@ const AppHeader: React.FC = () => {
                         variant="beam"
                         colors={["#6366f1", "#818cf8", "#c7d2fe", "#e0e7ff", "#f5f3ff"]}
                     />
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-200 pr-1">{userProfile.name}</span>
+                    <span className="text-sm font-medium pr-1" style={{ color: 'var(--label-primary)' }}>{userProfile.name}</span>
                 </button>
             </div>
         </header>

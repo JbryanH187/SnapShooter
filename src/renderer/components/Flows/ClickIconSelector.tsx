@@ -18,15 +18,27 @@ export const ClickIconSelector: React.FC<ClickIconSelectorProps> = ({ value, onC
     ];
 
     return (
-        <div className="flex bg-gray-100 dark:bg-gray-700/50 p-1 rounded-lg border border-gray-200 dark:border-gray-600">
+        <div
+            className="flex p-1 rounded-lg border"
+            style={{
+                background: 'var(--fill-secondary)',
+                borderColor: 'var(--separator-opaque)'
+            }}
+        >
             {options.map((option) => (
                 <Tooltip key={option.id} text={option.label}>
                     <button
                         onClick={() => onChange(option.id)}
-                        className={`p-2 rounded-md transition-all ${value === option.id
-                            ? 'bg-white dark:bg-gray-600 shadow-sm text-amber-600 dark:text-amber-400'
-                            : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
-                            }`}
+                        className="p-2 rounded-md transition-all"
+                        style={value === option.id ? {
+                            background: 'var(--system-background)',
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                            color: 'var(--system-orange)'
+                        } : {
+                            color: 'var(--label-tertiary)'
+                        }}
+                        onMouseEnter={(e) => { if (value !== option.id) e.currentTarget.style.color = 'var(--label-secondary)'; }}
+                        onMouseLeave={(e) => { if (value !== option.id) e.currentTarget.style.color = 'var(--label-tertiary)'; }}
                         title={option.label}
                     >
                         <option.icon size={18} className={value === option.id ? 'stroke-[2.5px]' : ''} />

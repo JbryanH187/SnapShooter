@@ -42,7 +42,10 @@ export const Breadcrumb: React.FC<BreadcrumbProps> = ({ maxItems = 3 }) => {
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     onClick={goBack}
-                    className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors mr-2"
+                    className="p-1.5 rounded-lg transition-colors mr-2"
+                    style={{ color: 'var(--label-secondary)' }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'var(--fill-secondary)'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                     title="Volver"
                 >
                     <ArrowLeft size={16} />
@@ -61,24 +64,30 @@ export const Breadcrumb: React.FC<BreadcrumbProps> = ({ maxItems = 3 }) => {
                             {/* Truncation indicator */}
                             {showTruncation && (
                                 <>
-                                    <span className="text-gray-400 dark:text-gray-500 mx-1">...</span>
-                                    <ChevronRight size={14} className="text-gray-400 dark:text-gray-500" />
+                                    <span className="mx-1" style={{ color: 'var(--label-tertiary)' }}>...</span>
+                                    <ChevronRight size={14} style={{ color: 'var(--label-tertiary)' }} />
                                 </>
                             )}
 
                             {/* Separator */}
                             {index > 0 && !showTruncation && (
-                                <ChevronRight size={14} className="text-gray-400 dark:text-gray-500 mx-0.5" />
+                                <ChevronRight size={14} className="mx-0.5" style={{ color: 'var(--label-tertiary)' }} />
                             )}
 
                             {/* Breadcrumb Item */}
                             <motion.button
                                 onClick={() => handleClick(view, index)}
                                 disabled={isLast}
-                                className={`flex items-center gap-1 px-2 py-1 rounded-md transition-colors ${isLast
-                                        ? 'text-gray-900 dark:text-white font-medium cursor-default'
-                                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'
-                                    }`}
+                                className="flex items-center gap-1 px-2 py-1 rounded-md transition-colors"
+                                style={isLast ? {
+                                    color: 'var(--label-primary)',
+                                    fontWeight: 500,
+                                    cursor: 'default'
+                                } : {
+                                    color: 'var(--label-tertiary)'
+                                }}
+                                onMouseEnter={(e) => { if (!isLast) { e.currentTarget.style.color = 'var(--label-primary)'; e.currentTarget.style.background = 'var(--fill-secondary)'; } }}
+                                onMouseLeave={(e) => { if (!isLast) { e.currentTarget.style.color = 'var(--label-tertiary)'; e.currentTarget.style.background = 'transparent'; } }}
                                 whileHover={!isLast ? { scale: 1.02 } : undefined}
                                 whileTap={!isLast ? { scale: 0.98 } : undefined}
                             >

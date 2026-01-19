@@ -2,7 +2,7 @@ import React from 'react';
 import './styles/index.css';
 
 // Contexts
-import { ThemeProvider } from './contexts/ThemeContext';
+import { LiquidThemeProvider } from './contexts/LiquidThemeContext';
 import { UIProvider } from './contexts/UIContext';
 import { GlobalModalProvider } from './contexts/GlobalModalContext';
 
@@ -18,13 +18,9 @@ import { KeyboardShortcutsModal } from './components/UI/KeyboardShortcutsModal';
 import { useCaptureStore } from './stores/captureStore';
 import { useUndoRedo } from './hooks/useUndoRedo';
 import { useGlobalShortcuts } from './hooks/useGlobalShortcuts';
-import { useLiquidTheme } from './hooks/useTheme'; // NEW: Liquid Glass theme system
 
 // App Content - runs inside providers
 const AppContent: React.FC = () => {
-    // Enable Liquid Glass theme system (injects CSS variables)
-    const { theme, isDark } = useLiquidTheme();
-
     // Enable global undo/redo keyboard shortcuts
     useUndoRedo();
 
@@ -63,7 +59,7 @@ const App: React.FC = () => {
     }
 
     return (
-        <ThemeProvider>
+        <LiquidThemeProvider>
             <UIProvider>
                 <GlobalModalProvider>
                     <GlobalErrorBoundary>
@@ -71,7 +67,7 @@ const App: React.FC = () => {
                     </GlobalErrorBoundary>
                 </GlobalModalProvider>
             </UIProvider>
-        </ThemeProvider>
+        </LiquidThemeProvider>
     );
 };
 

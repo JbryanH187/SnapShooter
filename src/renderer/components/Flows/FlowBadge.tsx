@@ -28,18 +28,27 @@ export const FlowBadge: React.FC<FlowBadgeProps> = ({ flow, onEdit, onDelete, on
     };
 
     return (
-        <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4 hover:shadow-lg transition-all group">
+        <div
+            className="rounded-xl p-4 hover:shadow-lg transition-all group border"
+            style={{
+                background: 'color-mix(in srgb, var(--system-orange) 8%, var(--system-background))',
+                borderColor: 'color-mix(in srgb, var(--system-orange) 25%, transparent)'
+            }}
+        >
             {/* Header */}
             <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-2">
-                    <div className="w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-800/50 flex items-center justify-center text-amber-600 dark:text-amber-400">
+                    <div
+                        className="w-10 h-10 rounded-lg flex items-center justify-center"
+                        style={{ background: 'color-mix(in srgb, var(--system-orange) 15%, transparent)', color: 'var(--system-orange)' }}
+                    >
                         <Layers size={20} />
                     </div>
                     <div>
-                        <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">
+                        <h3 className="font-semibold text-sm" style={{ color: 'var(--label-primary)' }}>
                             {flow.name || 'Flujo sin nombre'}
                         </h3>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                        <p className="text-xs" style={{ color: 'var(--label-secondary)' }}>
                             {format(new Date(flow.createdAt), 'PP')}
                         </p>
                     </div>
@@ -49,21 +58,30 @@ export const FlowBadge: React.FC<FlowBadgeProps> = ({ flow, onEdit, onDelete, on
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                         onClick={() => onExport(flow)}
-                        className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-lg transition-colors"
+                        className="p-1.5 rounded-lg transition-colors"
+                        style={{ color: 'var(--label-tertiary)' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--system-blue)'; e.currentTarget.style.background = 'color-mix(in srgb, var(--system-blue) 15%, transparent)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--label-tertiary)'; e.currentTarget.style.background = 'transparent'; }}
                         title="Exportar Reporte"
                     >
                         <FileText size={16} />
                     </button>
                     <button
                         onClick={() => onEdit(flow)}
-                        className="p-1.5 text-gray-400 hover:text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/40 rounded-lg transition-colors"
+                        className="p-1.5 rounded-lg transition-colors"
+                        style={{ color: 'var(--label-tertiary)' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--system-orange)'; e.currentTarget.style.background = 'color-mix(in srgb, var(--system-orange) 15%, transparent)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--label-tertiary)'; e.currentTarget.style.background = 'transparent'; }}
                         title="Editar flujo"
                     >
                         <Edit3 size={16} />
                     </button>
                     <button
                         onClick={() => onDelete(flow.id)}
-                        className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-lg transition-colors"
+                        className="p-1.5 rounded-lg transition-colors"
+                        style={{ color: 'var(--label-tertiary)' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--system-red)'; e.currentTarget.style.background = 'color-mix(in srgb, var(--system-red) 15%, transparent)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--label-tertiary)'; e.currentTarget.style.background = 'transparent'; }}
                         title="Eliminar flujo"
                     >
                         <Trash2 size={16} />
@@ -76,8 +94,8 @@ export const FlowBadge: React.FC<FlowBadgeProps> = ({ flow, onEdit, onDelete, on
                 {flow.captures.slice(0, 5).map((capture, idx) => (
                     <div
                         key={capture.id}
-                        className="w-12 h-12 rounded-lg border-2 border-white dark:border-gray-800 overflow-hidden flex-shrink-0 relative"
-                        style={{ zIndex: flow.captures.length - idx }}
+                        className="w-12 h-12 rounded-lg border-2 overflow-hidden flex-shrink-0 relative"
+                        style={{ zIndex: flow.captures.length - idx, borderColor: 'var(--system-background)' }}
                     >
                         <img
                             src={`media://${capture.imagePath.split(/[\\/]/).pop()}`}
@@ -104,18 +122,22 @@ export const FlowBadge: React.FC<FlowBadgeProps> = ({ flow, onEdit, onDelete, on
                     </div>
                 ))}
                 {flow.captures.length > 5 && (
-                    <div className="w-12 h-12 rounded-lg border-2 border-white dark:border-gray-800 bg-gray-100 dark:bg-gray-700 flex items-center justify-center flex-shrink-0 text-xs font-medium text-gray-500 dark:text-gray-400">
+                    <div
+                        className="w-12 h-12 rounded-lg border-2 flex items-center justify-center flex-shrink-0 text-xs font-medium"
+                        style={{ borderColor: 'var(--system-background)', background: 'var(--fill-secondary)', color: 'var(--label-secondary)' }}
+                    >
                         +{flow.captures.length - 5}
                     </div>
                 )}
             </div>
 
             {/* Footer */}
-            <div className="mt-3 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+            <div className="mt-3 flex items-center justify-between text-xs" style={{ color: 'var(--label-secondary)' }}>
                 <span>{flow.captures.length} pasos</span>
                 <button
                     onClick={() => onEdit(flow)}
-                    className="text-amber-600 dark:text-amber-400 hover:underline font-medium"
+                    className="hover:underline font-medium"
+                    style={{ color: 'var(--system-orange)' }}
                 >
                     Ver detalles
                 </button>

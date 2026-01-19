@@ -37,7 +37,7 @@ export const ContentRouter: React.FC = () => {
     return (
         <>
             <section className="flex-1 flex flex-col overflow-hidden">
-                <div className="card h-full flex flex-col overflow-hidden border-gray-200/60 dark:border-gray-700/60 shadow-sm hover:shadow-md transition-shadow bg-white dark:bg-gray-900">
+                <div className="card h-full flex flex-col overflow-hidden shadow-sm hover:shadow-md transition-shadow" style={{ borderColor: 'var(--separator-opaque)', background: 'var(--system-background)' }}>
                     <AnimatePresence mode="wait">
                         {contentView === 'home' && (
                             <motion.div
@@ -108,7 +108,8 @@ export const ContentRouter: React.FC = () => {
                         key={contentView === 'recents' ? 'captures' : 'flows'}
                         initial={{ scale: 1.2, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
-                        className="text-sm text-gray-500 dark:text-gray-400 font-medium"
+                        className="text-sm font-medium"
+                        style={{ color: 'var(--label-secondary)' }}
                     >
                         {contentView === 'recents'
                             ? `${captures.length} ${captures.length === 1 ? 'captura' : 'capturas'}`
@@ -122,7 +123,14 @@ export const ContentRouter: React.FC = () => {
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={handleClearAll}
-                        className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg transition-colors"
+                        className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors border"
+                        style={{
+                            color: 'var(--system-red)',
+                            background: 'color-mix(in srgb, var(--system-red) 8%, transparent)',
+                            borderColor: 'color-mix(in srgb, var(--system-red) 25%, transparent)'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = 'color-mix(in srgb, var(--system-red) 15%, transparent)'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = 'color-mix(in srgb, var(--system-red) 8%, transparent)'}
                     >
                         <Trash2 size={14} />
                         Clear All Evidence
