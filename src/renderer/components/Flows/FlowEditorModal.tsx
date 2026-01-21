@@ -86,23 +86,28 @@ export const FlowEditorModal: React.FC<FlowEditorModalProps> = ({ isOpen, flow, 
         <Modal
             isOpen={isOpen}
             onCancel={onClose}
-            title="Editar Flujo de Capturas"
-            maxWidth="4xl"
-            description={null}
+            title="Editar Flujo"
+            maxWidth="max-w-4xl"
+            description={
+                <span className="opacity-80">
+                    Organiza, renombra y personaliza los pasos de tu flujo.
+                </span>
+            }
             showFooter={false}
+            type="info"
         >
-            <div className="flex flex-col gap-6 max-h-[70vh] overflow-y-auto">
+            <div className="flex flex-col gap-6 max-h-[70vh] overflow-y-auto px-2 py-2">
                 {/* Flow Name */}
-                <div>
-                    <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--label-primary)' }}>
+                <div className="bg-white/50 dark:bg-black/20 p-4 rounded-3xl border border-white/20">
+                    <label className="block text-sm font-bold mb-2 ml-1" style={{ color: 'var(--label-primary)' }}>
                         Nombre del Flujo
                     </label>
                     <input
                         type="text"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        placeholder="Ej: Flujo de Login, Proceso de Checkout..."
-                        className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                        placeholder="Ej: Flujo de Login..."
+                        className="w-full px-5 py-3 rounded-2xl border outline-none transition-all focus:ring-4 focus:ring-amber-500/20"
                         style={{
                             background: 'var(--system-background)',
                             borderColor: 'var(--separator-opaque)',
@@ -113,52 +118,64 @@ export const FlowEditorModal: React.FC<FlowEditorModalProps> = ({ isOpen, flow, 
 
                 {/* Captures Grid */}
                 <div>
-                    <label className="block text-sm font-semibold mb-3" style={{ color: 'var(--label-primary)' }}>
-                        Capturas ({captures.length} pasos)
-                    </label>
+                    <div className="flex items-center justify-between mb-3 px-1">
+                        <label className="text-sm font-bold" style={{ color: 'var(--label-primary)' }}>
+                            Pasos ({captures.length})
+                        </label>
+                        <span className="text-xs opacity-60">Arrastra para reordenar</span>
+                    </div>
 
-                    <DndContext
-                        sensors={sensors}
-                        collisionDetection={closestCenter}
-                        onDragEnd={handleDragEnd}
-                    >
-                        <SortableContext
-                            items={captures.map(c => c.id)}
-                            strategy={verticalListSortingStrategy}
+                    <div className="bg-white/50 dark:bg-black/20 p-4 rounded-3xl border border-white/20 min-h-[200px]">
+                        <DndContext
+                            sensors={sensors}
+                            collisionDetection={closestCenter}
+                            onDragEnd={handleDragEnd}
                         >
-                            <div className="space-y-4">
-                                {captures.map((capture, idx) => (
-                                    <SortableStepItem
-                                        key={capture.id}
-                                        capture={capture}
-                                        index={idx}
-                                        onUpdate={handleCaptureUpdate}
-                                        onDelete={handleDeleteCapture}
-                                        renderClickIcon={renderClickIcon}
-                                    />
-                                ))}
-                            </div>
-                        </SortableContext>
-                    </DndContext>
+                            <SortableContext
+                                items={captures.map(c => c.id)}
+                                strategy={verticalListSortingStrategy}
+                            >
+                                <div className="space-y-3">
+                                    {captures.length === 0 ? (
+                                        <div className="text-center py-12 opacity-50 italic">
+                                            No hay capturas en este flujo
+                                        </div>
+                                    ) : (
+                                        captures.map((capture, idx) => (
+                                            <SortableStepItem
+                                                key={capture.id}
+                                                capture={capture}
+                                                index={idx}
+                                                onUpdate={handleCaptureUpdate}
+                                                onDelete={handleDeleteCapture}
+                                                renderClickIcon={renderClickIcon}
+                                            />
+                                        ))
+                                    )}
+                                </div>
+                            </SortableContext>
+                        </DndContext>
+                    </div>
                 </div>
 
-                {/* Footer */}
-                <div className="flex justify-end gap-3 pt-4 border-t" style={{ borderColor: 'var(--separator-opaque)' }}>
+                {/* Footer Actions */}
+                <div className="flex justify-end gap-3 mt-2">
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 font-medium"
+                        className="px-6 py-2.5 rounded-2xl font-medium transition-colors hover:bg-gray-100 dark:hover:bg-white/10"
                         style={{ color: 'var(--label-secondary)' }}
-                        onMouseEnter={(e) => e.currentTarget.style.color = 'var(--label-primary)'}
-                        onMouseLeave={(e) => e.currentTarget.style.color = 'var(--label-secondary)'}
                     >
                         Cancelar
                     </button>
                     <button
                         onClick={handleSave}
-                        className="px-5 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-medium flex items-center gap-2 shadow-sm"
+                        className="px-6 py-2.5 rounded-2xl font-bold text-white shadow-lg transition-transform hover:scale-105 active:scale-95 flex items-center gap-2"
+                        style={{
+                            background: 'linear-gradient(135deg, var(--system-orange), #f97316)'
+                        }}
                     >
                         <Save size={18} />
-                        Guardar Cambios
+                        Guardar Flujo
                     </button>
                 </div>
             </div>
