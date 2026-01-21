@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Modal } from './Modal';
 import { useGlobalModal } from '../../contexts/GlobalModalContext';
 import { useCaptureStore } from '../../stores/captureStore';
 import { useUI } from '../../contexts/UIContext';
@@ -9,6 +10,7 @@ import { FlowEditorModal } from '../Flows/FlowEditorModal';
 import { CaptureOverlay } from '../Overlay/CaptureOverlay';
 import { toast, confirm } from '../../utils/toast';
 import { CaptureFlow } from '../../../shared/types/FlowTypes';
+import { useFlowStore } from '../../stores/flowStore';
 
 export const ModalManager: React.FC = () => {
     const {
@@ -53,30 +55,16 @@ export const ModalManager: React.FC = () => {
         closeImageEditor();
     };
 
+    const { flows, saveFlow, loadFlows } = useFlowStore();
+
+    const [showSuccessModal, setShowSuccessModal] = React.useState(false);
+
     const handleSaveFlow = async (flow: CaptureFlow) => {
-        // This is tricky. App.tsx handled saving flows because flows were local state.
-        // We probably need a useFlows hook or move flows to a store.
-        // For now, we'll access the IPC directly here? OR pass a callback?
-        // Ideally, flows should be in a Store.
-        // Since I haven't created a FlowStore yet, I will use direct IPC calls here,
-        // mirroring what App.tsx did, but without updating the local state in App.tsx...
-        // WAIT. If App.tsx holds the 'flows' state, updating it from here is hard.
-
-        // CORRECTION: The Prompt didn't ask for FlowStore, but to avoid breaking,
-        // I should probably create a simple useFlows hook or stick to IPC.
-        // But App.tsx `flows` state drives the UI list.
-        // Ideally, `ContentRouter` needs `flows` too.
-
-        // I will assume for this step that I will refactor `App.tsx` to use a `FlowStore` or `useFlows` context/hook.
-        // Let's create a useFlows hook in `src/renderer/hooks/useFlows.ts` quickly?
-        // Or simply trigger a reload in App via an event?
-
-        if (window.electron?.saveFlow) {
-            await window.electron.saveFlow(flow);
-            // We need to notify the app to reload flows.
-            // A simple event bus or a store is best.
-            // Let's dispatch a custom event on window for now to keep it decoupled?
-            window.dispatchEvent(new CustomEvent('flows-updated'));
+        try {
+            await saveFlow(flow);
+            setShowSuccessModal(true);
+        } catch (error) {
+            toast.error('Error al guardar el flujo');
         }
         closeFlowEditor();
     };
@@ -85,6 +73,19 @@ export const ModalManager: React.FC = () => {
         <>
             {/* Capture Overlay */}
             {currentCapture && <CaptureOverlay />}
+
+            {/* Success Modal */}
+            <Modal
+                isOpen={showSuccessModal}
+                onCancel={() => setShowSuccessModal(false)}
+                title="¡Flujo Guardado!"
+                type="success"
+                description="Tu flujo se ha guardado correctamente en el Storage."
+                confirmText="Entendido"
+                onConfirm={() => setShowSuccessModal(false)}
+                showFooter={true}
+                maxWidth="max-w-sm"
+            />
 
             {/* Report Wizard */}
             {reportModalOpen && (
