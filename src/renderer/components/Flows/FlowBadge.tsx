@@ -1,5 +1,6 @@
 import React from 'react';
-import { Layers, Trash2, Edit3, Hand, Target, Circle, MousePointer2, FileText } from 'lucide-react';
+import { Layers, Trash2, Edit3, Hand, Target, Circle, MousePointer2, FileText, FolderOpen } from 'lucide-react';
+import { useFlowStore } from '../../stores/flowStore';
 import { CaptureFlow } from '../../../shared/types/FlowTypes';
 import { format } from 'date-fns';
 
@@ -11,6 +12,7 @@ interface FlowBadgeProps {
 }
 
 export const FlowBadge: React.FC<FlowBadgeProps> = ({ flow, onEdit, onDelete, onExport }) => {
+    const { openFlowFolder } = useFlowStore();
 
     const renderClickIcon = (style: string = 'hand') => {
         const commonProps = "drop-shadow-lg filter";
@@ -67,6 +69,16 @@ export const FlowBadge: React.FC<FlowBadgeProps> = ({ flow, onEdit, onDelete, on
                         <FileText size={16} />
                     </button>
                     <button
+                        onClick={() => openFlowFolder(flow.id)}
+                        className="p-1.5 rounded-lg transition-colors"
+                        style={{ color: 'var(--label-tertiary)' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--system-warning)'; e.currentTarget.style.background = 'color-mix(in srgb, var(--system-warning) 15%, transparent)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--label-tertiary)'; e.currentTarget.style.background = 'transparent'; }}
+                        title="Abrir en Explorer"
+                    >
+                        <FolderOpen size={16} />
+                    </button>
+                    <button
                         onClick={() => onEdit(flow)}
                         className="p-1.5 rounded-lg transition-colors"
                         style={{ color: 'var(--label-tertiary)' }}
@@ -98,7 +110,7 @@ export const FlowBadge: React.FC<FlowBadgeProps> = ({ flow, onEdit, onDelete, on
                         style={{ zIndex: flow.captures.length - idx, borderColor: 'var(--system-background)' }}
                     >
                         <img
-                            src={`media://${capture.imagePath.split(/[\\/]/).pop()}`}
+                            src={capture.imagePath}
                             alt={`Capture ${idx + 1}`}
                             className="w-full h-full object-cover"
                         />

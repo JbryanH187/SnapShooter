@@ -1,4 +1,0 @@
-src/renderer/components/UI/VirtualGrid.tsx(3,10): error TS2305: Module '"react-window"' has no exported member 'FixedSizeList'.
-src/renderer/components/UI/VirtualGrid.tsx(4,8): error TS2613: Module '"C:/Users/jesus.bojorquezh/Desktop/BryanDevStuff/Project/SnapProof/node_modules/react-virtualized-auto-sizer/dist/react-virtualized-auto-sizer"' has no default export. Did you mean to use 'import { AutoSizer } from "C:/Users/jesus.bojorquezh/Desktop/BryanDevStuff/Project/SnapProof/node_modules/react-virtualized-auto-sizer/dist/react-virtualized-auto-sizer"' instead?
-src/renderer/components/UI/VirtualGrid.tsx(44,33): error TS7031: Binding element 'index' implicitly has an 'any' type.
-src/renderer/components/UI/VirtualGrid.tsx(44,40): error TS7031: Binding element 'style' implicitly has an 'any' type.

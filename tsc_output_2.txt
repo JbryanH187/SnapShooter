@@ -1,4 +1,0 @@
-src/renderer/App.tsx(441,40): error TS2304: Cannot find name 'setNameModalOpen'.
-src/renderer/App.tsx(541,76): error TS7006: Parameter 'c' implicitly has an 'any' type.
-src/renderer/App.tsx(541,79): error TS7006: Parameter 'index' implicitly has an 'any' type.
-src/renderer/App.tsx(657,73): error TS7006: Parameter 'flow' implicitly has an 'any' type.

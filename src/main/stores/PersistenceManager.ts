@@ -1,13 +1,16 @@
 import Store from 'electron-store';
 import path from 'path';
-import { app } from 'electron';
+import { app, shell } from 'electron';
 import fs from 'fs-extra';
 import { CaptureItem } from '../../shared/types';
+import { CaptureFlow, FlowCapture } from '../../shared/types/FlowTypes';
+import { v4 as uuidv4 } from 'uuid';
 
 // Define the shape of our store
 interface AppValidation {
     captures: CaptureItem[];
     userProfile?: { name: string; initialized: boolean };
+    captureFlows?: CaptureFlow[];
 }
 
 export class PersistenceManager {
@@ -16,13 +19,13 @@ export class PersistenceManager {
     private capturesDir: string;
     private flowsDir: string;
     private reportsDir: string;
-
     constructor() {
         this.store = new Store<AppValidation>({
             name: 'snapproof-data',
             defaults: {
                 captures: [],
-                userProfile: { name: '', initialized: false }
+                userProfile: { name: '', initialized: false },
+                captureFlows: []
             }
         });
 
@@ -52,19 +55,29 @@ export class PersistenceManager {
     }
 
     async readImage(pathUrl: string): Promise<string> {
+        console.log(`[Persistence] readImage: ${pathUrl}`);
         if (pathUrl.startsWith('media://')) {
             const fileName = pathUrl.replace('media://', '');
             const decodedName = decodeURIComponent(fileName);
+            const normalizedName = path.normalize(decodedName);
 
             // Try captures dir first
-            let filePath = path.join(this.capturesDir, decodedName);
+            const capturesPath = path.join(this.capturesDir, normalizedName);
 
-            if (!fs.existsSync(filePath)) {
-                // Try flows dir
-                filePath = path.join(this.flowsDir, decodedName);
+            // Try flows dir
+            const flowsPath = path.join(this.flowsDir, normalizedName);
+
+            let filePath = '';
+            if (fs.existsSync(capturesPath)) {
+                filePath = capturesPath;
+            } else if (fs.existsSync(flowsPath)) {
+                filePath = flowsPath;
+            } else if (fs.existsSync(normalizedName)) {
+                // Try as absolute path
+                filePath = normalizedName;
             }
 
-            if (fs.existsSync(filePath)) {
+            if (filePath) {
                 const ext = path.extname(filePath).toLowerCase();
                 let mimeType = 'image/png';
                 if (ext === '.jpg' || ext === '.jpeg') mimeType = 'image/jpeg';
@@ -73,6 +86,9 @@ export class PersistenceManager {
 
                 const base64Data = await fs.readFile(filePath, { encoding: 'base64' });
                 return `data:${mimeType};base64,${base64Data}`;
+            } else {
+                console.error(`[Persistence] Image not found: ${normalizedName}`);
+                console.error(`[Persistence] Tried: ${capturesPath} AND ${flowsPath}`);
             }
         }
         throw new Error('Image not found or invalid protocol');
@@ -226,15 +242,238 @@ export class PersistenceManager {
         return flow;
     }
 
-    deleteFlow(id: string) {
+    async saveFlowSession(name: string, captures: CaptureItem[]): Promise<CaptureFlow> {
+        const flowId = uuidv4();
+        // Sanitize name for folder
+        const safeName = name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        const flowFolder = path.join(this.flowsDir, safeName);
+        const screensFolder = path.join(flowFolder, 'Screens');
+
+        await fs.ensureDir(screensFolder);
+
+        const flowCaptures: FlowCapture[] = [];
+
+        for (let i = 0; i < captures.length; i++) {
+            const capture = captures[i];
+            const fileName = capture.thumbnail.replace('media://', '');
+            const sourcePath = path.join(this.capturesDir, fileName);
+            const destPath = path.join(screensFolder, fileName);
+
+            // Move file (using copy+remove to be safe or move)
+            // We MOVE because we want to clear the workspace as per requirement
+            if (await fs.pathExists(sourcePath)) {
+                await fs.move(sourcePath, destPath, { overwrite: true });
+            }
+
+            flowCaptures.push({
+                id: capture.id,
+                imagePath: `media://${safeName}/Screens/${fileName}`, // Store relative path protocol with subfolder
+                title: capture.title,
+                description: capture.description,
+                order: i,
+                createdAt: capture.timestamp
+            });
+        }
+
+        const newFlow: CaptureFlow = {
+            id: flowId,
+            name: name,
+            captures: flowCaptures,
+            createdAt: Date.now(),
+            updatedAt: Date.now()
+        };
+
+        const flows = this.store.get('captureFlows' as any, []);
+        flows.push(newFlow);
+        this.store.set('captureFlows' as any, flows);
+
+        // Clear workspace
+        this.store.set('captures', []);
+
+        return newFlow;
+    }
+
+    async addToFlow(flowId: string, captures: CaptureItem[]): Promise<CaptureFlow> {
+        const flows = this.store.get('captureFlows' as any, []) as CaptureFlow[];
+        const flowIndex = flows.findIndex(f => f.id === flowId);
+
+        if (flowIndex === -1) throw new Error('Flow not found');
+
+        const flow = flows[flowIndex];
+
+        // Determine folder path from existing captures or name
+        // We assume flow.name matches folder name logic or we use the first capture to find it
+        // But safer to re-derive from name if standard, OR better: store folderPath in flow metadata?
+        // Let's use the folder name from the first capture if available, or try based on name.
+
+        let safeName = flow.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+
+        if (flow.captures.length > 0) {
+            const firstImage = flow.captures[0].imagePath.replace('media://', '');
+            const parts = firstImage.split('/');
+            if (parts.length > 0) safeName = parts[0];
+        }
+
+        const flowFolder = path.join(this.flowsDir, safeName);
+        const screensFolder = path.join(flowFolder, 'Screens');
+        await fs.ensureDir(screensFolder);
+
+        // Determine start order
+        const maxOrder = flow.captures.length > 0 ? Math.max(...flow.captures.map(c => c.order)) : -1;
+        let currentOrder = maxOrder + 1;
+
+        const newFlowCaptures: FlowCapture[] = [];
+
+        for (let i = 0; i < captures.length; i++) {
+            const capture = captures[i];
+            const fileName = capture.thumbnail.replace('media://', '');
+            const sourcePath = path.join(this.capturesDir, fileName);
+            const destPath = path.join(screensFolder, fileName);
+
+            if (await fs.pathExists(sourcePath)) {
+                await fs.move(sourcePath, destPath, { overwrite: true });
+            }
+
+            newFlowCaptures.push({
+                id: capture.id,
+                imagePath: `media://${safeName}/Screens/${fileName}`,
+                title: capture.title,
+                description: capture.description,
+                order: currentOrder++,
+                createdAt: capture.timestamp
+            });
+        }
+
+        // Update flow
+        flow.captures = [...flow.captures, ...newFlowCaptures];
+        flow.updatedAt = Date.now();
+
+        flows[flowIndex] = flow;
+        this.store.set('captureFlows' as any, flows);
+
+        // Clear workspace
+        this.store.set('captures', []);
+
+        return flow;
+    }
+
+    async loadFlow(flowId: string): Promise<CaptureItem[]> {
+        const flows = this.store.get('captureFlows' as any, []) as CaptureFlow[];
+        const flow = flows.find(f => f.id === flowId);
+
+        if (!flow) throw new Error('Flow not found');
+
+        // Clear current workspace first (delete images in captures? No, just clear state? 
+        // Logic: if we are "loading" we might overwrite existing files in capturesDir if names collide.
+        // Assuming we clear workspace first.
+
+        // 1. Clear current workspace files to be clean? 
+        // Or just let overwrite happen. UUIDs prevent collisions mostly.
+
+        const restoredCaptures: CaptureItem[] = [];
+
+        for (const fc of flow.captures) {
+            // fc.imagePath is "media://flowName/image.png"
+            const relativePath = fc.imagePath.replace('media://', '');
+            const sourcePath = path.join(this.flowsDir, relativePath);
+
+            const fileName = path.basename(relativePath);
+            const destPath = path.join(this.capturesDir, fileName);
+
+            console.log(`[Persistence] loadFlow processing: ${fc.id}`);
+            console.log(`[Persistence] Source: ${sourcePath}`);
+            console.log(`[Persistence] Dest: ${destPath}`);
+
+            // Copy file back to workspace
+            let foundPath = sourcePath;
+
+            if (!await fs.pathExists(sourcePath)) {
+                console.warn(`[Persistence] Source path not found: ${sourcePath}`);
+                // Fallback: Search for the file by name in the flows directory (recursive-ish or check common paths)
+                // We know it's likely in some flow folder.
+                const searchName = path.basename(fileName);
+                console.log(`[Persistence] Attempting to find ${searchName} in flows directory...`);
+
+                // Simple search in all subfolders of flowsDir
+                try {
+                    const subdirs = await fs.readdir(this.flowsDir, { withFileTypes: true });
+                    for (const dirent of subdirs) {
+                        if (dirent.isDirectory()) {
+                            // Check root of flow folder
+                            const p1 = path.join(this.flowsDir, dirent.name, searchName);
+                            if (await fs.pathExists(p1)) { foundPath = p1; break; }
+
+                            // Check Screens subfolder
+                            const p2 = path.join(this.flowsDir, dirent.name, 'Screens', searchName);
+                            if (await fs.pathExists(p2)) { foundPath = p2; break; }
+                        }
+                    }
+                } catch (e) {
+                    console.error('[Persistence] Error searching for file:', e);
+                }
+            }
+
+            if (await fs.pathExists(foundPath)) {
+                if (foundPath !== sourcePath) {
+                    console.log(`[Persistence] Found file at alternative path: ${foundPath}`);
+                }
+                await fs.copy(foundPath, destPath, { overwrite: true });
+                console.log(`[Persistence] Copied successfully.`);
+            } else {
+                console.error(`[Persistence] Critical: Could not find image file for capture ${fc.id}`);
+            }
+
+            restoredCaptures.push({
+                id: fc.id,
+                timestamp: fc.createdAt,
+                thumbnail: `media://${fileName}`,
+                status: 'success',
+                title: fc.title || '',
+                description: fc.description || '',
+                metadata: {
+                    os: 'unknown',
+                    resolution: 'unknown',
+                    timestamp: fc.createdAt
+                }
+            });
+        }
+
+        // Update Store
+        this.store.set('captures', restoredCaptures);
+        return restoredCaptures;
+    }
+
+    async openFlowFolder(flowId: string) {
+        const flows = this.store.get('captureFlows' as any, []) as CaptureFlow[];
+        const flow = flows.find(f => f.id === flowId);
+        if (flow && flow.captures.length > 0) {
+            // Deduce folder from first capture path which is like "media://flowName/Screens/image.png"
+            const firstImage = flow.captures[0].imagePath.replace('media://', '');
+            // Split by separator usually '/'
+            const parts = firstImage.split('/');
+            // parts[0] is flowName
+            if (parts.length > 0) {
+                const folderPath = path.join(this.flowsDir, parts[0]);
+                await shell.openPath(folderPath);
+            }
+        } else {
+            // Fallback
+            await shell.openPath(this.flowsDir);
+        }
+    }
+
+    async deleteFlow(id: string) {
         const flows = this.store.get('captureFlows' as any, []);
         const flow = flows.find((f: any) => f.id === id);
 
-        // Delete all capture images in the flow
-        if (flow && flow.captures) {
-            for (const capture of flow.captures) {
-                if (capture.imagePath) {
-                    fs.remove(capture.imagePath).catch(err => console.error("Failed to delete flow capture:", err));
+        if (flow) {
+            // Delete the entire folder
+            if (flow.captures.length > 0) {
+                const firstImage = flow.captures[0].imagePath.replace('media://', '');
+                const parts = firstImage.split('/');
+                if (parts.length > 0) {
+                    const folderPath = path.join(this.flowsDir, parts[0]);
+                    await fs.remove(folderPath).catch(err => console.error("Failed to delete flow folder:", err));
                 }
             }
         }

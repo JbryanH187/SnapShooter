@@ -113,7 +113,7 @@ npm run build
 | Action | Windows | Mac |
 | :--- | :--- | :--- |
 | **Region Capture** | `Ctrl` + `Shift` + `1` | `Cmd` + `Shift` + `1` |
-| **Quick Flow Mode** | `Ctrl` + `Shift` + `F` | `Cmd` + `Shift` + `F` |
+| **Quick Flow Mode** | `Ctrl` + `Shift` + `F` | `Cmd` + `Shift` + `Q` |
 | **Developer Tools** | `Ctrl` + `Shift` + `I` | `Cmd` + `Option` + `I` |
 
 ---
@@ -131,5 +131,5 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ---
 
 <div align="center">
-  <p>Built with ❤️ by the SnapProof Team</p>
+  <p>Built with creativity thinking and a lot of coffee and be fun. The best desires for you to enjoy this app 😁</p>
 </div>

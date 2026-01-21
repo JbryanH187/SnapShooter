@@ -62,7 +62,7 @@ export const SortableStepItem: React.FC<SortableStepItemProps> = ({
                 style={{ borderColor: 'var(--separator-opaque)' }}
             >
                 <img
-                    src={`media://${capture.imagePath.split(/[\\/]/).pop()}`}
+                    src={capture.imagePath}
                     alt={`Step ${index + 1}`}
                     className="w-full h-full object-cover"
                 />

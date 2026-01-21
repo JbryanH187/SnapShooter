@@ -1,3 +1,0 @@
-src/renderer/components/ErrorBoundaries/SectionErrorBoundary.tsx(46,22): error TS2304: Cannot find name 'AlertCircle'.
-src/renderer/services/Logger.ts(17,34): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
-src/renderer/stores/flowStore.ts(35,57): error TS2304: Cannot find name 'e'.

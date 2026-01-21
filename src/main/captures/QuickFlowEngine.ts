@@ -224,7 +224,7 @@ export class QuickFlowEngine {
 
                 const capture = {
                     id: captureId,
-                    imagePath,
+                    imagePath: `media://${captureId}.png`,
                     clickPosition,
                     order: this.currentFlowCaptures.length,
                     createdAt: Date.now()

@@ -1,9 +1,10 @@
-import { app, BrowserWindow, protocol } from 'electron';
+import { app, BrowserWindow } from 'electron';
 import * as path from 'path';
 import { setupHandlers } from './ipc/handlers';
 import { registerShortcuts } from './shortcuts/GlobalShortcuts';
 import { captureEngine } from './captures/CaptureEngine';
 import { quickFlowEngine } from './captures/QuickFlowEngine';
+import { registerMediaProtocol } from './ipc/MediaProtocol';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -54,23 +55,8 @@ function createWindow() {
 app.whenReady().then(() => {
     console.log('[Main] Application Ready');
 
-    // Register custom protocol 'media' to serve images from userData/captures or userData/flows
-    protocol.registerFileProtocol('media', (request, callback) => {
-        const url = request.url.replace('media://', '');
-        const decodedFile = decodeURIComponent(url);
-
-        // Try captures directory first
-        const capturesPath = path.join(app.getPath('userData'), 'captures', decodedFile);
-        const flowsPath = path.join(app.getPath('userData'), 'flows', decodedFile);
-
-        // Check if file exists in captures, otherwise try flows
-        const fs = require('fs');
-        if (fs.existsSync(capturesPath)) {
-            callback({ path: capturesPath });
-        } else {
-            callback({ path: flowsPath });
-        }
-    });
+    // Register custom protocol 'media'
+    registerMediaProtocol();
 
     createWindow();
 

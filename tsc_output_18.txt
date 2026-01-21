@@ -1,2 +1,0 @@
-src/renderer/components/UI/VirtualGrid.tsx(4,8): error TS1192: Module '"C:/Users/jesus.bojorquezh/Desktop/BryanDevStuff/Project/SnapProof/node_modules/react-virtualized-auto-sizer/dist/react-virtualized-auto-sizer"' has no default export.
-src/renderer/components/UI/VirtualGrid.tsx(8,73): error TS2339: Property 'default' does not exist on type 'typeof import("C:/Users/jesus.bojorquezh/Desktop/BryanDevStuff/Project/SnapProof/node_modules/react-window/dist/react-window")'.
