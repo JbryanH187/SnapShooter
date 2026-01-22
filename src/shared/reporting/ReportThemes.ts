@@ -5,6 +5,7 @@ export interface ColorPalette {
     textMain: string;
     textLight: string;
     bgLight: string;
+    border: string;
     statusSuccess: { bg: string; text: string };
     statusFail: { bg: string; text: string };
 }
@@ -16,6 +17,7 @@ export const REPORT_THEMES: Record<string, ColorPalette> = {
         textMain: '#1e293b',
         textLight: '#64748b',
         bgLight: '#f8fafc',
+        border: '#e2e8f0',
         statusSuccess: { bg: '#dcfce7', text: '#15803d' },
         statusFail: { bg: '#fee2e2', text: '#b91c1c' }
     },
@@ -25,6 +27,7 @@ export const REPORT_THEMES: Record<string, ColorPalette> = {
         textMain: '#27272a',
         textLight: '#71717a',
         bgLight: '#fafafa',
+        border: '#e5e7eb',
         statusSuccess: { bg: '#ecfccb', text: '#3f6212' },
         statusFail: { bg: '#ffe4e6', text: '#881337' }
     },
@@ -34,6 +37,7 @@ export const REPORT_THEMES: Record<string, ColorPalette> = {
         textMain: '#134e4a',
         textLight: '#5eead4',
         bgLight: '#f0fdfa',
+        border: '#ccfbf1',
         statusSuccess: { bg: '#ccfbf1', text: '#0f766e' },
         statusFail: { bg: '#ffe4e6', text: '#be123c' }
     },
@@ -43,6 +47,7 @@ export const REPORT_THEMES: Record<string, ColorPalette> = {
         textMain: '#022c22',
         textLight: '#6b7280',
         bgLight: '#ecfdf5',
+        border: '#d1fae5',
         statusSuccess: { bg: '#d1fae5', text: '#065f46' },
         statusFail: { bg: '#fee2e2', text: '#991b1b' }
     },
@@ -52,6 +57,7 @@ export const REPORT_THEMES: Record<string, ColorPalette> = {
         textMain: '#3b0764',
         textLight: '#6b7280',
         bgLight: '#faf5ff',
+        border: '#e9d5ff',
         statusSuccess: { bg: '#d8b4fe', text: '#581c87' },
         statusFail: { bg: '#fce7f3', text: '#9d174d' }
     }
@@ -61,9 +67,11 @@ export type ReportLayout = 'A' | 'B';
 export type LogoAlignment = 'left' | 'center' | 'right' | 'split';
 export type LogoGap = 'small' | 'medium' | 'large';
 
+import { ReportTemplate } from '../types';
+
 export interface ReportConfig {
     layout: ReportLayout; // Deprecated: use templateId instead
-    templateId?: 'classic' | 'modern' | 'creative'; // New template system
+    templateId?: 'classic' | 'modern' | 'creative' | 'custom'; // New template system
     theme: keyof typeof REPORT_THEMES;
     title: string;
     titleColor?: string; // Optional custom color for title
@@ -77,4 +85,5 @@ export interface ReportConfig {
     customLogoText?: string | null;
     logoAlignment: LogoAlignment;
     logoGap: LogoGap;
+    customTemplate?: ReportTemplate;
 }

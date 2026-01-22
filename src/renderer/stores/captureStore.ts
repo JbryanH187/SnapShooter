@@ -19,6 +19,7 @@ interface CaptureState {
 
     // Actions
     addCapture: (capture: CaptureItem) => void;
+    reorderCaptures: (newOrder: CaptureItem[]) => void;
     updateCapture: (id: string, updates: Partial<CaptureItem>) => void;
     deleteCapture: (id: string) => void;
     undoLastDelete: () => void;
@@ -88,6 +89,11 @@ export const useCaptureStore = create<CaptureState>()(subscribeWithSelector((set
                 currentCapture: state.currentCapture?.id === saved.id ? saved : state.currentCapture
             }));
         });
+    },
+
+    reorderCaptures: (newOrder) => {
+        set({ captures: newOrder });
+        // TODO: Persist order if strictly necessary
     },
 
     updateCapture: (id, updates) => {

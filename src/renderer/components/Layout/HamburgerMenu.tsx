@@ -9,12 +9,13 @@ import {
     ChevronRight,
     FileEdit,
     Home,
-    FolderKanban
+    FolderKanban,
+    LayoutTemplate
 } from 'lucide-react';
 import { SmartFoldersList } from '../Views/SmartFoldersList';
 import { LiquidGlass } from '../UI/LiquidGlass';
 
-export type ViewType = 'home' | 'recents' | 'flows' | 'history' | 'drafts';
+export type ViewType = 'home' | 'recents' | 'flows' | 'history' | 'drafts' | 'builder';
 
 interface HamburgerMenuProps {
     isOpen: boolean;
@@ -45,7 +46,7 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
         },
         {
             id: 'flows' as ViewType,
-            label: 'Flujos de Trabajo',
+            label: 'Storage',
             icon: Layers,
             count: flowCount,
             onClick: () => onViewChange('flows')
@@ -63,6 +64,13 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
             icon: FileEdit,
             count: null,
             onClick: () => onViewChange('drafts')
+        },
+        {
+            id: 'builder' as ViewType,
+            label: 'Report Builder',
+            icon: LayoutTemplate,
+            count: null,
+            onClick: () => onViewChange('builder')
         }
     ];
 

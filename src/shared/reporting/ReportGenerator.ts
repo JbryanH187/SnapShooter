@@ -4,6 +4,7 @@ import { jsPDF } from 'jspdf';
 import { CaptureItem } from '../types';
 import { REPORT_THEMES, ReportConfig, ColorPalette } from './ReportThemes';
 import { ClassicTemplate, ModernTemplate, CreativeTemplate, TemplateBase } from './templates';
+import { DynamicTemplate } from './DynamicTemplate';
 
 /**
  * Helper to get template instance based on templateId or legacy layout
@@ -16,6 +17,8 @@ function getTemplate(doc: jsPDF, config: ReportConfig): TemplateBase {
                 return new ModernTemplate(doc, config);
             case 'creative':
                 return new CreativeTemplate(doc, config);
+            case 'custom':
+                return new DynamicTemplate(doc, config);
             case 'classic':
             default:
                 return new ClassicTemplate(doc, config);
@@ -53,7 +56,9 @@ export class ReportGenerator {
             customLogoSymbol: config?.customLogoSymbol || null,
             customLogoText: config?.customLogoText || null,
             logoAlignment: config?.logoAlignment || 'split',
-            logoGap: config?.logoGap || 'medium'
+            logoGap: config?.logoGap || 'medium',
+            customTemplate: config?.customTemplate,
+            projectName: config?.projectName
         };
 
         if (format === 'pdf') {

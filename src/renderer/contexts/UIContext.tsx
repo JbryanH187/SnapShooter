@@ -10,7 +10,8 @@ export const VIEW_LABELS: Record<ViewType, string> = {
     recents: 'Recientes',
     flows: 'Flujos',
     history: 'Historial',
-    drafts: 'Borradores'
+    drafts: 'Borradores',
+    builder: 'Report Builder'
 };
 
 interface UIContextType {

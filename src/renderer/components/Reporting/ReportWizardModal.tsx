@@ -11,6 +11,7 @@ import { toast } from '../../utils/toast';
 import { SectionErrorBoundary } from '../ErrorBoundaries/SectionErrorBoundary';
 import { logger } from '../../services/Logger';
 import { ExportProgressOverlay, ExportStep } from './ExportProgressOverlay';
+import { useTemplateStore } from '../../stores/templateStore';
 
 interface ReportWizardModalProps {
     isOpen: boolean;
@@ -23,6 +24,7 @@ interface ReportWizardModalProps {
 type Step = 'config' | 'export';
 
 export const ReportWizardModal: React.FC<ReportWizardModalProps> = ({ isOpen, onClose, captures, authorName, initialDraft }) => {
+    const { templates } = useTemplateStore();
     const [step, setStep] = useState<Step>('config');
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
@@ -34,11 +36,12 @@ export const ReportWizardModal: React.FC<ReportWizardModalProps> = ({ isOpen, on
 
     const [config, setConfig] = useState<ReportConfig>({
         layout: 'A',
+        templateId: 'classic',
         theme: 'default',
         title: 'REPORTE DE EVIDENCIA',
-        titleColor: undefined, // Will use theme default if undefined
+        titleColor: undefined,
         subtitle: 'PRUEBAS UNITARIAS',
-        subtitleColor: undefined, // Will use theme default if undefined
+        subtitleColor: undefined,
         author: authorName,
         showLogoSymbol: true,
         showLogoText: true,
@@ -57,7 +60,6 @@ export const ReportWizardModal: React.FC<ReportWizardModalProps> = ({ isOpen, on
         if (isOpen && captures.length > 0) {
             setStep('config');
 
-            // If loading from a draft, restore its config
             if (initialDraft) {
                 setDraftId(initialDraft.id);
                 if (initialDraft.config) {
@@ -68,7 +70,6 @@ export const ReportWizardModal: React.FC<ReportWizardModalProps> = ({ isOpen, on
                 setConfig(prev => ({ ...prev, author: authorName }));
             }
 
-            // Generate initial preview
             generatePreview();
         } else {
             if (previewUrl) {
@@ -79,15 +80,12 @@ export const ReportWizardModal: React.FC<ReportWizardModalProps> = ({ isOpen, on
         }
     }, [isOpen, captures, authorName, initialDraft]);
 
-    // Auto-regenerate preview when visual config changes (instant)
     useEffect(() => {
         if (step === 'config' && isOpen) {
-            // Only regenerate for visual changes (theme, layout, logos, colors)
             generatePreview();
         }
-    }, [config.theme, config.layout, config.showLogoSymbol, config.showLogoText, config.customLogoSymbol, config.customLogoText, config.logoAlignment, config.logoGap, config.titleColor, config.subtitleColor, step, isOpen]);
+    }, [config.theme, config.layout, config.templateId, config.customTemplate, config.showLogoSymbol, config.showLogoText, config.customLogoSymbol, config.customLogoText, config.logoAlignment, config.logoGap, config.titleColor, config.subtitleColor, step, isOpen]);
 
-    // Auto-regenerate preview when text fields change (debounced)
     useEffect(() => {
         if (step === 'config' && isOpen) {
             if (previewTimeoutRef.current) {
@@ -95,7 +93,7 @@ export const ReportWizardModal: React.FC<ReportWizardModalProps> = ({ isOpen, on
             }
             previewTimeoutRef.current = setTimeout(() => {
                 generatePreview();
-            }, 3000); // Debounce 3 seconds - wait for user to stop typing
+            }, 3000);
         }
         return () => {
             if (previewTimeoutRef.current) {
@@ -128,7 +126,6 @@ export const ReportWizardModal: React.FC<ReportWizardModalProps> = ({ isOpen, on
     const generatePreview = async () => {
         setIsGeneratingPreview(true);
         try {
-            // Revoke old URL
             if (previewUrl) {
                 URL.revokeObjectURL(previewUrl);
             }
@@ -175,72 +172,11 @@ export const ReportWizardModal: React.FC<ReportWizardModalProps> = ({ isOpen, on
         setIsExporting(true);
         setExportStep('generating');
         try {
-            // Step 1: Generate the report blob
             const blob = await ReportGenerator.generate(captures, config.author, exportFormat, config) as Blob;
 
-            // 2. Convert to Base64/Buffer for IPC transfer if needed, but since we are in renderer, handling blobs via IPC might require reading it as array buffer.
-            // Actually, ReportGenerator with new flag returns Blob.
-            // But we also want to trigger download for the user as usual?
-            // User requirement: "Save generated report previews".
-            // ReportGenerator.generate returns Blob if returnBlob=true? No, I updated it to accept a flag but default is false/void.
-            // Wait, I updated ReportGenerator.generate to CALL generateDOCX/PDF with true?
-            // In step 1920 diff: I changed it to return `await this.generatePDF(..., true)`. So it ALWAYS returns blob now and does NOT save automatically?
-            // Checking step 1920 again.
-            // Yes: `return await this.generatePDF(captures, fullConfig, true);`
-            // So `ReportGenerator.generate` NOW returns a Blob and DOES NOT download automatically.
-            // I need to trigger the download MANUALLY here using file-saver, AND save to history.
-
             if (blob) {
-                // A. Trigger Download
                 const fileName = `Reporte_${config.title.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.${exportFormat}`;
-                logger.info('REPORT', `Triggering download: ${fileName}, Size: ${blob.size}`);
 
-                // Let's handle download here. 
-                // I need `file-saver`.
-
-                // Create a Report History Item
-                const reportId = crypto.randomUUID();
-                const reportHistoryItem = {
-                    id: reportId,
-                    title: config.title,
-                    date: new Date().toISOString(),
-                    author: config.author,
-                    format: exportFormat,
-                    path: null // We don't have a stable path if we just download.
-                };
-
-                // To do this right: I should ask Main process to save the file.
-                // I will add `saveReportFile` to IPC.
-
-                // But let's stick to the current plan:
-                // 1. Download to user (saveAs).
-                // 2. Save metadata to history.
-                // (Limitation: specific path might be unknown if use saveAs, but usually we can't get the path back from web saveAs).
-
-                // BETTER PLAN:
-                // Use IPC key `history:save-file` which takes `{ name, buffer }` and returns `absolutePath`.
-                // Then save metadata with that path.
-                // I'll use `window.electron.saveReportToHistory` taking `{ ...metadata, content: ArrayBuffer }`?
-                // `PersistenceManager.saveReportToHistory` in step 1869 just pushes `report` (any) to store.
-                // It does NOT write file.
-
-                // I'll stick to:
-                // 1. Trigger download (saveAs).
-                // 2. Save metadata.
-                // 3. (Future) Implement robust file saving.
-                // But for "Open" to work, I need a path.
-
-                // COMPROMISE:
-                // Use a hacked "save" via Node FS if exposed, OR just accept that "Open" might not work without a path.
-                // BUT, I can use `window.electron.saveCapture` mechanism logic: send base64/buffer.
-
-                // I will modify `ReportWizardModal` to:
-                // 1. Get blob.
-                // 2. Send blob + metadata to `window.electron.saveReportToHistory`.
-                // 3. `PersistenceManager` needs to update to handle content saving if present.
-                //    (I viewed `PersistenceManager` in step 1869... it assumes `report.filePath` for deletion but doesn't write it).
-
-                // Step 2: Save to history
                 setExportStep('saving');
                 let savedFilePath: string | null = null;
                 try {
@@ -252,12 +188,10 @@ export const ReportWizardModal: React.FC<ReportWizardModalProps> = ({ isOpen, on
                     logger.error('REPORT', 'Failed to save report file', { err });
                 }
 
-                // Step 3: Trigger download
                 setExportStep('downloading');
                 const { saveAs } = await import('file-saver');
                 saveAs(blob, fileName);
 
-                // Save to history with the actual file path
                 if (window.electron?.saveReportToHistory) {
                     await window.electron.saveReportToHistory({
                         id: crypto.randomUUID(),
@@ -269,11 +203,8 @@ export const ReportWizardModal: React.FC<ReportWizardModalProps> = ({ isOpen, on
                     });
                 }
 
-                // Step 4: Complete
                 setExportStep('complete');
                 toast.success(`Reporte exportado exitosamente`);
-
-                // Wait a moment to show completion state
                 await new Promise(resolve => setTimeout(resolve, 1000));
             }
 
@@ -287,7 +218,6 @@ export const ReportWizardModal: React.FC<ReportWizardModalProps> = ({ isOpen, on
 
     return (
         <>
-            {/* Export Progress Overlay */}
             <ExportProgressOverlay
                 isVisible={isExporting}
                 currentStep={exportStep}
@@ -309,8 +239,6 @@ export const ReportWizardModal: React.FC<ReportWizardModalProps> = ({ isOpen, on
             >
                 <div className="w-full h-[85vh] max-h-[650px] flex flex-col">
                     <SectionErrorBoundary title="Error en el Wizard de Reportes">
-
-                        {/* Content */}
                         <AnimatePresence mode="wait">
                             {step === 'config' ? (
                                 <motion.div
@@ -320,7 +248,6 @@ export const ReportWizardModal: React.FC<ReportWizardModalProps> = ({ isOpen, on
                                     exit={{ opacity: 0 }}
                                     className="flex-1 flex overflow-hidden"
                                 >
-                                    {/* Sidebar - Configuration Panel */}
                                     <div
                                         className="w-64 lg:w-72 border-r overflow-y-auto p-4 lg:p-6 space-y-4 lg:space-y-6"
                                         style={{
@@ -339,48 +266,55 @@ export const ReportWizardModal: React.FC<ReportWizardModalProps> = ({ isOpen, on
                                             Configuración
                                         </div>
 
-                                        {/* Layout Selection */}
+                                        {/* Template Selection */}
                                         <div>
                                             <label className="block text-xs font-bold mb-2 uppercase" style={{ color: 'var(--label-secondary)' }}>Diseño</label>
-                                            <div className="grid grid-cols-2 gap-2">
-                                                <button
-                                                    onClick={() => updateConfig('layout', 'A')}
-                                                    className="p-2 lg:p-3 border-2 rounded-lg transition-all text-xs"
-                                                    style={config.layout === 'A' ? {
-                                                        borderColor: 'var(--system-blue)',
-                                                        background: 'color-mix(in srgb, var(--system-blue) 15%, transparent)',
-                                                        color: 'var(--system-blue)',
-                                                        fontWeight: 'bold'
-                                                    } : {
-                                                        borderColor: 'var(--separator-opaque)',
-                                                        color: 'var(--label-secondary)'
-                                                    }}
-                                                    onMouseEnter={(e) => { if (config.layout !== 'A') e.currentTarget.style.borderColor = 'var(--system-blue)'; }}
-                                                    onMouseLeave={(e) => { if (config.layout !== 'A') e.currentTarget.style.borderColor = 'var(--separator-opaque)'; }}
-                                                >
-                                                    Clásico
-                                                </button>
-                                                <button
-                                                    onClick={() => updateConfig('layout', 'B')}
-                                                    className="p-2 lg:p-3 border-2 rounded-lg transition-all text-xs"
-                                                    style={config.layout === 'B' ? {
-                                                        borderColor: 'var(--system-blue)',
-                                                        background: 'color-mix(in srgb, var(--system-blue) 15%, transparent)',
-                                                        color: 'var(--system-blue)',
-                                                        fontWeight: 'bold'
-                                                    } : {
-                                                        borderColor: 'var(--separator-opaque)',
-                                                        color: 'var(--label-secondary)'
-                                                    }}
-                                                    onMouseEnter={(e) => { if (config.layout !== 'B') e.currentTarget.style.borderColor = 'var(--system-blue)'; }}
-                                                    onMouseLeave={(e) => { if (config.layout !== 'B') e.currentTarget.style.borderColor = 'var(--separator-opaque)'; }}
-                                                >
-                                                    Moderno
-                                                </button>
+                                            <div className="grid grid-cols-2 gap-2 mb-2">
+                                                {['classic', 'modern', 'creative', 'custom'].map((tId) => (
+                                                    <button
+                                                        key={tId}
+                                                        onClick={() => updateConfig('templateId', tId)}
+                                                        className="p-2 lg:p-3 border-2 rounded-lg transition-all text-xs capital"
+                                                        style={config.templateId === tId ? {
+                                                            borderColor: 'var(--system-blue)',
+                                                            background: 'color-mix(in srgb, var(--system-blue) 15%, transparent)',
+                                                            color: 'var(--system-blue)',
+                                                            fontWeight: 'bold'
+                                                        } : {
+                                                            borderColor: 'var(--separator-opaque)',
+                                                            color: 'var(--label-secondary)'
+                                                        }}
+                                                    >
+                                                        {tId.charAt(0).toUpperCase() + tId.slice(1)}
+                                                    </button>
+                                                ))}
                                             </div>
+
+                                            {/* Custom Template Dropdown */}
+                                            {config.templateId === 'custom' && (
+                                                <div className="mt-2 animate-in fade-in slide-in-from-top-1">
+                                                    <label className="block text-xs font-semibold mb-1" style={{ color: 'var(--label-secondary)' }}>Select Saved Template</label>
+                                                    <select
+                                                        value={config.customTemplate?.id || ''}
+                                                        onChange={(e) => {
+                                                            const selected = templates.find(t => t.id === e.target.value);
+                                                            updateConfig('customTemplate', selected);
+                                                        }}
+                                                        className="w-full border rounded p-2 text-xs outline-none focus:ring-2 focus:ring-blue-500"
+                                                        style={{ borderColor: 'var(--separator-opaque)', background: 'var(--fill-secondary)', color: 'var(--label-primary)' }}
+                                                    >
+                                                        <option value="">-- Select Template --</option>
+                                                        {templates.map(t => (
+                                                            <option key={t.id} value={t.id}>{t.name}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                            )}
                                         </div>
 
-                                        {/* Theme Selection */}
+                                        {/* Theme Selection - Hide if custom template is selected (as it overrides theme usually, or we can allow override) */}
+                                        {/* Actually, custom templates might use themes too. Let's keep it but maybe warn? */}
+                                        {/* For now, show it always as it applies to blocks that use theme colors */}
                                         <div>
                                             <label className="block text-xs font-bold mb-2 uppercase flex items-center gap-1" style={{ color: 'var(--label-secondary)' }}>
                                                 <Palette size={14} /> Tema
@@ -806,7 +740,7 @@ export const ReportWizardModal: React.FC<ReportWizardModalProps> = ({ isOpen, on
 
                     </SectionErrorBoundary>
                 </div>
-            </Modal >
+            </Modal>
         </>
     );
 };
