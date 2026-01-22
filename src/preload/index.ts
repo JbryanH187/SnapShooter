@@ -36,6 +36,10 @@ contextBridge.exposeInMainWorld('electron', {
     // Flows
     getFlows: () => ipcRenderer.invoke('flows:get'),
     saveFlow: (flow: any) => ipcRenderer.invoke('flows:save', flow),
+    saveFlowSession: (name: string, captures: any[]) => ipcRenderer.invoke('flows:saveSession', name, captures),
+    addToFlow: (flowId: string, captures: any[]) => ipcRenderer.invoke('flows:add', flowId, captures),
+    loadFlow: (flowId: string) => ipcRenderer.invoke('flows:load', flowId),
+    openFlowFolder: (flowId: string) => ipcRenderer.invoke('flows:openFolder', flowId),
     deleteFlow: (id: string) => ipcRenderer.invoke('flows:delete', id),
 
     // Window Controls

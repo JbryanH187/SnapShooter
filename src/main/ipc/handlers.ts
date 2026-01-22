@@ -98,6 +98,22 @@ export function setupHandlers() {
         return persistenceManager.saveFlow(flow);
     });
 
+    ipcMain.handle('flows:saveSession', async (_event, name: string, captures: CaptureItem[]) => {
+        return persistenceManager.saveFlowSession(name, captures);
+    });
+
+    ipcMain.handle('flows:add', async (_event, flowId: string, captures: CaptureItem[]) => {
+        return persistenceManager.addToFlow(flowId, captures);
+    });
+
+    ipcMain.handle('flows:load', async (_event, flowId: string) => {
+        return persistenceManager.loadFlow(flowId);
+    });
+
+    ipcMain.handle('flows:openFolder', async (_event, flowId: string) => {
+        return persistenceManager.openFlowFolder(flowId);
+    });
+
     ipcMain.handle('flows:delete', async (_event, id: string) => {
         return persistenceManager.deleteFlow(id);
     });

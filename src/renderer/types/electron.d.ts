@@ -31,7 +31,11 @@ export interface ElectronAPI {
 
     // Flows
     getFlows: () => Promise<any[]>;
-    saveFlow: (flow: any) => Promise<void>;
+    saveFlow: (flow: any) => Promise<any>;
+    saveFlowSession: (name: string, captures: any[]) => Promise<any>;
+    addToFlow: (flowId: string, captures: any[]) => Promise<any>;
+    loadFlow: (flowId: string) => Promise<CaptureItem[]>;
+    openFlowFolder: (flowId: string) => Promise<void>;
     deleteFlow: (id: string) => Promise<void>;
 
     // Window Controls

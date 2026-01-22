@@ -9,6 +9,7 @@ import { RecentsView } from '../Views/RecentsView';
 import { FlowsView } from '../Views/FlowsView';
 import { ReportsHistoryView } from '../Views/ReportsHistoryView';
 import { ReportDraftsView } from '../Views/ReportDraftsView';
+import { ReportBuilderView } from '../Views/ReportBuilderView';
 import { SmartFoldersList } from '../Views/SmartFoldersList';
 import { useGlobalModal } from '../../contexts/GlobalModalContext';
 import { Trash2 } from 'lucide-react';
@@ -84,8 +85,21 @@ export const ContentRouter: React.FC = () => {
                             </motion.div>
                         )}
 
+                        {contentView === 'builder' && (
+                            <motion.div
+                                key="builder"
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                transition={{ duration: 0.2 }}
+                                className="flex-1 overflow-hidden"
+                            >
+                                <ReportBuilderView />
+                            </motion.div>
+                        )}
+
                         {/* Smart Folders - check if contentView is a folder ID */}
-                        {!['home', 'recents', 'flows', 'history', 'drafts'].includes(contentView) && (
+                        {!['home', 'recents', 'flows', 'history', 'drafts', 'builder'].includes(contentView) && (
                             <motion.div
                                 key={contentView}
                                 initial={{ opacity: 0, x: 20 }}
