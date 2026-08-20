@@ -18,6 +18,7 @@ import { OnboardingOverlay } from '../UI/OnboardingOverlay';
 import { CapturePreview } from '../Overlay/CapturePreview';
 import { Toaster } from 'react-hot-toast';
 import { Breadcrumb } from '../Navigation/Breadcrumb';
+import { ResolutionPickerModal } from '../UI/ResolutionPickerModal';
 
 interface AppShellProps {
     children: React.ReactNode;
@@ -39,6 +40,8 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
     const { captures, userProfile, loadCaptures, setCurrentCapture, tutorial, startTutorial, setTutorialState } = useCaptureStore();
     const { flows, loadFlows, quickFlowActive, setQuickFlowActive } = useFlowStore();
     const { openFlowEditor, closeReportWizard } = useGlobalModal();
+
+    const [resolutionPickerOpen, setResolutionPickerOpen] = React.useState(false);
 
     // -- Event Listeners --
 
@@ -87,6 +90,11 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
             setQuickFlowActive(active);
         });
 
+        // Listen for resolution picker requests
+        const removeResPickerListener = electron.onRequestResolutionPicker?.(() => {
+            setResolutionPickerOpen(true);
+        });
+
         // Listen for flow complete event
         const removeCompleteListener = electron.onQuickFlowComplete?.((data: { id: string; captures: any[] }) => {
             if (data.captures.length > 0) {
@@ -102,8 +110,9 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
         });
 
         return () => {
-            removeModeListener?.();
-            removeCompleteListener?.();
+            if (removeModeListener) removeModeListener();
+            if (removeResPickerListener) removeResPickerListener();
+            if (removeCompleteListener) removeCompleteListener();
         };
     }, [setQuickFlowActive, openFlowEditor]);
 
@@ -186,9 +195,18 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
                     className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-6 py-3 rounded-full shadow-2xl z-50 flex items-center gap-3 animate-pulse"
                 >
                     <Layers size={20} />
-                    <span className="font-semibold">Quick Flow Mode</span>
+                    <span className="font-semibold">Quick Flow: Ctrl+Shift+C para capturar (Q salir)</span>
                 </div>
             )}
+
+            <ResolutionPickerModal 
+                isOpen={resolutionPickerOpen} 
+                onClose={() => setResolutionPickerOpen(false)}
+                onSelect={async (w, h) => {
+                    await window.electron?.setResolution(w, h);
+                    toast.success('Resolución de captura actualizada');
+                }}
+            />
         </div>
     );
 };

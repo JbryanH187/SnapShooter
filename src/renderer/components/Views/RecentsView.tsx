@@ -274,7 +274,7 @@ export const RecentsView: React.FC = () => {
             </AnimatePresence>
 
             {/* Header */}
-            <div className="flex items-center justify-between px-6 pt-6 pb-3">
+            <div className="flex items-center justify-between px-6 pt-3 pb-4">
                 <div className="flex items-center gap-3">
                     <h2 className="text-xl font-semibold flex items-center gap-2" style={{ color: 'var(--label-primary)' }}>
                         <Camera size={20} style={{ color: 'var(--system-blue)' }} />
@@ -290,33 +290,35 @@ export const RecentsView: React.FC = () => {
                         {filteredCaptures.length} / {captures.length}
                     </span>
                 </div>
-                {captures.length > 0 && (
-                    <button
-                        onClick={() => setIsSaveModalOpen(true)}
-                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                        style={{ color: 'var(--system-blue)' }}
-                    >
-                        <Save size={16} />
-                        Guardar en Storage
-                    </button>
-                )}
+                <div className="flex items-center gap-2">
+                    {captures.length > 0 && (
+                        <FilterBar
+                            dateFilter={dateFilter}
+                            statusFilter={statusFilter}
+                            onDateFilterChange={setDateFilter}
+                            onStatusFilterChange={setStatusFilter}
+                            resultCount={searchResult.count}
+                            totalCount={captures.length}
+                            hasActiveFilters={hasActiveFilters}
+                            onClearFilters={handleClearFilters}
+                            sortOrder={sortOrder}
+                            onToggleSortOrder={toggleSortOrder}
+                        />
+                    )}
+                    {captures.length > 0 && (
+                        <button
+                            onClick={() => setIsSaveModalOpen(true)}
+                            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                            style={{ color: 'var(--system-blue)' }}
+                        >
+                            <Save size={16} />
+                            <span className="hidden sm:inline">Guardar en Storage</span>
+                        </button>
+                    )}
+                </div>
             </div>
 
-            {/* Filter Bar */}
-            {captures.length > 0 && (
-                <FilterBar
-                    dateFilter={dateFilter}
-                    statusFilter={statusFilter}
-                    onDateFilterChange={setDateFilter}
-                    onStatusFilterChange={setStatusFilter}
-                    resultCount={searchResult.count}
-                    totalCount={captures.length}
-                    hasActiveFilters={hasActiveFilters}
-                    onClearFilters={handleClearFilters}
-                    sortOrder={sortOrder}
-                    onToggleSortOrder={toggleSortOrder}
-                />
-            )}
+            {/* Filters are now integrated in the header */}
 
             {isLoading ? (
                 <div className="flex-1 overflow-hidden overflow-y-auto no-scrollbar px-6">

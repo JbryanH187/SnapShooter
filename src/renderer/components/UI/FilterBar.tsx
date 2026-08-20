@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Calendar, Filter as FilterIcon, CheckCircle, XCircle, Clock, ArrowUpDown } from 'lucide-react';
+import { X, Calendar, Filter as FilterIcon, CheckCircle, XCircle, Clock, ArrowUpNarrowWide, ArrowDownWideNarrow } from 'lucide-react';
 import { DateFilter, StatusFilter } from '../../hooks/useCaptureSearch';
 import { LiquidGlass } from './LiquidGlass';
 
@@ -50,15 +50,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
     const activeStatus = statusOptions.find(o => o.value === statusFilter);
 
     return (
-        <div
-            className="flex items-center justify-between px-6 py-3 border-b"
-            style={{
-                background: 'var(--system-background-secondary)',
-                borderColor: 'var(--separator-non-opaque)'
-            }}
-        >
-            {/* Left: Filter Controls */}
-            <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
                 {/* Date Filter */}
                 <div className="relative">
                     <motion.button
@@ -223,46 +215,31 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                 {/* Sort Order Toggle */}
                 {onToggleSortOrder && (
                     <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                         onClick={onToggleSortOrder}
                         title={
                             sortOrder === 'asc'
-                                ? 'Orden: 1 → N (Cronológico / Flujo de pasos). Clic para invertir a N → 1.'
-                                : 'Orden: N → 1 (Más recientes primero). Clic para invertir a 1 → N.'
+                                ? 'Orden: Cronológico (1 → N)'
+                                : 'Orden: Más recientes primero (N → 1)'
                         }
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl transition-all border shadow-sm ml-1"
+                        className="flex items-center justify-center p-1.5 ml-1 transition-colors"
                         style={{
-                            background:
-                                sortOrder === 'asc'
-                                    ? 'var(--fill-secondary)'
-                                    : 'color-mix(in srgb, var(--system-blue) 15%, var(--fill-secondary))',
-                            borderColor: sortOrder === 'asc' ? 'var(--separator-opaque)' : 'var(--system-blue)',
-                            color: sortOrder === 'asc' ? 'var(--label-primary)' : 'var(--system-blue)',
-                            borderRadius: 'var(--radius-base)'
+                            color: 'var(--label-secondary)',
+                            borderRadius: 'var(--radius-base)',
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.color = 'var(--label-primary)';
+                            e.currentTarget.style.background = 'var(--fill-secondary)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.color = 'var(--label-secondary)';
+                            e.currentTarget.style.background = 'transparent';
                         }}
                     >
-                        <ArrowUpDown size={13} className={sortOrder === 'desc' ? 'text-blue-500' : 'opacity-70'} />
-                        <span>{sortOrder === 'asc' ? '1 → N' : 'N → 1'}</span>
-                        <span className="text-[11px] font-normal opacity-70 hidden sm:inline">
-                            {sortOrder === 'asc' ? 'Cronológico' : 'Inverso'}
-                        </span>
+                        {sortOrder === 'asc' ? <ArrowUpNarrowWide size={18} /> : <ArrowDownWideNarrow size={18} />}
                     </motion.button>
                 )}
-            </div>
-
-            {/* Right: Result Count */}
-            <div className="text-sm" style={{ color: 'var(--label-secondary)' }}>
-                {hasActiveFilters ? (
-                    <span>
-                        Showing <strong style={{ color: 'var(--label-primary)' }}>{resultCount}</strong> of {totalCount}
-                    </span>
-                ) : (
-                    <span>
-                        <strong style={{ color: 'var(--label-primary)' }}>{totalCount}</strong> {totalCount === 1 ? 'capture' : 'captures'}
-                    </span>
-                )}
-            </div>
         </div>
     );
 };

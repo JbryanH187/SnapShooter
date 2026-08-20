@@ -45,6 +45,10 @@ export interface ElectronAPI {
     onQuickFlowModeChange: (callback: (active: boolean) => void) => () => void;
     onQuickFlowCapture: (callback: (data: any) => void) => () => void;
     onQuickFlowComplete: (callback: (data: any) => void) => () => void;
+
+    // Resolution Picker
+    onRequestResolutionPicker: (callback: () => void) => () => void;
+    setResolution: (width: number, height: number) => Promise<void>;
 }
 
 declare global {

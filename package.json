@@ -9,7 +9,7 @@
     "build": "npm run build:main && vite build && electron-builder",
     "build:portable": "npm run build:main && vite build && electron-builder --win portable",
     "build:dir": "npm run build:main && vite build && electron-builder --dir",
-    "start": "npm run build:main && electron text-electron/src/main/main.js",
+    "start": "npm run build:main && electron .",
     "electron:dev": "concurrently -k \"npm run dev\" \"npm run build:main && electron .\"",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -37,6 +37,9 @@
       ],
       "icon": "build/icon.png",
       "signAndEditExecutable": false
+    },
+    "portable": {
+      "requestExecutionLevel": "user"
     }
   },
   "keywords": [],

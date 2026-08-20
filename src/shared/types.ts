@@ -30,7 +30,7 @@ export interface TemplateBlock {
         variant?: string;
         showBorder?: boolean;
     };
-    variant?: 'classic' | 'modern' | 'creative';
+    variant?: 'classic' | 'modern' | 'bubble' | 'japanese';
 }
 
 export interface ReportTemplate {
