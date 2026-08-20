@@ -1,4 +1,4 @@
-import { UndoStack, createDeleteCommand, createUpdateCommand } from '../../../renderer/utils/undoStack';
+import { UndoStack, createDeleteCommand, createUpdateCommand } from '../../renderer/utils/undoStack';
 
 describe('UndoStack', () => {
     let stack: UndoStack;
@@ -20,7 +20,7 @@ describe('UndoStack', () => {
                 undo: () => { executed = false; }
             };
 
-            stack.execute(command);
+            stack.executeCommand(command);
             expect(executed).toBe(true);
             expect(stack.canUndo()).toBe(true);
         });
@@ -32,7 +32,7 @@ describe('UndoStack', () => {
                 undo: () => { value = 0; }
             };
 
-            stack.execute(command);
+            stack.executeCommand(command);
             expect(value).toBe(1);
 
             stack.undo();
@@ -47,7 +47,7 @@ describe('UndoStack', () => {
                 undo: () => { value = 0; }
             };
 
-            stack.execute(command);
+            stack.executeCommand(command);
             stack.undo();
             expect(value).toBe(0);
 
@@ -68,17 +68,17 @@ describe('UndoStack', () => {
                 undo: () => { }
             };
 
-            stack.execute(command1);
+            stack.executeCommand(command1);
             stack.undo();
             expect(stack.canRedo()).toBe(true);
 
-            stack.execute(command2);
+            stack.executeCommand(command2);
             expect(stack.canRedo()).toBe(false);
         });
 
         it('should respect max size (50)', () => {
             for (let i = 0; i < 60; i++) {
-                stack.execute({
+                stack.executeCommand({
                     execute: () => { },
                     undo: () => { }
                 });
@@ -94,7 +94,7 @@ describe('UndoStack', () => {
         });
 
         it('should clear all stacks', () => {
-            stack.execute({
+            stack.executeCommand({
                 execute: () => { },
                 undo: () => { }
             });
@@ -110,7 +110,7 @@ describe('UndoStack', () => {
             const values: number[] = [];
 
             for (let i = 1; i <= 5; i++) {
-                stack.execute({
+                stack.executeCommand({
                     execute: () => values.push(i),
                     undo: () => values.pop()
                 });
@@ -140,7 +140,7 @@ describe('Command Factories', () => {
                 () => { items.push(mockItem); }
             );
 
-            expect(command.type).toBe('delete');
+            expect(command.description).toMatch(/Delete/);
             expect(typeof command.execute).toBe('function');
             expect(typeof command.undo).toBe('function');
         });
@@ -159,7 +159,7 @@ describe('Command Factories', () => {
                 (val) => { mockItem.value = val; }
             );
 
-            expect(command.type).toBe('update');
+            expect(command.description).toMatch(/Update/);
 
             command.execute();
             expect(mockItem.value).toBe('new');

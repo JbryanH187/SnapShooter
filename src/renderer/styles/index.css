@@ -105,3 +105,18 @@ body {
 .app-no-drag {
     -webkit-app-region: no-drag;
 }
+
+/* Custom Date Input (Apple HIG Style) */
+.custom-date-input::-webkit-calendar-picker-indicator {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    background: transparent;
+    color: transparent;
+}

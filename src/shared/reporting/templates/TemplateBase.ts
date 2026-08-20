@@ -16,7 +16,9 @@ export abstract class TemplateBase {
         this.doc = doc;
         this.config = config;
         this.theme = REPORT_THEMES[config.theme];
-        this.currentDate = new Date().toLocaleDateString('es-ES', {
+        // Use custom reportDate if provided, otherwise default to today
+        const dateSource = config.reportDate ? new Date(config.reportDate + 'T12:00:00') : new Date();
+        this.currentDate = dateSource.toLocaleDateString('es-ES', {
             year: 'numeric',
             month: 'long',
             day: 'numeric'
@@ -48,13 +50,32 @@ export abstract class TemplateBase {
     /**
      * Load an image and add it to the PDF
      */
-    protected async addImage(src: string, x: number, y: number, width: number, height: number): Promise<boolean> {
+    protected async addImage(src: string, x: number, y: number, maxWidth: number, maxHeight: number): Promise<boolean> {
         return new Promise((resolve) => {
             const img = new Image();
             img.crossOrigin = 'anonymous';
             img.onload = () => {
                 try {
-                    this.doc.addImage(img, 'PNG', x, y, width, height);
+                    // Calculate aspect ratio fit (object-fit: contain)
+                    const imgRatio = img.width / img.height;
+                    const maxRatio = maxWidth / maxHeight;
+                    
+                    let drawWidth = maxWidth;
+                    let drawHeight = maxHeight;
+                    let drawX = x;
+                    let drawY = y;
+                    
+                    if (imgRatio > maxRatio) {
+                        // Image is wider than max bound
+                        drawHeight = maxWidth / imgRatio;
+                        drawY = y + (maxHeight - drawHeight) / 2; // Center vertically
+                    } else {
+                        // Image is taller than max bound
+                        drawWidth = maxHeight * imgRatio;
+                        drawX = x + (maxWidth - drawWidth) / 2; // Center horizontally
+                    }
+
+                    this.doc.addImage(img, 'PNG', drawX, drawY, drawWidth, drawHeight);
                     resolve(true);
                 } catch (error) {
                     console.error('Error adding image:', error);
@@ -115,9 +136,15 @@ export const REPORT_TEMPLATES: TemplateInfo[] = [
         previewClass: 'bg-gradient-to-r from-indigo-900 to-slate-900'
     },
     {
-        id: 'creative',
-        name: 'Creative Bold',
-        description: 'Eye-catching layout with large hero images and accent colors',
-        previewClass: 'bg-gradient-to-br from-purple-600 to-pink-500'
+        id: 'bubble',
+        name: 'Bubbles',
+        description: 'Playful and modern layout with circular elements and soft edges',
+        previewClass: 'bg-gradient-to-br from-pink-400 to-orange-400'
+    },
+    {
+        id: 'japanese',
+        name: 'Japanese Book',
+        description: 'Elegant 2-column layout flowing top-to-bottom',
+        previewClass: 'bg-gradient-to-br from-stone-200 to-stone-400'
     }
 ];

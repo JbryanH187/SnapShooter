@@ -287,7 +287,10 @@ export class DynamicTemplate extends TemplateBase {
         if (showDate) {
             this.doc.setFontSize(10);
             this.doc.setTextColor(this.theme.textLight);
-            const dateStr = new Date().toLocaleDateString();
+            const dateSource = this.config.reportDate
+                ? new Date(this.config.reportDate + 'T12:00:00')
+                : new Date();
+            const dateStr = dateSource.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
             if (variant === 'modern') {
                 this.doc.setTextColor(255, 255, 255);
                 this.doc.text(dateStr, 180, 25, { align: 'right' });
@@ -524,17 +527,50 @@ export class DynamicTemplate extends TemplateBase {
 
     private async processImage(src: string): Promise<{ data: any, width: number, height: number, format: string } | null> {
         if (!src) return null;
+
+        // Resolve media:// to data URL via Electron IPC
+        let resolvedSrc = src;
         try {
-            if (src.startsWith('data:')) {
-                const format = src.includes('png') ? 'PNG' : 'JPEG';
-                return new Promise((resolve) => {
-                    const img = new Image();
-                    img.onload = () => resolve({ data: src, width: img.width, height: img.height, format });
-                    img.onerror = () => resolve(null);
-                    img.src = src;
-                });
+            if (src.startsWith('media://')) {
+                if ((window as any).electron?.readImage) {
+                    const buffer = await (window as any).electron.readImage(src);
+                    const bytes = buffer.buffer ? new Uint8Array(buffer.buffer) : new Uint8Array(buffer);
+                    let binary = '';
+                    for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+                    resolvedSrc = 'data:image/png;base64,' + btoa(binary);
+                } else {
+                    return null;
+                }
             }
-            return null;
+
+            // Compress image via canvas: max 1280x960, JPEG 82%
+            const compressed = await new Promise<{ dataUrl: string; width: number; height: number } | null>((resolve) => {
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                img.onload = () => {
+                    try {
+                        const maxW = 1280, maxH = 960;
+                        const ratio = Math.min(maxW / img.width, maxH / img.height, 1);
+                        const w = Math.round(img.width * ratio);
+                        const h = Math.round(img.height * ratio);
+                        const canvas = document.createElement('canvas');
+                        canvas.width = w;
+                        canvas.height = h;
+                        const ctx = canvas.getContext('2d')!;
+                        ctx.drawImage(img, 0, 0, w, h);
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+                        resolve({ dataUrl, width: w, height: h });
+                    } catch {
+                        resolve({ dataUrl: resolvedSrc, width: img.width, height: img.height });
+                    }
+                };
+                img.onerror = () => resolve(null);
+                img.src = resolvedSrc;
+            });
+
+            if (!compressed) return null;
+            return { data: compressed.dataUrl, width: compressed.width, height: compressed.height, format: 'JPEG' };
+
         } catch {
             return null;
         }

@@ -84,11 +84,7 @@ export const Modal: React.FC<ModalProps> = ({
                     boxShadow: '0 16px 48px rgba(0, 0, 0, 0.2)'
                 }}
             >
-                {/* Header Accent Strip */}
-                <div
-                    className="h-1 w-full"
-                    style={{ background: accentColor }}
-                />
+                {/* Header Accent Strip removed for cleaner Apple HIG style */}
 
                 <div className="p-6">
                     {/* Icon Container */}

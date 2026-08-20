@@ -21,7 +21,7 @@ class LoggerService implements ILogger {
 
     private constructor() {
         // Check for dev mode
-        this.isDev = (import.meta as any).env?.DEV || false;
+        this.isDev = process.env.NODE_ENV === 'development';
     }
 
     public static getInstance(): LoggerService {
