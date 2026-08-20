@@ -66,13 +66,21 @@ export class QuickFlowEngine {
         this.isActive = true;
         this.currentFlowCaptures = [];
 
-        // Register Ctrl+Shift+C for quick capture while in flow mode
-        globalShortcut.register('CommandOrControl+Shift+C', async () => {
+        // Register multiple shortcuts to avoid OS conflicts
+        const captureAction = async () => {
+            console.log('[QuickFlowEngine] Capture shortcut triggered!');
             if (this.isActive) {
                 const cursorPos = screen.getCursorScreenPoint();
+                console.log(`[QuickFlowEngine] Cursor position: ${cursorPos.x}, ${cursorPos.y}`);
                 await this.captureWithClick(cursorPos);
             }
-        });
+        };
+
+        const c1 = globalShortcut.register('CommandOrControl+Shift+C', captureAction);
+        const c2 = globalShortcut.register('CommandOrControl+Shift+X', captureAction);
+        const c3 = globalShortcut.register('Alt+S', captureAction);
+        
+        console.log(`[QuickFlowEngine] Shortcuts registered - Ctrl+Shift+C: ${c1}, Ctrl+Shift+X: ${c2}, Alt+S: ${c3}`);
 
         // Notify renderer that Quick Flow mode is active
         if (this.mainWindow) {
@@ -88,8 +96,10 @@ export class QuickFlowEngine {
     private stopMode() {
         this.isActive = false;
 
-        // Unregister the capture shortcut
+        // Unregister the capture shortcuts
         globalShortcut.unregister('CommandOrControl+Shift+C');
+        globalShortcut.unregister('CommandOrControl+Shift+X');
+        globalShortcut.unregister('Alt+S');
 
         // Close overlay
         if (this.overlayWindow) {
@@ -201,7 +211,7 @@ export class QuickFlowEngine {
                 <div class="indicator">
                     <div class="logo">📸</div>
                     <span>Quick Flow</span>
-                    <span class="hint">Ctrl+Shift+C captura | Ctrl+Shift+Q salir</span>
+                    <span class="hint">Alt+S o Ctrl+Shift+X para capturar | Ctrl+Shift+Q salir</span>
                 </div>
                 <div class="count" id="count">📷 Capturas: 0</div>
             </body>
@@ -227,24 +237,32 @@ export class QuickFlowEngine {
             // Small delay to ensure overlay is hidden
             await new Promise(resolve => setTimeout(resolve, 100));
 
-            // Capture the screen
-            const primaryDisplay = screen.getPrimaryDisplay();
+            // Capture the screen based on where the cursor is
+            const currentDisplay = screen.getDisplayNearestPoint(clickData);
             const sources = await desktopCapturer.getSources({
                 types: ['screen'],
                 thumbnailSize: { 
-                    width: primaryDisplay.size.width * primaryDisplay.scaleFactor, 
-                    height: primaryDisplay.size.height * primaryDisplay.scaleFactor 
+                    width: currentDisplay.size.width * currentDisplay.scaleFactor, 
+                    height: currentDisplay.size.height * currentDisplay.scaleFactor 
                 }
             });
 
             if (sources.length > 0) {
-                let nativeImg = sources[0].thumbnail;
-                const screenWidth = primaryDisplay.size.width;
-                const screenHeight = primaryDisplay.size.height;
+                // Find the source matching our current display
+                let source = sources.find(s => s.display_id === currentDisplay.id.toString());
+                if (!source) source = sources[0];
+
+                let nativeImg = source.thumbnail;
+                const screenWidth = currentDisplay.size.width;
+                const screenHeight = currentDisplay.size.height;
+                
+                // Adjust coordinates relative to the specific monitor's bounds
+                const localClickX = clickData.x - currentDisplay.bounds.x;
+                const localClickY = clickData.y - currentDisplay.bounds.y;
                 
                 let clickPosition = {
-                    x: (clickData.x / screenWidth) * 100,
-                    y: (clickData.y / screenHeight) * 100
+                    x: (localClickX / screenWidth) * 100,
+                    y: (localClickY / screenHeight) * 100
                 };
 
                 // Apply predefined resolution crop
@@ -252,12 +270,12 @@ export class QuickFlowEngine {
                     const { width, height } = this.currentResolution;
                     
                     // We need to scale the crop coordinates to the actual nativeImg size if scaleFactor > 1
-                    const scale = primaryDisplay.scaleFactor;
+                    const scale = currentDisplay.scaleFactor;
                     const scaledWidth = width * scale;
                     const scaledHeight = height * scale;
                     
-                    let cropX = (clickData.x * scale) - scaledWidth / 2;
-                    let cropY = (clickData.y * scale) - scaledHeight / 2;
+                    let cropX = (localClickX * scale) - scaledWidth / 2;
+                    let cropY = (localClickY * scale) - scaledHeight / 2;
 
                     // Clamp to native image bounds
                     const imgSize = nativeImg.getSize();
@@ -273,11 +291,11 @@ export class QuickFlowEngine {
                     });
 
                     // Recalculate click position relative to cropped area (unscaled)
-                    const localClickX = clickData.x - (cropX / scale);
-                    const localClickY = clickData.y - (cropY / scale);
+                    const croppedLocalX = localClickX - (cropX / scale);
+                    const croppedLocalY = localClickY - (cropY / scale);
                     clickPosition = {
-                        x: (localClickX / width) * 100,
-                        y: (localClickY / height) * 100
+                        x: (croppedLocalX / width) * 100,
+                        y: (croppedLocalY / height) * 100
                     };
                 }
 
@@ -320,6 +338,8 @@ export class QuickFlowEngine {
     cleanup() {
         globalShortcut.unregister('CommandOrControl+Shift+Q');
         globalShortcut.unregister('CommandOrControl+Shift+C');
+        globalShortcut.unregister('CommandOrControl+Shift+X');
+        globalShortcut.unregister('Alt+S');
         if (this.overlayWindow) {
             this.overlayWindow.close();
             this.overlayWindow = null;

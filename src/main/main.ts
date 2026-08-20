@@ -17,6 +17,7 @@ function createWindow() {
         minWidth: 800,
         minHeight: 600,
         backgroundColor: '#fcfcfd', // gray-25
+        icon: path.join(__dirname, '../../build/icon.png'),
         webPreferences: {
             nodeIntegration: false, // Security best practice
             contextIsolation: true, // Required for contextBridge
