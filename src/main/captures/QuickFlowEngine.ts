@@ -10,6 +10,10 @@ export class QuickFlowEngine {
     private overlayWindow: BrowserWindow | null = null;
     private currentFlowCaptures: any[] = [];
     private flowsDir: string;
+    private currentResolution: { width: number; height: number } | null = null;
+    
+    // Add ipcMain to imports dynamically if needed, but it's cleaner to inject or just require it
+    private ipcMain: any;
 
     constructor() {
         this.flowsDir = path.join(app.getPath('userData'), 'flows');
@@ -18,13 +22,35 @@ export class QuickFlowEngine {
 
     initialize(mainWindow: BrowserWindow) {
         this.mainWindow = mainWindow;
+        this.ipcMain = require('electron').ipcMain;
+        
+        // Handle resolution set from renderer
+        this.ipcMain.handle('resolution:set', (_event: any, width: number, height: number) => {
+            this.setResolution(width, height);
+        });
+
         this.registerShortcuts();
+    }
+    
+    setResolution(width: number, height: number) {
+        if (width === 0 || height === 0) {
+            this.currentResolution = null; // Full screen
+        } else {
+            this.currentResolution = { width, height };
+        }
     }
 
     private registerShortcuts() {
         // Register Ctrl+Shift+Q to toggle Quick Flow mode
         globalShortcut.register('CommandOrControl+Shift+Q', () => {
             this.toggleMode();
+        });
+
+        // Register Ctrl+Shift+B to change resolution
+        globalShortcut.register('CommandOrControl+Shift+B', () => {
+            if (this.isActive && this.mainWindow) {
+                this.mainWindow.webContents.send('resolution:request-picker');
+            }
         });
     }
 
@@ -51,6 +77,8 @@ export class QuickFlowEngine {
         // Notify renderer that Quick Flow mode is active
         if (this.mainWindow) {
             this.mainWindow.webContents.send('quickflow:modeChange', true);
+            // Prompt for resolution when starting flow
+            this.mainWindow.webContents.send('resolution:request-picker');
         }
 
         // Create transparent overlay window
@@ -203,24 +231,61 @@ export class QuickFlowEngine {
             const primaryDisplay = screen.getPrimaryDisplay();
             const sources = await desktopCapturer.getSources({
                 types: ['screen'],
-                thumbnailSize: primaryDisplay.size
+                thumbnailSize: { 
+                    width: primaryDisplay.size.width * primaryDisplay.scaleFactor, 
+                    height: primaryDisplay.size.height * primaryDisplay.scaleFactor 
+                }
             });
 
             if (sources.length > 0) {
-                const imageBuffer = sources[0].thumbnail.toPNG();
+                let nativeImg = sources[0].thumbnail;
+                const screenWidth = primaryDisplay.size.width;
+                const screenHeight = primaryDisplay.size.height;
+                
+                let clickPosition = {
+                    x: (clickData.x / screenWidth) * 100,
+                    y: (clickData.y / screenHeight) * 100
+                };
+
+                // Apply predefined resolution crop
+                if (this.currentResolution) {
+                    const { width, height } = this.currentResolution;
+                    
+                    // We need to scale the crop coordinates to the actual nativeImg size if scaleFactor > 1
+                    const scale = primaryDisplay.scaleFactor;
+                    const scaledWidth = width * scale;
+                    const scaledHeight = height * scale;
+                    
+                    let cropX = (clickData.x * scale) - scaledWidth / 2;
+                    let cropY = (clickData.y * scale) - scaledHeight / 2;
+
+                    // Clamp to native image bounds
+                    const imgSize = nativeImg.getSize();
+                    cropX = Math.max(0, Math.min(cropX, imgSize.width - scaledWidth));
+                    cropY = Math.max(0, Math.min(cropY, imgSize.height - scaledHeight));
+
+                    // Crop image
+                    nativeImg = nativeImg.crop({
+                        x: Math.round(cropX),
+                        y: Math.round(cropY),
+                        width: Math.round(scaledWidth),
+                        height: Math.round(scaledHeight)
+                    });
+
+                    // Recalculate click position relative to cropped area (unscaled)
+                    const localClickX = clickData.x - (cropX / scale);
+                    const localClickY = clickData.y - (cropY / scale);
+                    clickPosition = {
+                        x: (localClickX / width) * 100,
+                        y: (localClickY / height) * 100
+                    };
+                }
+
+                const imageBuffer = nativeImg.toPNG();
                 const captureId = uuidv4();
                 const imagePath = path.join(this.flowsDir, `${captureId}.png`);
 
                 await fs.writeFile(imagePath, imageBuffer);
-
-                // Calculate click position as percentage
-                const screenWidth = primaryDisplay.size.width;
-                const screenHeight = primaryDisplay.size.height;
-
-                const clickPosition = {
-                    x: (clickData.x / screenWidth) * 100,
-                    y: (clickData.y / screenHeight) * 100
-                };
 
                 const capture = {
                     id: captureId,

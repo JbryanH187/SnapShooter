@@ -67,4 +67,14 @@ contextBridge.exposeInMainWorld('electron', {
             ipcRenderer.removeListener('quickflow:flowComplete', subscription);
         };
     },
+
+    // Resolution Picker
+    onRequestResolutionPicker: (callback: () => void) => {
+        const subscription = () => callback();
+        ipcRenderer.on('resolution:request-picker', subscription);
+        return () => {
+            ipcRenderer.removeListener('resolution:request-picker', subscription);
+        };
+    },
+    setResolution: (width: number, height: number) => ipcRenderer.invoke('resolution:set', width, height),
 });

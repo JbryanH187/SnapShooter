@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Calendar, Filter as FilterIcon, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { X, Calendar, Filter as FilterIcon, CheckCircle, XCircle, Clock, ArrowUpNarrowWide, ArrowDownWideNarrow } from 'lucide-react';
 import { DateFilter, StatusFilter } from '../../hooks/useCaptureSearch';
 import { LiquidGlass } from './LiquidGlass';
 
@@ -13,6 +13,8 @@ interface FilterBarProps {
     totalCount: number;
     hasActiveFilters: boolean;
     onClearFilters: () => void;
+    sortOrder?: 'asc' | 'desc';
+    onToggleSortOrder?: () => void;
 }
 
 export const FilterBar: React.FC<FilterBarProps> = ({
@@ -23,7 +25,9 @@ export const FilterBar: React.FC<FilterBarProps> = ({
     resultCount,
     totalCount,
     hasActiveFilters,
-    onClearFilters
+    onClearFilters,
+    sortOrder = 'asc',
+    onToggleSortOrder
 }) => {
     const [showDateMenu, setShowDateMenu] = useState(false);
     const [showStatusMenu, setShowStatusMenu] = useState(false);
@@ -46,15 +50,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
     const activeStatus = statusOptions.find(o => o.value === statusFilter);
 
     return (
-        <div
-            className="flex items-center justify-between px-6 py-3 border-b"
-            style={{
-                background: 'var(--system-background-secondary)',
-                borderColor: 'var(--separator-non-opaque)'
-            }}
-        >
-            {/* Left: Filter Controls */}
-            <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
                 {/* Date Filter */}
                 <div className="relative">
                     <motion.button
@@ -215,20 +211,35 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                         Clear filters
                     </motion.button>
                 )}
-            </div>
 
-            {/* Right: Result Count */}
-            <div className="text-sm" style={{ color: 'var(--label-secondary)' }}>
-                {hasActiveFilters ? (
-                    <span>
-                        Showing <strong style={{ color: 'var(--label-primary)' }}>{resultCount}</strong> of {totalCount}
-                    </span>
-                ) : (
-                    <span>
-                        <strong style={{ color: 'var(--label-primary)' }}>{totalCount}</strong> {totalCount === 1 ? 'capture' : 'captures'}
-                    </span>
+                {/* Sort Order Toggle */}
+                {onToggleSortOrder && (
+                    <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={onToggleSortOrder}
+                        title={
+                            sortOrder === 'asc'
+                                ? 'Orden: Cronológico (1 → N)'
+                                : 'Orden: Más recientes primero (N → 1)'
+                        }
+                        className="flex items-center justify-center p-1.5 ml-1 transition-colors"
+                        style={{
+                            color: 'var(--label-secondary)',
+                            borderRadius: 'var(--radius-base)',
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.color = 'var(--label-primary)';
+                            e.currentTarget.style.background = 'var(--fill-secondary)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.color = 'var(--label-secondary)';
+                            e.currentTarget.style.background = 'transparent';
+                        }}
+                    >
+                        {sortOrder === 'asc' ? <ArrowUpNarrowWide size={18} /> : <ArrowDownWideNarrow size={18} />}
+                    </motion.button>
                 )}
-            </div>
         </div>
     );
 };

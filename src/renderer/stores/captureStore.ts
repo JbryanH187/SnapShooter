@@ -17,6 +17,12 @@ interface CaptureState {
     // Undo State
     lastDeleted: { item: CaptureItem; timeoutId: NodeJS.Timeout } | null;
 
+    // Sort Order State
+    sortOrder: 'asc' | 'desc';
+    setSortOrder: (order: 'asc' | 'desc') => void;
+    toggleSortOrder: () => void;
+    invertCaptures: () => void;
+
     // Actions
     addCapture: (capture: CaptureItem) => void;
     reorderCaptures: (newOrder: CaptureItem[]) => void;
@@ -47,11 +53,39 @@ interface CaptureState {
 
 export const useCaptureStore = create<CaptureState>()(subscribeWithSelector((set, get) => ({
     captures: [],
+    sortOrder: 'asc', // Default chronological: Step 1 -> Step N
     currentCapture: null,
     previewCapture: null,
     error: null,
     isLoading: true, // Start loading by default
     lastDeleted: null,
+
+    setSortOrder: (order) => {
+        set((state) => {
+            if (state.sortOrder === order) return state;
+            const sorted = [...state.captures].sort((a, b) =>
+                order === 'asc' ? a.timestamp - b.timestamp : b.timestamp - a.timestamp
+            );
+            return { sortOrder: order, captures: sorted };
+        });
+    },
+
+    toggleSortOrder: () => {
+        set((state) => {
+            const nextOrder = state.sortOrder === 'asc' ? 'desc' : 'asc';
+            const sorted = [...state.captures].sort((a, b) =>
+                nextOrder === 'asc' ? a.timestamp - b.timestamp : b.timestamp - a.timestamp
+            );
+            return { sortOrder: nextOrder, captures: sorted };
+        });
+    },
+
+    invertCaptures: () => {
+        set((state) => ({
+            sortOrder: state.sortOrder === 'asc' ? 'desc' : 'asc',
+            captures: [...state.captures].reverse()
+        }));
+    },
 
     loadCaptures: async () => {
         set({ isLoading: true });
@@ -59,7 +93,11 @@ export const useCaptureStore = create<CaptureState>()(subscribeWithSelector((set
             if (window.electron?.getCaptures) {
                 const captures = await withRetry(() => window.electron.getCaptures());
                 if (captures) {
-                    set({ captures });
+                    const currentOrder = get().sortOrder;
+                    const sorted = [...captures].sort((a, b) =>
+                        currentOrder === 'asc' ? a.timestamp - b.timestamp : b.timestamp - a.timestamp
+                    );
+                    set({ captures: sorted });
                 }
 
                 // Load User Profile
@@ -77,10 +115,15 @@ export const useCaptureStore = create<CaptureState>()(subscribeWithSelector((set
     },
 
     addCapture: (capture) => {
-        set((state) => ({
-            captures: [capture, ...state.captures],
-            previewCapture: capture
-        }));
+        set((state) => {
+            const nextCaptures = state.sortOrder === 'asc'
+                ? [...state.captures, capture]
+                : [capture, ...state.captures];
+            return {
+                captures: nextCaptures,
+                previewCapture: capture
+            };
+        });
         // Async save
         withRetry(() => window.electron?.saveCapture(capture)).then((saved: any) => {
             set(state => ({
@@ -93,7 +136,6 @@ export const useCaptureStore = create<CaptureState>()(subscribeWithSelector((set
 
     reorderCaptures: (newOrder) => {
         set({ captures: newOrder });
-        // TODO: Persist order if strictly necessary
     },
 
     updateCapture: (id, updates) => {
@@ -154,9 +196,11 @@ export const useCaptureStore = create<CaptureState>()(subscribeWithSelector((set
 
             set((state) => {
                 const item = state.lastDeleted!.item;
-                // Add back to top (or we could try to find original index, but top is okay for Recents)
+                const combined = [...state.captures, item].sort((a, b) =>
+                    state.sortOrder === 'asc' ? a.timestamp - b.timestamp : b.timestamp - a.timestamp
+                );
                 return {
-                    captures: [item, ...state.captures].sort((a, b) => b.timestamp - a.timestamp), // Ensure correct order
+                    captures: combined,
                     lastDeleted: null
                 };
             });

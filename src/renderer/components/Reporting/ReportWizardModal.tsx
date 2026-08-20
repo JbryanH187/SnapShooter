@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Modal } from '../UI/Modal';
+import { DatePicker } from '../UI/DatePicker';
 import { CaptureItem } from '../../stores/captureStore';
 import { ReportGenerator } from '../../../shared/reporting/ReportGenerator';
 import { REPORT_THEMES, ReportConfig } from '../../../shared/reporting/ReportThemes';
-import { FileText, FileType, Download, Check, Settings, Palette, Upload, X, RefreshCw, Save, Zap } from 'lucide-react';
+import { FileText, FileType, Download, Check, Settings, Palette, Upload, X, RefreshCw, Save, Zap, Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ReportDraft } from './ReportDraftsModal';
 import { v4 as uuidv4 } from 'uuid';
@@ -43,6 +44,7 @@ export const ReportWizardModal: React.FC<ReportWizardModalProps> = ({ isOpen, on
         subtitle: 'PRUEBAS UNITARIAS',
         subtitleColor: undefined,
         author: authorName,
+        reportDate: new Date().toISOString().slice(0, 10), // Default: today
         showLogoSymbol: true,
         showLogoText: true,
         customLogoSymbol: null,
@@ -270,7 +272,7 @@ export const ReportWizardModal: React.FC<ReportWizardModalProps> = ({ isOpen, on
                                         <div>
                                             <label className="block text-xs font-bold mb-2 uppercase" style={{ color: 'var(--label-secondary)' }}>Diseño</label>
                                             <div className="grid grid-cols-2 gap-2 mb-2">
-                                                {['classic', 'modern', 'creative', 'custom'].map((tId) => (
+                                                {['classic', 'modern', 'bubble', 'japanese', 'custom'].map((tId) => (
                                                     <button
                                                         key={tId}
                                                         onClick={() => updateConfig('templateId', tId)}
@@ -552,6 +554,13 @@ export const ReportWizardModal: React.FC<ReportWizardModalProps> = ({ isOpen, on
                                                     onChange={(e) => updateConfig('author', e.target.value)}
                                                     className="w-full border rounded p-1.5 lg:p-2 text-xs lg:text-sm focus:ring-2 focus:ring-primary-500 outline-none"
                                                     style={{ background: 'var(--fill-secondary)', borderColor: 'var(--separator-opaque)', color: 'var(--label-primary)' }}
+                                                />
+                                            </div>
+                                            <div className="w-full">
+                                                <DatePicker
+                                                    label="Fecha del Reporte"
+                                                    value={config.reportDate || new Date().toISOString().slice(0, 10)}
+                                                    onChange={(date) => updateConfig('reportDate', date)}
                                                 />
                                             </div>
                                         </div>

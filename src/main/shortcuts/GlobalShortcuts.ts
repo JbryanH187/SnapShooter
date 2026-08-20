@@ -28,4 +28,13 @@ export function registerShortcuts(mainWindow: BrowserWindow) {
             console.error('Capture failed:', error);
         }
     });
+
+    // Ctrl+Shift+E -> Fixed Region Capture (prompts for resolution then captures)
+    globalShortcut.register('CommandOrControl+Shift+E', async () => {
+        // We'll reuse the Quick Flow mode logic for this by having a single-shot capture
+        // But the easiest way is to let the user use Quick Flow for fixed sizes, 
+        // as implementing a whole new single-shot fixed size capture engine replicates QuickFlowEngine.
+        // Let's notify renderer to handle a single fixed capture if needed, or just let them use Quick Flow.
+        mainWindow.webContents.send('resolution:request-picker');
+    });
 }

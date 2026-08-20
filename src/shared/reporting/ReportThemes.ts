@@ -71,7 +71,7 @@ import { ReportTemplate } from '../types';
 
 export interface ReportConfig {
     layout: ReportLayout; // Deprecated: use templateId instead
-    templateId?: 'classic' | 'modern' | 'creative' | 'custom'; // New template system
+    templateId?: 'classic' | 'modern' | 'bubble' | 'japanese' | 'custom'; // New template system
     theme: keyof typeof REPORT_THEMES;
     title: string;
     titleColor?: string; // Optional custom color for title
@@ -79,6 +79,7 @@ export interface ReportConfig {
     subtitleColor?: string; // Optional custom color for subtitle
     projectName?: string; // Project Name to appear in report
     author: string;
+    reportDate?: string; // Custom report date (ISO string YYYY-MM-DD). Defaults to today if not set.
     showLogoSymbol: boolean;
     showLogoText: boolean;
     customLogoSymbol?: string | null;

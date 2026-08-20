@@ -56,6 +56,22 @@ export const FlowsView: React.FC = () => {
     // Delete Confirmation State
     const [flowToDelete, setFlowToDelete] = React.useState<string | null>(null);
 
+    // Quick Flow State Tracker
+    const [quickFlowActive, setQuickFlowActive] = React.useState(false);
+
+    React.useEffect(() => {
+        const electron = window.electron;
+        if (!electron) return;
+        
+        const removeModeListener = electron.onQuickFlowModeChange?.((active: boolean) => {
+            setQuickFlowActive(active);
+        });
+        
+        return () => {
+            if (removeModeListener) removeModeListener();
+        };
+    }, []);
+
     const checkDeleteFlow = (id: string) => {
         setFlowToDelete(id);
     };
@@ -209,7 +225,9 @@ export const FlowsView: React.FC = () => {
                             border: '1px solid color-mix(in srgb, var(--system-orange) 20%, transparent)'
                         }}
                     >
-                        <span style={{ color: 'var(--label-secondary)' }}>Presiona</span>
+                        <span style={{ color: 'var(--label-secondary)' }}>
+                            {quickFlowActive ? 'Presiona' : 'Presiona'}
+                        </span>
                         <kbd
                             className="font-bold px-2.5 py-1 rounded-lg text-xs font-mono"
                             style={{
@@ -217,8 +235,12 @@ export const FlowsView: React.FC = () => {
                                 background: 'color-mix(in srgb, var(--system-orange) 15%, transparent)',
                                 border: '1px solid color-mix(in srgb, var(--system-orange) 30%, transparent)'
                             }}
-                        >Ctrl+Shift+Q</kbd>
-                        <span style={{ color: 'var(--label-secondary)' }}>para Quick Flow</span>
+                        >
+                            {quickFlowActive ? 'Ctrl+Shift+C' : 'Ctrl+Shift+Q'}
+                        </kbd>
+                        <span style={{ color: 'var(--label-secondary)' }}>
+                            {quickFlowActive ? 'para tomar un snap' : 'para Quick Flow'}
+                        </span>
                     </motion.div>
                 </motion.div>
             ) : (

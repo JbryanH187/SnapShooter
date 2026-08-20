@@ -3,8 +3,44 @@ import { saveAs } from 'file-saver';
 import { jsPDF } from 'jspdf';
 import { CaptureItem } from '../types';
 import { REPORT_THEMES, ReportConfig, ColorPalette } from './ReportThemes';
-import { ClassicTemplate, ModernTemplate, CreativeTemplate, TemplateBase } from './templates';
+import { ClassicTemplate, ModernTemplate, BubbleTemplate, JapaneseTemplate, TemplateBase } from './templates';
 import { DynamicTemplate } from './DynamicTemplate';
+
+/**
+ * Compress an image to reduce export file size.
+ * Re-renders to a canvas at max 1280x960, exports as JPEG at 82% quality.
+ * Preserves aspect ratio. Falls back to original src if canvas fails.
+ */
+async function compressImageForExport(
+    src: string,
+    maxW = 1280,
+    maxH = 960,
+    quality = 0.82
+): Promise<{ dataUrl: string; width: number; height: number } | null> {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+            try {
+                const ratio = Math.min(maxW / img.width, maxH / img.height, 1);
+                const w = Math.round(img.width * ratio);
+                const h = Math.round(img.height * ratio);
+                const canvas = document.createElement('canvas');
+                canvas.width = w;
+                canvas.height = h;
+                const ctx = canvas.getContext('2d')!;
+                ctx.drawImage(img, 0, 0, w, h);
+                const dataUrl = canvas.toDataURL('image/jpeg', quality);
+                resolve({ dataUrl, width: w, height: h });
+            } catch (e) {
+                console.warn('Image compression failed, using original', e);
+                resolve({ dataUrl: src, width: img.width, height: img.height });
+            }
+        };
+        img.onerror = () => resolve(null);
+        img.src = src;
+    });
+}
 
 /**
  * Helper to get template instance based on templateId or legacy layout
@@ -13,13 +49,16 @@ function getTemplate(doc: jsPDF, config: ReportConfig): TemplateBase {
     // New templateId takes precedence over legacy layout
     if (config.templateId) {
         switch (config.templateId) {
+            case 'classic':
+                return new ClassicTemplate(doc, config);
             case 'modern':
                 return new ModernTemplate(doc, config);
-            case 'creative':
-                return new CreativeTemplate(doc, config);
+            case 'bubble':
+                return new BubbleTemplate(doc, config);
+            case 'japanese':
+                return new JapaneseTemplate(doc, config);
             case 'custom':
                 return new DynamicTemplate(doc, config);
-            case 'classic':
             default:
                 return new ClassicTemplate(doc, config);
         }
@@ -86,7 +125,8 @@ export class ReportGenerator {
     // DOCX Generation
     private static async generateDOCX(captures: CaptureItem[], config: ReportConfig, returnBlob = false): Promise<Blob | void> {
         const theme = REPORT_THEMES[config.theme];
-        const currentDate = new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+        const dateSource = config.reportDate ? new Date(config.reportDate + 'T12:00:00') : new Date();
+        const currentDate = dateSource.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
 
         const doc = new Document({
             sections: [{
@@ -167,47 +207,46 @@ export class ReportGenerator {
                 }));
             }
 
-            // Image handling
+            // Image handling — compress first, then calculate proper aspect ratio
             try {
-                let imageBuffer: ArrayBuffer;
-                if (capture.thumbnail.startsWith('data:')) {
-                    const base64Data = capture.thumbnail.split(',')[1];
-                    const binaryString = atob(base64Data);
-                    const len = binaryString.length;
-                    const bytes = new Uint8Array(len);
-                    for (let i = 0; i < len; i++) {
-                        bytes[i] = binaryString.charCodeAt(i);
-                    }
-                    imageBuffer = bytes.buffer;
-                } else if (capture.thumbnail.startsWith('media://')) {
+                let srcForCompression = capture.thumbnail;
+
+                // Resolve media:// protocol to a data URL before compression
+                if (capture.thumbnail.startsWith('media://')) {
                     if ((window as any).electron?.readImage) {
                         const buffer = await (window as any).electron.readImage(capture.thumbnail);
                         const bytes = buffer.buffer ? new Uint8Array(buffer.buffer) : new Uint8Array(buffer);
                         let binary = '';
-                        const len = bytes.byteLength;
-                        for (let i = 0; i < len; i++) {
-                            binary += String.fromCharCode(bytes[i]);
-                        }
-                        const base64 = btoa(binary);
-                        const binaryString = atob(base64);
-                        const len2 = binaryString.length;
-                        const bytes2 = new Uint8Array(len2);
-                        for (let i = 0; i < len2; i++) {
-                            bytes2[i] = binaryString.charCodeAt(i);
-                        }
-                        imageBuffer = bytes2.buffer;
+                        for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+                        srcForCompression = 'data:image/png;base64,' + btoa(binary);
                     } else {
-                        throw new Error("Read Image capability missing");
+                        throw new Error('Read Image capability missing');
                     }
-                } else {
-                    const response = await fetch(capture.thumbnail);
-                    imageBuffer = await response.arrayBuffer();
                 }
 
-                paragraphs.push(new Paragraph({
-                    children: [new ImageRun({ data: imageBuffer, transformation: { width: 500, height: 300 }, type: "png" })],
-                    spacing: { after: 400 }
-                }));
+                // Compress the image before embedding
+                const compressed = await compressImageForExport(srcForCompression);
+
+                if (compressed) {
+                    // Calc DOCX dimensions in EMUs: max width = 450px, keep aspect ratio
+                    const maxDocxW = 450;
+                    const ratio = compressed.width / compressed.height;
+                    const docxW = Math.min(maxDocxW, compressed.width);
+                    const docxH = Math.round(docxW / ratio);
+
+                    // Convert compressed JPEG data URL to ArrayBuffer
+                    const base64Data = compressed.dataUrl.split(',')[1];
+                    const binaryString = atob(base64Data);
+                    const bytes = new Uint8Array(binaryString.length);
+                    for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i);
+
+                    paragraphs.push(new Paragraph({
+                        children: [new ImageRun({ data: bytes.buffer, transformation: { width: docxW, height: docxH }, type: 'jpg' })],
+                        spacing: { after: 400 }
+                    }));
+                } else {
+                    throw new Error('Could not process image');
+                }
             } catch (e) {
                 console.error("Failed to add image", e);
                 paragraphs.push(new Paragraph({

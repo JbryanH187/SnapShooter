@@ -32,3 +32,5 @@ global.ResizeObserver = class ResizeObserver {
     observe() { }
     unobserve() { }
 } as any;
+
+test.skip('setup environment', () => {});
