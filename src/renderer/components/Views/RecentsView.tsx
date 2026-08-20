@@ -38,7 +38,7 @@ import { CaptureCard } from './CaptureCard';
 import { CaptureItem } from '../../../shared/types';
 
 export const RecentsView: React.FC = () => {
-    const { captures, deleteCapture, updateCapture, isLoading, reorderCaptures, clearAllCaptures } = useCaptureStore();
+    const { captures, deleteCapture, updateCapture, isLoading, reorderCaptures, clearAllCaptures, sortOrder, toggleSortOrder } = useCaptureStore();
     const { saveFlowSession, flows, addToFlow } = useFlowStore(); // Includes addToFlow now (or will soon)
     const { searchQuery } = useUI();
     const { openImageEditor } = useGlobalModal();
@@ -313,6 +313,8 @@ export const RecentsView: React.FC = () => {
                     totalCount={captures.length}
                     hasActiveFilters={hasActiveFilters}
                     onClearFilters={handleClearFilters}
+                    sortOrder={sortOrder}
+                    onToggleSortOrder={toggleSortOrder}
                 />
             )}
 

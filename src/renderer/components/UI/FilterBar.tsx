@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Calendar, Filter as FilterIcon, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { X, Calendar, Filter as FilterIcon, CheckCircle, XCircle, Clock, ArrowUpDown } from 'lucide-react';
 import { DateFilter, StatusFilter } from '../../hooks/useCaptureSearch';
 import { LiquidGlass } from './LiquidGlass';
 
@@ -13,6 +13,8 @@ interface FilterBarProps {
     totalCount: number;
     hasActiveFilters: boolean;
     onClearFilters: () => void;
+    sortOrder?: 'asc' | 'desc';
+    onToggleSortOrder?: () => void;
 }
 
 export const FilterBar: React.FC<FilterBarProps> = ({
@@ -23,7 +25,9 @@ export const FilterBar: React.FC<FilterBarProps> = ({
     resultCount,
     totalCount,
     hasActiveFilters,
-    onClearFilters
+    onClearFilters,
+    sortOrder = 'asc',
+    onToggleSortOrder
 }) => {
     const [showDateMenu, setShowDateMenu] = useState(false);
     const [showStatusMenu, setShowStatusMenu] = useState(false);
@@ -213,6 +217,36 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                     >
                         <X size={14} />
                         Clear filters
+                    </motion.button>
+                )}
+
+                {/* Sort Order Toggle */}
+                {onToggleSortOrder && (
+                    <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={onToggleSortOrder}
+                        title={
+                            sortOrder === 'asc'
+                                ? 'Orden: 1 → N (Cronológico / Flujo de pasos). Clic para invertir a N → 1.'
+                                : 'Orden: N → 1 (Más recientes primero). Clic para invertir a 1 → N.'
+                        }
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl transition-all border shadow-sm ml-1"
+                        style={{
+                            background:
+                                sortOrder === 'asc'
+                                    ? 'var(--fill-secondary)'
+                                    : 'color-mix(in srgb, var(--system-blue) 15%, var(--fill-secondary))',
+                            borderColor: sortOrder === 'asc' ? 'var(--separator-opaque)' : 'var(--system-blue)',
+                            color: sortOrder === 'asc' ? 'var(--label-primary)' : 'var(--system-blue)',
+                            borderRadius: 'var(--radius-base)'
+                        }}
+                    >
+                        <ArrowUpDown size={13} className={sortOrder === 'desc' ? 'text-blue-500' : 'opacity-70'} />
+                        <span>{sortOrder === 'asc' ? '1 → N' : 'N → 1'}</span>
+                        <span className="text-[11px] font-normal opacity-70 hidden sm:inline">
+                            {sortOrder === 'asc' ? 'Cronológico' : 'Inverso'}
+                        </span>
                     </motion.button>
                 )}
             </div>
