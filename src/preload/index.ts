@@ -16,6 +16,7 @@ contextBridge.exposeInMainWorld('electron', {
     deleteCapture: (id: string) => ipcRenderer.invoke('captures:delete', id),
     clearCaptures: () => ipcRenderer.invoke('captures:clear'),
     openCapturesFolder: () => ipcRenderer.invoke('app:openCapturesFolder'),
+    copyImageToClipboard: (imageSrc: string) => ipcRenderer.invoke('clipboard:copyImage', imageSrc),
     saveUserProfile: (name: string) => ipcRenderer.invoke('user:save-profile', name),
     getUserProfile: () => ipcRenderer.invoke('user:get-profile'),
 
@@ -77,4 +78,14 @@ contextBridge.exposeInMainWorld('electron', {
         };
     },
     setResolution: (width: number, height: number) => ipcRenderer.invoke('resolution:set', width, height),
+
+    // Jira B2B Integration
+    jiraTestConnection: (config: any) => ipcRenderer.invoke('jira:testConnection', config),
+    jiraGetIssues: (config: any, query?: string) => ipcRenderer.invoke('jira:getIssues', config, query),
+    jiraUploadAttachment: (payload: { config: any; issueKey: string; fileName: string; imageSrc: string }) => ipcRenderer.invoke('jira:uploadAttachment', payload),
+
+    // Azure DevOps B2B Integration
+    adoTestConnection: (config: any) => ipcRenderer.invoke('ado:testConnection', config),
+    adoGetWorkItems: (config: any, query?: string) => ipcRenderer.invoke('ado:getWorkItems', config, query),
+    adoUploadAttachment: (payload: { config: any; workItemId: number; fileName: string; imageSrc: string }) => ipcRenderer.invoke('ado:uploadAttachment', payload),
 });

@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { SmartFoldersList } from '../Views/SmartFoldersList';
 import { LiquidGlass } from '../UI/LiquidGlass';
+import { useI18n } from '../../i18n/I18nContext';
 
 export type ViewType = 'home' | 'recents' | 'flows' | 'history' | 'drafts' | 'builder';
 
@@ -36,24 +37,26 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
     flowCount,
     onSettingsClick
 }) => {
+    const { t } = useI18n();
+
     const menuItems = [
         {
             id: 'recents' as ViewType,
-            label: 'Recientes',
+            label: t('nav.recents'),
             icon: Camera,
             count: captureCount,
             onClick: () => onViewChange('recents')
         },
         {
             id: 'flows' as ViewType,
-            label: 'Storage',
+            label: t('nav.flows'),
             icon: Layers,
             count: flowCount,
             onClick: () => onViewChange('flows')
         },
         {
             id: 'history' as ViewType,
-            label: 'Historial',
+            label: t('nav.history'),
             icon: History,
             count: null,
             onClick: () => onViewChange('history')
@@ -67,7 +70,7 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
         },
         {
             id: 'builder' as ViewType,
-            label: 'Report Builder',
+            label: t('nav.builder'),
             icon: LayoutTemplate,
             count: null,
             onClick: () => onViewChange('builder')

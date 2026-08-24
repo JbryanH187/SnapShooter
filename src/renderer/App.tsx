@@ -5,6 +5,7 @@ import './styles/index.css';
 import { LiquidThemeProvider } from './contexts/LiquidThemeContext';
 import { UIProvider } from './contexts/UIContext';
 import { GlobalModalProvider } from './contexts/GlobalModalContext';
+import { I18nProvider } from './i18n/I18nContext';
 
 // Components
 import { AppShell } from './components/Layout/AppShell';
@@ -59,15 +60,17 @@ const App: React.FC = () => {
     }
 
     return (
-        <LiquidThemeProvider>
-            <UIProvider>
-                <GlobalModalProvider>
-                    <GlobalErrorBoundary>
-                        <AppContent />
-                    </GlobalErrorBoundary>
-                </GlobalModalProvider>
-            </UIProvider>
-        </LiquidThemeProvider>
+        <I18nProvider>
+            <LiquidThemeProvider>
+                <UIProvider>
+                    <GlobalModalProvider>
+                        <GlobalErrorBoundary>
+                            <AppContent />
+                        </GlobalErrorBoundary>
+                    </GlobalModalProvider>
+                </UIProvider>
+            </LiquidThemeProvider>
+        </I18nProvider>
     );
 };
 

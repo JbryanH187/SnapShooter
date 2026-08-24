@@ -8,6 +8,9 @@
     "build:main": "tsc -p tsconfig.electron.json",
     "build": "npm run build:main && vite build && electron-builder",
     "build:portable": "npm run build:main && vite build && electron-builder --win portable",
+    "build:mac": "npm run build:main && vite build && electron-builder --mac",
+    "build:linux": "npm run build:main && vite build && electron-builder --linux",
+    "build:all": "npm run build:main && vite build && electron-builder --win --mac --linux",
     "build:dir": "npm run build:main && vite build && electron-builder --dir",
     "start": "npm run build:main && electron .",
     "electron:dev": "concurrently -k \"npm run dev\" \"npm run build:main && electron .\"",
@@ -19,6 +22,13 @@
   "build": {
     "appId": "com.snapproof.app",
     "productName": "SnapProof",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "JbryanH187",
+        "repo": "SnapShooter"
+      }
+    ],
     "directories": {
       "output": "release"
     },
@@ -38,6 +48,20 @@
       ],
       "icon": "build/icon.png",
       "signAndEditExecutable": false
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "icon": "build/icon.png",
+      "category": "public.app-category.developer-tools"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "icon": "build/icon.png",
+      "category": "Development"
     },
     "portable": {
       "requestExecutionLevel": "user"
@@ -83,6 +107,7 @@
     "docx": "^9.5.1",
     "electron-screenshots": "^0.6.0",
     "electron-store": "^8.1.0",
+    "electron-updater": "^6.8.9",
     "fabric": "^7.1.0",
     "file-saver": "^2.0.5",
     "framer-motion": "^12.26.2",

@@ -56,7 +56,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
             // If we want non-blocking, we should use setPreviewCapture or addCapture.
 
             const removeListener = window.electron.onCaptureComplete((data: { id: string, thumbnail: string, metadata: any }) => {
-                logger.info("Capture received via Shortcut:", data.id);
+                logger.info('CAPTURE', "Capture received via Shortcut:", { id: data.id });
 
                 const newCapture = {
                     id: data.id,

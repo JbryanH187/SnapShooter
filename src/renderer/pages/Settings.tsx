@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Trash2, FolderOpen, Keyboard, Info, Moon, Sun } from 'lucide-react';
+import { Trash2, FolderOpen, Keyboard, Info, Moon, Sun, Languages } from 'lucide-react';
 import { useCaptureStore } from '../stores/captureStore';
 import { logger } from '../services/Logger';
 import { useLiquidTheme } from '../contexts/LiquidThemeContext';
+import { useI18n } from '../i18n/I18nContext';
 import { toast, confirm } from '../utils/toast';
 
 interface SettingsProps {
@@ -13,6 +14,7 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
     const captures = useCaptureStore(state => state.captures);
     const deleteCapture = useCaptureStore(state => state.deleteCapture);
     const { isDark, setTheme } = useLiquidTheme();
+    const { language, setLanguage, t } = useI18n();
     const toggleTheme = () => setTheme(isDark ? 'liquid-light' : 'liquid-dark');
 
     const handleClearHistory = async () => {
@@ -36,7 +38,7 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
                 await window.electron.openCapturesFolder();
                 toast.success('Carpeta abierta en explorador de archivos');
             } catch (error) {
-                logger.error('Error opening folder:', error);
+                logger.error('UI', 'Error opening folder', { error });
                 toast.error('Error al abrir la carpeta');
             }
         } else {
@@ -47,12 +49,12 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
     return (
         <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 h-full overflow-y-auto transition-colors duration-200">
             <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Settings</h2>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('settings.title')}</h2>
                 <button
                     onClick={onClose}
                     className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
                 >
-                    Close
+                    {t('action.cancel')}
                 </button>
             </div>
 
@@ -63,6 +65,36 @@ export const Settings: React.FC<SettingsProps> = ({ onClose }) => {
                         <Info size={20} /> General
                     </h3>
                     <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 space-y-3">
+                        {/* Language Selector */}
+                        <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-2">
+                                <Languages size={18} className="text-gray-600 dark:text-gray-400" />
+                                <span className="text-gray-700 dark:text-gray-300">{t('settings.language')}</span>
+                            </div>
+                            <div className="flex items-center gap-1 bg-gray-200 dark:bg-gray-700 p-1 rounded-lg">
+                                <button
+                                    onClick={() => setLanguage('es')}
+                                    className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-all ${
+                                        language === 'es'
+                                            ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 shadow-sm'
+                                            : 'text-gray-500 hover:text-gray-800 dark:hover:text-gray-200'
+                                    }`}
+                                >
+                                    🇪🇸 ES
+                                </button>
+                                <button
+                                    onClick={() => setLanguage('en')}
+                                    className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-all ${
+                                        language === 'en'
+                                            ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 shadow-sm'
+                                            : 'text-gray-500 hover:text-gray-800 dark:hover:text-gray-200'
+                                    }`}
+                                >
+                                    🇺🇸 EN
+                                </button>
+                            </div>
+                        </div>
+
                         {/* Dark Mode Toggle */}
                         <div className="flex justify-between items-center">
                             <div className="flex items-center gap-2">

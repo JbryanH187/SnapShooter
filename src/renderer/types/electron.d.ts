@@ -12,6 +12,7 @@ export interface ElectronAPI {
     deleteCapture: (id: string) => Promise<void>;
     clearCaptures: () => Promise<void>;
     openCapturesFolder: () => Promise<void>;
+    copyImageToClipboard: (imageSrc: string) => Promise<boolean>;
     saveUserProfile: (name: string) => Promise<void>;
     getUserProfile: () => Promise<{ name: string; initialized: boolean }>;
 
@@ -49,6 +50,16 @@ export interface ElectronAPI {
     // Resolution Picker
     onRequestResolutionPicker: (callback: () => void) => () => void;
     setResolution: (width: number, height: number) => Promise<void>;
+
+    // Jira B2B Integration
+    jiraTestConnection: (config: any) => Promise<{ success: boolean; message: string; user?: string }>;
+    jiraGetIssues: (config: any, query?: string) => Promise<Array<{ id: string; key: string; summary: string; status: string; issueType: string }>>;
+    jiraUploadAttachment: (payload: { config: any; issueKey: string; fileName: string; imageSrc: string }) => Promise<boolean>;
+
+    // Azure DevOps B2B Integration
+    adoTestConnection: (config: any) => Promise<{ success: boolean; message: string; project?: string }>;
+    adoGetWorkItems: (config: any, query?: string) => Promise<Array<{ id: number; title: string; type: string; state: string; assignedTo?: string }>>;
+    adoUploadAttachment: (payload: { config: any; workItemId: number; fileName: string; imageSrc: string }) => Promise<boolean>;
 }
 
 declare global {

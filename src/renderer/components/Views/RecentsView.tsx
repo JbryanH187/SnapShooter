@@ -8,7 +8,7 @@ import { useGlobalModal } from '../../contexts/GlobalModalContext';
 import { FilterBar } from '../UI/FilterBar';
 import { toast, confirm } from '../../utils/toast';
 import { toast as hotToast } from 'react-hot-toast';
-import { Camera, Trash2, Save } from 'lucide-react';
+import { Camera, Trash2, Save, SplitSquareVertical } from 'lucide-react';
 import OnlyEyesSnapProof from '../../../assets/OnlyEyesSnapProof.png';
 import { logger } from '../../services/Logger';
 import { useFlowStore } from '../../stores/flowStore';
@@ -36,17 +36,23 @@ import {
 import { SortableCaptureCard } from './SortableCaptureCard';
 import { CaptureCard } from './CaptureCard';
 import { CaptureItem } from '../../../shared/types';
+import { JiraUploadModal } from '../Integrations/JiraUploadModal';
+import { AzureDevOpsUploadModal } from '../Integrations/AzureDevOpsUploadModal';
+import { ImageDiffModal } from './ImageDiffModal';
 
 export const RecentsView: React.FC = () => {
     const { captures, deleteCapture, updateCapture, isLoading, reorderCaptures, clearAllCaptures, sortOrder, toggleSortOrder } = useCaptureStore();
-    const { saveFlowSession, flows, addToFlow } = useFlowStore(); // Includes addToFlow now (or will soon)
+    const { saveFlowSession, flows, addToFlow } = useFlowStore();
     const { searchQuery } = useUI();
     const { openImageEditor } = useGlobalModal();
 
-    // Local state for Save FLow
+    // Local state for Save Flow, Jira, ADO and Diff
     const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+    const [isDiffModalOpen, setIsDiffModalOpen] = useState(false);
+    const [jiraTargetCapture, setJiraTargetCapture] = useState<CaptureItem | null>(null);
+    const [adoTargetCapture, setAdoTargetCapture] = useState<CaptureItem | null>(null);
     const [flowName, setFlowName] = useState('');
-    const [selectedFlowId, setSelectedFlowId] = useState<string>(''); // For appending to existing flow
+    const [selectedFlowId, setSelectedFlowId] = useState<string>('');
 
     // DnD State
     const [activeId, setActiveId] = useState<string | null>(null);
@@ -305,6 +311,17 @@ export const RecentsView: React.FC = () => {
                             onToggleSortOrder={toggleSortOrder}
                         />
                     )}
+                    {captures.length >= 2 && (
+                        <button
+                            onClick={() => setIsDiffModalOpen(true)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all hover:bg-purple-50 dark:hover:bg-purple-900/20"
+                            style={{ color: 'var(--system-purple, #8b5cf6)' }}
+                            title="Comparar dos evidencias visualmente con cortina o lado a lado"
+                        >
+                            <SplitSquareVertical size={16} />
+                            <span className="hidden sm:inline">Comparar (Diff)</span>
+                        </button>
+                    )}
                     {captures.length > 0 && (
                         <button
                             onClick={() => setIsSaveModalOpen(true)}
@@ -374,6 +391,8 @@ export const RecentsView: React.FC = () => {
                                             onEdit={openImageEditor}
                                             onDelete={handleDeleteCapture}
                                             onUpdateStatus={(id, s) => updateCapture(id, { status: s })}
+                                            onUploadJira={(capture) => setJiraTargetCapture(capture)}
+                                            onUploadADO={(capture) => setAdoTargetCapture(capture)}
                                         />
                                     </SortableCaptureCard>
                                 ))}
@@ -393,6 +412,29 @@ export const RecentsView: React.FC = () => {
                         </DragOverlay>
                     </DndContext>
                 </div>
+            )}
+
+            {/* Jira Upload Modal */}
+            <JiraUploadModal
+                isOpen={!!jiraTargetCapture}
+                onClose={() => setJiraTargetCapture(null)}
+                capture={jiraTargetCapture}
+            />
+
+            {/* Azure DevOps Upload Modal */}
+            <AzureDevOpsUploadModal
+                isOpen={!!adoTargetCapture}
+                onClose={() => setAdoTargetCapture(null)}
+                capture={adoTargetCapture}
+            />
+
+            {/* Visual Diff Modal */}
+            {isDiffModalOpen && (
+                <ImageDiffModal
+                    isOpen={isDiffModalOpen}
+                    onClose={() => setIsDiffModalOpen(false)}
+                    captures={captures}
+                />
             )}
         </motion.div>
     );

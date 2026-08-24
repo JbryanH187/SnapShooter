@@ -1,7 +1,8 @@
 
 import React from 'react';
-import { CheckCircle, XCircle, Trash2 } from 'lucide-react';
+import { CheckCircle, XCircle, Trash2, Copy, Send, Building2 } from 'lucide-react';
 import { CaptureItem } from '../../../shared/types';
+import { toast } from '../../utils/toast';
 
 interface CaptureCardProps {
     capture: CaptureItem;
@@ -9,6 +10,8 @@ interface CaptureCardProps {
     onEdit: (c: CaptureItem) => void;
     onUpdateStatus: (id: string, status: 'success' | 'failure') => void;
     onDelete: (id: string) => void;
+    onUploadJira?: (c: CaptureItem) => void;
+    onUploadADO?: (c: CaptureItem) => void;
 }
 
 export const CaptureCard: React.FC<CaptureCardProps> = ({
@@ -16,8 +19,23 @@ export const CaptureCard: React.FC<CaptureCardProps> = ({
     index,
     onEdit,
     onUpdateStatus,
-    onDelete
+    onDelete,
+    onUploadJira,
+    onUploadADO
 }) => {
+    const handleCopy = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        try {
+            if (window.electron?.copyImageToClipboard) {
+                await window.electron.copyImageToClipboard(c.thumbnail);
+                toast.success('Imagen copiada al portapapeles');
+            }
+        } catch (err) {
+            console.error('[CaptureCard] Copy failed:', err);
+            toast.error('Error al copiar imagen');
+        }
+    };
+
     return (
         <div
             className={`flex flex-col p-4 border rounded-xl shadow-sm hover:shadow-md transition-all group relative h-full bg-white dark:bg-gray-800
@@ -54,19 +72,36 @@ export const CaptureCard: React.FC<CaptureCardProps> = ({
             {/* Info */}
             <div className="flex-1 min-w-0">
                 <h3 className="font-semibold mb-1 truncate text-sm" style={{ color: 'var(--label-primary)' }}>{c.title || 'Untitled Capture'}</h3>
-                <p className="text-xs line-clamp-2 mb-2" style={{ color: 'var(--label-secondary)' }}>{c.description || 'No description.'}</p>
-                <span
-                    className="text-[10px] px-2 py-0.5 rounded-full font-medium"
-                    style={{
-                        background: 'var(--fill-secondary)',
-                        color: 'var(--label-secondary)'
-                    }}
-                >
-                    {new Date(c.timestamp).toLocaleTimeString()}
-                </span>
+                <p className="text-xs line-clamp-2 mb-1.5" style={{ color: 'var(--label-secondary)' }}>{c.description || 'No description.'}</p>
+                
+                {/* Tags & Timestamp */}
+                <div className="flex items-center gap-1 flex-wrap mb-1">
+                    <span
+                        className="text-[10px] px-2 py-0.5 rounded-full font-medium"
+                        style={{
+                            background: 'var(--fill-secondary)',
+                            color: 'var(--label-secondary)'
+                        }}
+                    >
+                        {new Date(c.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                    {(c.tags || []).map((tag, i) => (
+                        <span
+                            key={i}
+                            className="text-[10px] px-1.5 py-0.5 rounded-md font-medium flex items-center gap-1 border"
+                            style={{
+                                background: 'color-mix(in srgb, var(--system-blue) 10%, transparent)',
+                                borderColor: 'color-mix(in srgb, var(--system-blue) 25%, transparent)',
+                                color: 'var(--system-blue)'
+                            }}
+                        >
+                            #{tag}
+                        </span>
+                    ))}
+                </div>
             </div>
 
-            {/* Status Toggles */}
+            {/* Status Toggles & Copy */}
             <div
                 className="absolute bottom-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg shadow-sm border"
                 style={{
@@ -74,6 +109,40 @@ export const CaptureCard: React.FC<CaptureCardProps> = ({
                     borderColor: 'var(--separator-opaque)'
                 }}
             >
+                {onUploadJira && (
+                    <button
+                        onClick={(e) => { e.stopPropagation(); onUploadJira(c); }}
+                        className="p-1 rounded-md transition-colors"
+                        style={{ color: 'var(--label-secondary)' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--system-blue)'; e.currentTarget.style.background = 'color-mix(in srgb, var(--system-blue) 10%, transparent)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--label-secondary)'; e.currentTarget.style.background = 'transparent'; }}
+                        title="Adjuntar a Jira"
+                    >
+                        <Send size={14} />
+                    </button>
+                )}
+                {onUploadADO && (
+                    <button
+                        onClick={(e) => { e.stopPropagation(); onUploadADO(c); }}
+                        className="p-1 rounded-md transition-colors"
+                        style={{ color: 'var(--label-secondary)' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--system-cyan, #06b6d4)'; e.currentTarget.style.background = 'color-mix(in srgb, var(--system-cyan, #06b6d4) 10%, transparent)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--label-secondary)'; e.currentTarget.style.background = 'transparent'; }}
+                        title="Adjuntar a Azure DevOps"
+                    >
+                        <Building2 size={14} />
+                    </button>
+                )}
+                <button
+                    onClick={handleCopy}
+                    className="p-1 rounded-md transition-colors"
+                    style={{ color: 'var(--label-secondary)' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--system-blue)'; e.currentTarget.style.background = 'color-mix(in srgb, var(--system-blue) 10%, transparent)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--label-secondary)'; e.currentTarget.style.background = 'transparent'; }}
+                    title="Copiar imagen al portapapeles"
+                >
+                    <Copy size={14} />
+                </button>
                 <button
                     onClick={(e) => { e.stopPropagation(); onUpdateStatus(c.id, 'success'); }}
                     className="p-1 rounded-md transition-colors"
@@ -113,7 +182,7 @@ export const CaptureCard: React.FC<CaptureCardProps> = ({
                 }}
                 className="absolute top-3 right-3 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all shadow-sm"
                 style={{
-                    background: 'rgba(239, 68, 68, 0.1)', // Red tint background
+                    background: 'rgba(239, 68, 68, 0.1)',
                     color: 'var(--system-red)',
                     backdropFilter: 'blur(8px)',
                     border: '1px solid rgba(239, 68, 68, 0.2)'
