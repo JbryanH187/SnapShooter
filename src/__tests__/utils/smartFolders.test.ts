@@ -1,4 +1,4 @@
-import { evaluatePredicate, matchesSmartFolder, PREDEFINED_SMART_FOLDERS } from '../../../shared/types/SmartFolder';
+import { evaluatePredicate, matchesSmartFolder, PREDEFINED_SMART_FOLDERS, SmartFolder } from '../../shared/types/SmartFolder';
 
 describe('Smart Folders', () => {
     const mockCapture = {
@@ -65,7 +65,7 @@ describe('Smart Folders', () => {
 
     describe('matchesSmartFolder', () => {
         it('should match folder with all predicates met', () => {
-            const folder = {
+            const folder: SmartFolder = {
                 id: 'test-folder',
                 name: 'Test',
                 icon: 'Folder',
@@ -80,7 +80,7 @@ describe('Smart Folders', () => {
         });
 
         it('should not match if any predicate fails', () => {
-            const folder = {
+            const folder: SmartFolder = {
                 id: 'test-folder',
                 name: 'Test',
                 icon: 'Folder',
@@ -101,38 +101,38 @@ describe('Smart Folders', () => {
         });
 
         it('should all be marked as predefined', () => {
-            PREDEFINED_SMART_FOLDERS.forEach(folder => {
+            PREDEFINED_SMART_FOLDERS.forEach((folder: SmartFolder) => {
                 expect(folder.isPredefined).toBe(true);
             });
         });
 
         it('should have unique IDs', () => {
-            const ids = PREDEFINED_SMART_FOLDERS.map(f => f.id);
+            const ids = PREDEFINED_SMART_FOLDERS.map((f: SmartFolder) => f.id);
             const uniqueIds = new Set(ids);
             expect(uniqueIds.size).toBe(ids.length);
         });
 
         it('should all have at least one predicate', () => {
-            PREDEFINED_SMART_FOLDERS.forEach(folder => {
+            PREDEFINED_SMART_FOLDERS.forEach((folder: SmartFolder) => {
                 expect(folder.predicates.length).toBeGreaterThan(0);
             });
         });
 
         it('should match Today folder for today\'s captures', () => {
-            const todayFolder = PREDEFINED_SMART_FOLDERS.find(f => f.id === 'today');
+            const todayFolder = PREDEFINED_SMART_FOLDERS.find((f: SmartFolder) => f.id === 'today');
             expect(todayFolder).toBeDefined();
             expect(matchesSmartFolder(mockCapture, todayFolder!)).toBe(true);
             expect(matchesSmartFolder(yesterdayCapture, todayFolder!)).toBe(false);
         });
 
         it('should match Successes folder for success status', () => {
-            const successFolder = PREDEFINED_SMART_FOLDERS.find(f => f.id === 'successes');
+            const successFolder = PREDEFINED_SMART_FOLDERS.find((f: SmartFolder) => f.id === 'successes');
             expect(successFolder).toBeDefined();
             expect(matchesSmartFolder(mockCapture, successFolder!)).toBe(true);
         });
 
         it('should match Unassigned folder for captures without flow', () => {
-            const unassignedFolder = PREDEFINED_SMART_FOLDERS.find(f => f.id === 'unassigned');
+            const unassignedFolder = PREDEFINED_SMART_FOLDERS.find((f: SmartFolder) => f.id === 'unassigned');
             const captureWithoutFlow = { ...mockCapture, flowId: undefined };
             expect(unassignedFolder).toBeDefined();
             expect(matchesSmartFolder(captureWithoutFlow, unassignedFolder!)).toBe(true);

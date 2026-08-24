@@ -1,4 +1,5 @@
 import { UndoStack, createDeleteCommand, createUpdateCommand } from '../../renderer/utils/undoStack';
+import { CaptureItem } from '../../shared/types';
 
 describe('UndoStack', () => {
     let stack: UndoStack;
@@ -16,6 +17,7 @@ describe('UndoStack', () => {
         it('should execute and store command', () => {
             let executed = false;
             const command = {
+                description: 'test command',
                 execute: () => { executed = true; },
                 undo: () => { executed = false; }
             };
@@ -28,6 +30,7 @@ describe('UndoStack', () => {
         it('should undo command', () => {
             let value = 0;
             const command = {
+                description: 'increment value',
                 execute: () => { value = 1; },
                 undo: () => { value = 0; }
             };
@@ -43,6 +46,7 @@ describe('UndoStack', () => {
         it('should redo command', () => {
             let value = 0;
             const command = {
+                description: 'increment value',
                 execute: () => { value = 1; },
                 undo: () => { value = 0; }
             };
@@ -60,10 +64,12 @@ describe('UndoStack', () => {
     describe('Stack Management', () => {
         it('should clear redo stack on new command', () => {
             const command1 = {
+                description: 'command 1',
                 execute: () => { },
                 undo: () => { }
             };
             const command2 = {
+                description: 'command 2',
                 execute: () => { },
                 undo: () => { }
             };
@@ -79,6 +85,7 @@ describe('UndoStack', () => {
         it('should respect max size (50)', () => {
             for (let i = 0; i < 60; i++) {
                 stack.executeCommand({
+                    description: `command ${i}`,
                     execute: () => { },
                     undo: () => { }
                 });
@@ -95,6 +102,7 @@ describe('UndoStack', () => {
 
         it('should clear all stacks', () => {
             stack.executeCommand({
+                description: 'clear test',
                 execute: () => { },
                 undo: () => { }
             });
@@ -110,9 +118,11 @@ describe('UndoStack', () => {
             const values: number[] = [];
 
             for (let i = 1; i <= 5; i++) {
+                const val = i;
                 stack.executeCommand({
-                    execute: () => values.push(i),
-                    undo: () => values.pop()
+                    description: `push ${val}`,
+                    execute: () => { values.push(val); },
+                    undo: () => { values.pop(); }
                 });
             }
 
@@ -131,7 +141,14 @@ describe('UndoStack', () => {
 describe('Command Factories', () => {
     describe('createDeleteCommand', () => {
         it('should create valid delete command', () => {
-            const mockItem = { id: 'test-1', name: 'Test' };
+            const mockItem: CaptureItem = {
+                id: 'test-1',
+                thumbnail: 'data:image/png;base64,test',
+                timestamp: Date.now(),
+                title: 'Test',
+                description: 'Test description',
+                status: 'success'
+            };
             let items = [mockItem];
 
             const command = createDeleteCommand(
@@ -148,24 +165,24 @@ describe('Command Factories', () => {
 
     describe('createUpdateCommand', () => {
         it('should create valid update command', () => {
-            const mockItem = { id: 'test-1', value: 'old' };
-            const oldValue = 'old';
-            const newValue = 'new';
+            let mockItem: Partial<CaptureItem> = { title: 'old' };
+            const oldValues: Partial<CaptureItem> = { title: 'old' };
+            const newValues: Partial<CaptureItem> = { title: 'new' };
 
             const command = createUpdateCommand(
-                mockItem,
-                oldValue,
-                newValue,
-                (val) => { mockItem.value = val; }
+                'test-1',
+                oldValues,
+                newValues,
+                (val) => { mockItem = { ...mockItem, ...val }; }
             );
 
             expect(command.description).toMatch(/Update/);
 
             command.execute();
-            expect(mockItem.value).toBe('new');
+            expect(mockItem.title).toBe('new');
 
             command.undo();
-            expect(mockItem.value).toBe('old');
+            expect(mockItem.title).toBe('old');
         });
     });
 });

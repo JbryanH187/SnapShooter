@@ -3,9 +3,10 @@ export interface CaptureItem {
     timestamp: number;
     title?: string;
     description?: string;
-    status: 'pending' | 'success' | 'failure';
+    status: 'pending' | 'saved' | 'success' | 'failure';
     path?: string;
     flowId?: string;
+    tags?: string[];
 }
 
 /**

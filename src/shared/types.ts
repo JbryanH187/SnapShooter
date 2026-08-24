@@ -8,6 +8,9 @@ export interface CaptureItem {
     description: string;
     status: 'pending' | 'saved' | 'success' | 'failure';
     metadata?: SystemMetadata;
+    tags?: string[];
+    path?: string;
+    flowId?: string;
 }
 
 
