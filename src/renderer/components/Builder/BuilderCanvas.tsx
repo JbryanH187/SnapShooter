@@ -12,18 +12,20 @@ export const BuilderCanvas: React.FC = () => {
 
     if (!activeTemplate) return null;
 
+    const blocks = activeTemplate.blocks || (activeTemplate.pages?.[0]?.blocks) || [];
+
     return (
         <div ref={setNodeRef} className="min-h-full pb-20">
             <SortableContext
-                items={activeTemplate.blocks.map(b => b.id)}
+                items={blocks.map(b => b.id)}
                 strategy={verticalListSortingStrategy}
             >
-                {activeTemplate.blocks.length === 0 ? (
+                {blocks.length === 0 ? (
                     <div className="h-40 flex flex-col items-center justify-center text-gray-400 border-2 border-dashed border-gray-200 rounded-xl mt-10">
                         <p>Drag blocks here to start</p>
                     </div>
                 ) : (
-                    activeTemplate.blocks.map((block) => (
+                    blocks.map((block) => (
                         <SortableBlock key={block.id} block={block} />
                     ))
                 )}

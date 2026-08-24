@@ -10,6 +10,7 @@ export interface SearchFilters {
     dateRange?: DateFilter;
     status?: StatusFilter;
     query?: string;
+    selectedTag?: string;
 }
 
 interface SearchResult {
@@ -20,7 +21,7 @@ interface SearchResult {
 
 /**
  * Advanced search and filtering for captures
- * Supports: text search, date filtering, status filtering
+ * Supports: text search, date filtering, status filtering, tag filtering
  */
 export const useCaptureSearch = (
     captures: CaptureItem[],
@@ -32,9 +33,15 @@ export const useCaptureSearch = (
         const hasQuery = Boolean(query && query.trim() !== '');
         const hasDateFilter = Boolean(filters.dateRange && filters.dateRange !== 'all');
         const hasStatusFilter = Boolean(filters.status && filters.status !== 'all');
-        const hasActiveFilters: boolean = hasQuery || hasDateFilter || hasStatusFilter;
+        const hasTagFilter = Boolean(filters.selectedTag && filters.selectedTag !== 'all');
+        const hasActiveFilters: boolean = hasQuery || hasDateFilter || hasStatusFilter || hasTagFilter;
 
-        // 1. Date Range Filter
+        // 1. Tag Filter
+        if (hasTagFilter && filters.selectedTag) {
+            filtered = filtered.filter(capture => (capture.tags || []).includes(filters.selectedTag!));
+        }
+
+        // 2. Date Range Filter
         if (hasDateFilter) {
             const now = Date.now();
             const oneDayMs = 24 * 60 * 60 * 1000;
@@ -62,7 +69,7 @@ export const useCaptureSearch = (
             });
         }
 
-        // 2. Status Filter
+        // 3. Status Filter
         if (hasStatusFilter) {
             filtered = filtered.filter(capture => capture.status === filters.status);
             logger.debug('CAPTURE', `Status filter applied: ${filters.status}`, {
@@ -70,7 +77,7 @@ export const useCaptureSearch = (
             });
         }
 
-        // 3. Text Search
+        // 4. Text Search
         if (hasQuery) {
             const lowerQuery = query.toLowerCase().trim();
             const queryWords = lowerQuery.split(/\s+/);
@@ -81,6 +88,7 @@ export const useCaptureSearch = (
                     capture.title || '',
                     capture.description || '',
                     capture.status,
+                    (capture.tags || []).join(' '),
                     JSON.stringify(capture.metadata || {})
                 ].join(' ').toLowerCase();
 
@@ -98,7 +106,7 @@ export const useCaptureSearch = (
             count: filtered.length,
             hasActiveFilters
         };
-    }, [captures, query, filters.dateRange, filters.status]);
+    }, [captures, query, filters.dateRange, filters.status, filters.selectedTag]);
 
     return result;
 };

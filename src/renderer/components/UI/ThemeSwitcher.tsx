@@ -29,7 +29,7 @@ export const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ className = '' }) 
 
     // Spring physics from theme config
     const springTransition = {
-        type: 'spring',
+        type: 'spring' as const,
         damping: theme.physics.spring.damping,
         stiffness: theme.physics.spring.stiffness,
         mass: theme.physics.spring.mass

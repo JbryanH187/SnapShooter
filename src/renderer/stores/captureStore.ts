@@ -107,7 +107,7 @@ export const useCaptureStore = create<CaptureState>()(subscribeWithSelector((set
                 }
             }
         } catch (e) {
-            logger.error("Failed to load captures", e);
+            logger.error('STORE', "Failed to load captures", { error: e });
             set({ error: "Failed to load captures. Please reload." });
         } finally {
             set({ isLoading: false });
@@ -205,7 +205,7 @@ export const useCaptureStore = create<CaptureState>()(subscribeWithSelector((set
                 };
             });
 
-            logger.info(`Undo delete for ${state.lastDeleted.item.id}`);
+            logger.info('STORE', `Undo delete for ${state.lastDeleted.item.id}`);
         }
     },
 

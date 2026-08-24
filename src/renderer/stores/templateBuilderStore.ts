@@ -118,8 +118,8 @@ export const useTemplateBuilderStore = create<TemplateBuilderState>((set, get) =
             });
         }
 
-        // TODO: Persist to storage
-        await window.electron?.saveCustomTemplate?.(template);
+        // Persist to storage
+        await (window.electron as any)?.saveCustomTemplate?.(template);
     },
 
     deleteTemplate: (id: string) => {
@@ -127,8 +127,8 @@ export const useTemplateBuilderStore = create<TemplateBuilderState>((set, get) =
             savedTemplates: get().savedTemplates.filter(t => t.id !== id)
         });
 
-        // TODO: Delete from storage
-        window.electron?.deleteCustomTemplate?.(id);
+        // Delete from storage
+        (window.electron as any)?.deleteCustomTemplate?.(id);
     },
 
     setAsDefault: (id: string) => {

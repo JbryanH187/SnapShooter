@@ -30,7 +30,7 @@ interface TemplateStore {
     updateDecoration: (id: string, updates: Partial<TemplateDecoration>) => void;
     removeDecoration: (id: string) => void;
 
-    moveBlock: (activeId: string, overId: string) => void;
+    moveBlock: (activeId: string, overId: string, activePageId?: string, overPageId?: string) => void;
 }
 
 export const useTemplateStore = create<TemplateStore>()(
@@ -209,7 +209,7 @@ export const useTemplateStore = create<TemplateStore>()(
                 });
             },
 
-            moveBlock: (activeId, overId, activePageId, overPageId) => {
+            moveBlock: (activeId: string, overId: string, _activePageId?: string, _overPageId?: string) => {
                 const { activeTemplate } = get();
                 if (!activeTemplate || !activeTemplate.pages) return;
 

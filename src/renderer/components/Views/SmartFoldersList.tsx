@@ -37,8 +37,8 @@ export const SmartFoldersList: React.FC<SmartFoldersListProps> = ({
                         <button
                             key={folder.id}
                             onClick={() => {
-                                setView('smartFolder');
-                                setContentView(folder.id);
+                                setView('dashboard');
+                                setContentView(folder.id as any);
                                 logger.info('UI', `Navigated to smart folder: ${folder.name}`);
                                 onFolderSelect?.(folder.id);
                             }}
