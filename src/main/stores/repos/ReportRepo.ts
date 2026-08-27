@@ -8,10 +8,15 @@ export class ReportRepo {
         private reportsDir: string,
     ) {}
 
-    async saveReportFile(fileName: string, content: ArrayBuffer): Promise<string> {
+    async saveReportFile(fileName: string, content: any): Promise<string> {
         fs.ensureDirSync(this.reportsDir);
         const filePath = path.join(this.reportsDir, fileName);
-        await fs.writeFile(filePath, Buffer.from(content));
+        const buf = Buffer.isBuffer(content)
+            ? content
+            : ArrayBuffer.isView(content)
+                ? Buffer.from(content.buffer, content.byteOffset, content.byteLength)
+                : Buffer.from(content);
+        await fs.writeFile(filePath, buf);
         return filePath;
     }
 

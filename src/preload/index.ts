@@ -33,11 +33,15 @@ contextBridge.exposeInMainWorld('electron', {
 
     // Reports
     saveReportFile: (fileName: string, content: ArrayBuffer) => ipcRenderer.invoke('reports:saveFile', fileName, content),
+    saveFileToPath: (filePath: string, content: ArrayBuffer) => ipcRenderer.invoke('file:saveToPath', filePath, content),
+    showSaveDialog: (options: any) => ipcRenderer.invoke('dialog:showSaveDialog', options),
+    showItemInFolder: (filePath: string) => ipcRenderer.invoke('shell:showItemInFolder', filePath),
 
     // Flows
     getFlows: () => ipcRenderer.invoke('flows:get'),
     saveFlow: (flow: any) => ipcRenderer.invoke('flows:save', flow),
     saveFlowSession: (name: string, captures: any[]) => ipcRenderer.invoke('flows:saveSession', name, captures),
+    updateFlowSession: (flowId: string, name: string, captures: any[]) => ipcRenderer.invoke('flows:updateSession', flowId, name, captures),
     addToFlow: (flowId: string, captures: any[]) => ipcRenderer.invoke('flows:add', flowId, captures),
     loadFlow: (flowId: string) => ipcRenderer.invoke('flows:load', flowId),
     openFlowFolder: (flowId: string) => ipcRenderer.invoke('flows:openFolder', flowId),

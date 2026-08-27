@@ -13,6 +13,7 @@ export class BubbleTemplate extends TemplateBase {
     }
 
     async renderCover(): Promise<void> {
+        console.log('[BubbleTemplate:renderCover] Rendering Bubbles layout cover...');
         const primaryRgb = this.hexToRgb(this.theme.primary);
         const secondaryRgb = this.hexToRgb(this.theme.secondary);
 
@@ -33,18 +34,18 @@ export class BubbleTemplate extends TemplateBase {
         this.doc.setTextColor(primaryRgb.r, primaryRgb.g, primaryRgb.b);
         this.doc.setFontSize(40);
         this.doc.setFont('helvetica', 'bold');
-        this.doc.text(this.config.title, 105, 120, { align: 'center' });
+        this.doc.text(this.config.title || 'REPORTE DE EVIDENCIA', 105, 120, { align: 'center' });
 
         this.doc.setTextColor(secondaryRgb.r, secondaryRgb.g, secondaryRgb.b);
         this.doc.setFontSize(18);
         this.doc.setFont('helvetica', 'normal');
-        this.doc.text(this.config.subtitle, 105, 140, { align: 'center' });
+        this.doc.text(this.config.subtitle || 'PRUEBAS DE CALIDAD', 105, 140, { align: 'center' });
 
         const textLightRgb = this.hexToRgb(this.theme.textLight);
         this.doc.setTextColor(textLightRgb.r, textLightRgb.g, textLightRgb.b);
         this.doc.setFontSize(12);
         
-        this.doc.text(`Autor: ${this.config.author}`, 105, 180, { align: 'center' });
+        this.doc.text(`Autor: ${this.config.author || 'QA Engineer'}`, 105, 180, { align: 'center' });
         this.doc.text(`Fecha: ${this.currentDate}`, 105, 190, { align: 'center' });
         
         if (this.config.projectName) {
@@ -53,6 +54,7 @@ export class BubbleTemplate extends TemplateBase {
     }
 
     async renderContent(captures: CaptureItem[]): Promise<void> {
+        console.log(`[BubbleTemplate:renderContent] Rendering ${captures.length} captures in Bubble format...`);
         const primaryRgb = this.hexToRgb(this.theme.primary);
         const secondaryRgb = this.hexToRgb(this.theme.secondary);
         const textMainRgb = this.hexToRgb(this.theme.textMain);
@@ -60,6 +62,7 @@ export class BubbleTemplate extends TemplateBase {
 
         for (let idx = 0; idx < captures.length; idx++) {
             const capture = captures[idx];
+            console.log(`[BubbleTemplate:renderContent] Rendering capture #${idx + 1}: "${capture.title || 'Untitled'}"`);
             this.addPage();
 
             // Burbujas decorativas laterales en cada página
@@ -123,5 +126,6 @@ export class BubbleTemplate extends TemplateBase {
                 this.doc.text(descLines, 25, imgY + imgHeight + 15);
             }
         }
+        console.log('[BubbleTemplate:renderContent] Finished all Bubble captures.');
     }
 }

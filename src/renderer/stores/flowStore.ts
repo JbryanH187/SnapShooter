@@ -3,22 +3,27 @@ import { create } from 'zustand';
 import { CaptureFlow } from '../../shared/types/FlowTypes';
 import { logger } from '../services/Logger';
 import { withRetry } from '../utils/ipcRetry';
-
 import { CaptureItem } from '../../shared/types';
+import { useCaptureStore } from './captureStore';
 
 interface FlowStore {
     flows: CaptureFlow[];
     isLoading: boolean;
     error: string | null;
     quickFlowActive: boolean;
+    activeFlowId: string | null;
+    activeFlowName: string | null;
 
     // Actions
     setQuickFlowActive: (active: boolean) => void;
+    setActiveFlow: (flow: { id: string; name: string } | null) => void;
     loadFlows: () => Promise<void>;
     saveFlow: (flow: CaptureFlow) => Promise<void>;
     saveFlowSession: (name: string, captures: CaptureItem[]) => Promise<void>;
+    updateFlowSession: (flowId: string, name: string, captures: CaptureItem[]) => Promise<void>;
     addToFlow: (flowId: string, captures: CaptureItem[]) => Promise<void>;
     loadFlow: (flowId: string) => Promise<void>;
+    continueFlowInRecents: (flow: CaptureFlow) => Promise<CaptureItem[] | undefined>;
     openFlowFolder: (flowId: string) => Promise<void>;
     deleteFlow: (id: string) => Promise<void>;
 }
@@ -28,8 +33,14 @@ export const useFlowStore = create<FlowStore>((set, get) => ({
     isLoading: false,
     error: null,
     quickFlowActive: false,
+    activeFlowId: null,
+    activeFlowName: null,
 
     setQuickFlowActive: (active: boolean) => set({ quickFlowActive: active }),
+    setActiveFlow: (flow) => set({
+        activeFlowId: flow ? flow.id : null,
+        activeFlowName: flow ? flow.name : null
+    }),
 
     loadFlows: async () => {
         set({ isLoading: true, error: null });
@@ -85,6 +96,26 @@ export const useFlowStore = create<FlowStore>((set, get) => ({
         }
     },
 
+    updateFlowSession: async (flowId: string, name: string, captures: CaptureItem[]) => {
+        try {
+            if (window.electron?.updateFlowSession) {
+                const updatedFlow = await withRetry(() => window.electron.updateFlowSession(flowId, name, captures));
+                set((state) => ({
+                    flows: state.flows.map(f => f.id === flowId ? updatedFlow : f),
+                    activeFlowId: null,
+                    activeFlowName: null
+                }));
+                useCaptureStore.getState().clearAllCaptures();
+            } else {
+                logger.error('CAPTURE', 'Electron bridge missing: updateFlowSession');
+                throw new Error('Electron bridge missing: updateFlowSession');
+            }
+        } catch (error) {
+            logger.error('CAPTURE', 'Failed to update flow session', { error });
+            throw error;
+        }
+    },
+
     addToFlow: async (flowId: string, captures: CaptureItem[]) => {
         try {
             if (window.electron?.addToFlow) {
@@ -110,6 +141,23 @@ export const useFlowStore = create<FlowStore>((set, get) => ({
             }
         } catch (error) {
             logger.error('CAPTURE', 'Failed to load flow', { error });
+            throw error;
+        }
+    },
+
+    continueFlowInRecents: async (flow: CaptureFlow) => {
+        try {
+            if (window.electron?.loadFlow) {
+                const restored = await withRetry(() => window.electron.loadFlow(flow.id));
+                set({ activeFlowId: flow.id, activeFlowName: flow.name });
+                await useCaptureStore.getState().loadCaptures();
+                return restored;
+            } else {
+                logger.error('CAPTURE', 'Electron bridge missing: loadFlow');
+                throw new Error('Electron bridge missing: loadFlow');
+            }
+        } catch (error) {
+            logger.error('CAPTURE', 'Failed to continue flow in recents', { error });
             throw error;
         }
     },

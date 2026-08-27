@@ -4,3 +4,5 @@ export { ClassicTemplate } from './ClassicTemplate';
 export { ModernTemplate } from './ModernTemplate';
 export { BubbleTemplate } from './BubbleTemplate';
 export { JapaneseTemplate } from './JapaneseTemplate';
+export { SlideDeckTemplate } from './SlideDeckTemplate';
+

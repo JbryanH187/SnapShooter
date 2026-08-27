@@ -116,11 +116,16 @@ export function setupHandlers() {
     });
 
     // Save report file and return path
-    ipcMain.handle('reports:saveFile', async (_event, fileName: unknown, content: unknown) => {
+    ipcMain.handle('reports:saveFile', async (_event, fileName: unknown, content: any) => {
         const nameP = z.string().min(1).safeParse(fileName);
         if (!nameP.success) throw new Error('Invalid fileName');
-        if (!(content instanceof ArrayBuffer) && !Buffer.isBuffer(content)) throw new Error('Invalid content');
-        return persistenceManager.saveReportFile(nameP.data, content as ArrayBuffer);
+        if (!content) throw new Error('Empty content');
+        const buf = Buffer.isBuffer(content)
+            ? content
+            : ArrayBuffer.isView(content)
+                ? Buffer.from(content.buffer, content.byteOffset, content.byteLength)
+                : Buffer.from(content);
+        return persistenceManager.saveReportFile(nameP.data, buf as any);
     });
 
     // Capture Flows Handlers
@@ -140,6 +145,20 @@ export function setupHandlers() {
         if (!nameP.success) throw new Error('Invalid flow name');
         if (!capturesP.success) throw new Error(`Invalid captures array: ${capturesP.error.message}`);
         return persistenceManager.saveFlowSession(nameP.data, capturesP.data as CaptureItem[]);
+    });
+
+    ipcMain.handle('flows:updateSession', async (_event, flowId: unknown, name: unknown, captures: unknown) => {
+        try {
+            const idP = z.string().min(1).safeParse(flowId);
+            const nameP = z.string().optional().safeParse(name);
+            const capturesP = z.array(CaptureItemSchema).safeParse(captures);
+            if (!idP.success) throw new Error('Invalid flow ID');
+            if (!capturesP.success) throw new Error(`Invalid captures array: ${capturesP.error.message}`);
+            return await persistenceManager.updateFlowSession(idP.data, nameP.data || '', capturesP.data as CaptureItem[]);
+        } catch (err: any) {
+            console.error('[IPC:flows:updateSession] Error updating flow session:', err);
+            throw err;
+        }
     });
 
     ipcMain.handle('flows:add', async (_event, flowId: unknown, captures: unknown) => {
@@ -220,6 +239,21 @@ export function setupHandlers() {
         const parsed = z.string().safeParse(filePath);
         if (!parsed.success) throw new Error('Invalid filePath');
         shell.showItemInFolder(parsed.data);
+    });
+
+    // Save file to specific path chosen by user
+    ipcMain.handle('file:saveToPath', async (_event, filePath: unknown, content: any) => {
+        const pathP = z.string().min(1).safeParse(filePath);
+        if (!pathP.success) throw new Error('Invalid filePath');
+        if (!content) throw new Error('Empty content');
+        const buf = Buffer.isBuffer(content)
+            ? content
+            : ArrayBuffer.isView(content)
+                ? Buffer.from(content.buffer, content.byteOffset, content.byteLength)
+                : Buffer.from(content);
+        const fs = require('fs-extra');
+        await fs.writeFile(pathP.data, buf);
+        return pathP.data;
     });
 
     // === Jira B2B Integration Handlers ===

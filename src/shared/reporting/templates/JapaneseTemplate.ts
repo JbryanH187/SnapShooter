@@ -15,6 +15,7 @@ export class JapaneseTemplate extends TemplateBase {
     }
 
     async renderCover(): Promise<void> {
+        console.log('[JapaneseTemplate:renderCover] Rendering Japanese Book cover...');
         const textMainRgb = this.hexToRgb(this.theme.textMain);
         const textLightRgb = this.hexToRgb(this.theme.textLight);
         const primaryRgb = this.hexToRgb(this.theme.primary);
@@ -32,19 +33,19 @@ export class JapaneseTemplate extends TemplateBase {
         this.doc.setTextColor(textMainRgb.r, textMainRgb.g, textMainRgb.b);
         this.doc.setFontSize(36);
         this.doc.setFont('helvetica', 'bold');
-        const titleLines = this.doc.splitTextToSize(this.config.title, 80);
+        const titleLines = this.doc.splitTextToSize(this.config.title || 'REPORTE DE EVIDENCIA', 80);
         this.doc.text(titleLines, 120, 100);
 
         this.doc.setTextColor(primaryRgb.r, primaryRgb.g, primaryRgb.b);
         this.doc.setFontSize(16);
         this.doc.setFont('helvetica', 'normal');
-        const subtitleLines = this.doc.splitTextToSize(this.config.subtitle, 80);
+        const subtitleLines = this.doc.splitTextToSize(this.config.subtitle || 'PRUEBAS DE CALIDAD', 80);
         this.doc.text(subtitleLines, 120, 100 + (titleLines.length * 15));
 
         // Metadata on the left side
         this.doc.setTextColor(textLightRgb.r, textLightRgb.g, textLightRgb.b);
         this.doc.setFontSize(10);
-        this.doc.text(this.config.author, 20, 250);
+        this.doc.text(this.config.author || 'QA Engineer', 20, 250);
         this.doc.text(this.currentDate, 20, 260);
         if (this.config.projectName) {
             this.doc.text(this.config.projectName, 20, 270);
@@ -52,6 +53,7 @@ export class JapaneseTemplate extends TemplateBase {
     }
 
     async renderContent(captures: CaptureItem[]): Promise<void> {
+        console.log(`[JapaneseTemplate:renderContent] Rendering ${captures.length} captures in 2-column Japanese Book format...`);
         const primaryRgb = this.hexToRgb(this.theme.primary);
         const secondaryRgb = this.hexToRgb(this.theme.secondary);
 
@@ -64,8 +66,6 @@ export class JapaneseTemplate extends TemplateBase {
             
             this.doc.setFillColor(primaryRgb.r, primaryRgb.g, primaryRgb.b);
             this.doc.circle(0, 240, 18, 'F'); // Peeking from bottom left
-
-            // Note: Middle divider line removed to leave clear whitespace gutter
 
             // Left Column (Top & Bottom)
             if (idx < captures.length) {
@@ -83,9 +83,11 @@ export class JapaneseTemplate extends TemplateBase {
                 await this.renderColumnCapture(captures[idx + 3], idx + 4, 115, 155);
             }
         }
+        console.log('[JapaneseTemplate:renderContent] Finished all Japanese Book pages.');
     }
 
     private async renderColumnCapture(capture: CaptureItem, stepNum: number, startX: number, startY: number) {
+        console.log(`[JapaneseTemplate:renderColumnCapture] Step #${stepNum}: "${capture.title || 'Untitled'}" at (${startX},${startY})`);
         const textMainRgb = this.hexToRgb(this.theme.textMain);
         const textLightRgb = this.hexToRgb(this.theme.textLight);
         const primaryRgb = this.hexToRgb(this.theme.primary);
@@ -147,7 +149,5 @@ export class JapaneseTemplate extends TemplateBase {
             this.doc.text(descLines, startX, currentY);
             currentY += descLines.length * 4;
         }
-
-        // Meta string block removed by request
     }
 }

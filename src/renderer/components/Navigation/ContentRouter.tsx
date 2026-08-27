@@ -22,16 +22,20 @@ export const ContentRouter: React.FC = () => {
     const { openReportWizard } = useGlobalModal();
 
     const handleClearAll = async () => {
+        const isEditingFlow = !!useFlowStore.getState().activeFlowId;
         const confirmed = await confirm({
-            title: '¿Limpiar toda la evidencia?',
-            text: '¿Estás seguro de que deseas eliminar todas las capturas? Esta acción no se puede deshacer.',
-            confirmText: 'Sí, Eliminar Todo',
+            title: isEditingFlow ? '¿Limpiar pantalla de Recientes?' : '¿Limpiar toda la evidencia?',
+            text: isEditingFlow
+                ? 'Esto solo limpiará las capturas de la vista de Recientes. Tu flujo original guardado en Storage NO se borrará.'
+                : '¿Estás seguro de que deseas eliminar todas las capturas de Recientes? Esta acción no se puede deshacer.',
+            confirmText: isEditingFlow ? 'Sí, Limpiar Pantalla' : 'Sí, Eliminar Todo',
             cancelText: 'Cancelar',
             type: 'danger'
         });
         if (confirmed) {
             await clearAllCaptures();
-            toast.success('Evidencia limpiada exitosamente');
+            useFlowStore.getState().setActiveFlow(null);
+            toast.success('Pantalla de Recientes limpiada');
         }
     };
 

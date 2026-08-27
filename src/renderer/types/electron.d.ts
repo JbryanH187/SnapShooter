@@ -28,12 +28,16 @@ export interface ElectronAPI {
     deleteReportDraft: (id: string) => Promise<void>;
 
     // Reports
-    saveReportFile: (fileName: string, content: ArrayBuffer) => Promise<void>;
+    saveReportFile: (fileName: string, content: ArrayBuffer) => Promise<string>;
+    saveFileToPath: (filePath: string, content: ArrayBuffer) => Promise<string>;
+    showSaveDialog: (options: { defaultPath?: string; filters?: { name: string; extensions: string[] }[] }) => Promise<string | null>;
+    showItemInFolder: (filePath: string) => Promise<void>;
 
     // Flows
     getFlows: () => Promise<any[]>;
     saveFlow: (flow: any) => Promise<any>;
     saveFlowSession: (name: string, captures: any[]) => Promise<any>;
+    updateFlowSession: (flowId: string, name: string, captures: any[]) => Promise<any>;
     addToFlow: (flowId: string, captures: any[]) => Promise<any>;
     loadFlow: (flowId: string) => Promise<CaptureItem[]>;
     openFlowFolder: (flowId: string) => Promise<void>;

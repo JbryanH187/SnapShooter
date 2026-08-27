@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCaptureStore } from '../../stores/captureStore';
 import { useUI } from '../../contexts/UIContext';
@@ -8,7 +8,7 @@ import { useGlobalModal } from '../../contexts/GlobalModalContext';
 import { FilterBar } from '../UI/FilterBar';
 import { toast, confirm } from '../../utils/toast';
 import { toast as hotToast } from 'react-hot-toast';
-import { Camera, Trash2, Save, SplitSquareVertical } from 'lucide-react';
+import { Camera, Trash2, Save, SplitSquareVertical, Layers, X, Undo2 } from 'lucide-react';
 import OnlyEyesSnapProof from '../../../assets/OnlyEyesSnapProof.png';
 import { logger } from '../../services/Logger';
 import { useFlowStore } from '../../stores/flowStore';
@@ -42,9 +42,13 @@ import { ImageDiffModal } from './ImageDiffModal';
 
 export const RecentsView: React.FC = () => {
     const { captures, deleteCapture, updateCapture, isLoading, reorderCaptures, clearAllCaptures, sortOrder, toggleSortOrder } = useCaptureStore();
-    const { saveFlowSession, flows, addToFlow } = useFlowStore();
+    const { saveFlowSession, updateFlowSession, flows, loadFlows, addToFlow, activeFlowId, activeFlowName, setActiveFlow } = useFlowStore();
     const { searchQuery } = useUI();
     const { openImageEditor } = useGlobalModal();
+
+    useEffect(() => {
+        loadFlows();
+    }, [loadFlows]);
 
     // Local state for Save Flow, Jira, ADO and Diff
     const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
@@ -103,6 +107,22 @@ export const RecentsView: React.FC = () => {
         setStatusFilter('all');
     };
 
+    const handleQuickSaveActiveFlow = async () => {
+        if (!activeFlowId || !activeFlowName) return;
+        if (captures.length === 0) {
+            toast.error('No hay capturas para guardar en el flujo');
+            return;
+        }
+
+        try {
+            await updateFlowSession(activeFlowId, activeFlowName, captures);
+            toast.success(`Flujo "${activeFlowName}" actualizado exitosamente (${captures.length} capturas)`);
+        } catch (error) {
+            toast.error('Error al actualizar el flujo');
+            logger.error('CAPTURE', 'Failed to update active flow', { error });
+        }
+    };
+
     const handleSaveFlow = async () => {
         if (!flowName.trim() && !selectedFlowId) {
             toast.error('Por favor ingresa un nombre o selecciona un flujo existente');
@@ -111,8 +131,10 @@ export const RecentsView: React.FC = () => {
 
         try {
             if (selectedFlowId) {
-                await addToFlow(selectedFlowId, captures);
-                toast.success('Agregado al flujo exitosamente');
+                const targetFlow = flows.find(f => f.id === selectedFlowId);
+                const targetName = targetFlow?.name || activeFlowName || 'Flujo';
+                await updateFlowSession(selectedFlowId, targetName, captures);
+                toast.success(`Flujo "${targetName}" actualizado exitosamente`);
             } else {
                 await saveFlowSession(flowName, captures);
                 toast.success('Flujo guardado exitosamente');
@@ -324,7 +346,12 @@ export const RecentsView: React.FC = () => {
                     )}
                     {captures.length > 0 && (
                         <button
-                            onClick={() => setIsSaveModalOpen(true)}
+                            onClick={() => {
+                                if (activeFlowId) {
+                                    setSelectedFlowId(activeFlowId);
+                                }
+                                setIsSaveModalOpen(true);
+                            }}
                             className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all hover:bg-blue-50 dark:hover:bg-blue-900/20"
                             style={{ color: 'var(--system-blue)' }}
                         >
@@ -334,6 +361,69 @@ export const RecentsView: React.FC = () => {
                     )}
                 </div>
             </div>
+
+            {/* Active Flow Continuation Banner */}
+            {activeFlowId && (
+                <div
+                    className="mx-6 mb-3 p-3.5 rounded-2xl border flex items-center justify-between gap-4 transition-all shadow-sm"
+                    style={{
+                        background: 'color-mix(in srgb, var(--system-orange) 10%, var(--system-background-secondary))',
+                        borderColor: 'color-mix(in srgb, var(--system-orange) 30%, transparent)'
+                    }}
+                >
+                    <div className="flex items-center gap-3 min-w-0">
+                        <div
+                            className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                            style={{
+                                background: 'color-mix(in srgb, var(--system-orange) 20%, transparent)',
+                                color: 'var(--system-orange)'
+                            }}
+                        >
+                            <Layers size={18} />
+                        </div>
+                        <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                                <span
+                                    className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
+                                    style={{
+                                        background: 'color-mix(in srgb, var(--system-orange) 25%, transparent)',
+                                        color: 'var(--system-orange)'
+                                    }}
+                                >
+                                    Flujo en Edición
+                                </span>
+                            </div>
+                            <h4 className="text-sm font-bold truncate" style={{ color: 'var(--label-primary)' }}>
+                                {activeFlowName}
+                            </h4>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                        <button
+                            onClick={handleQuickSaveActiveFlow}
+                            className="px-3.5 py-1.5 rounded-xl text-white text-xs font-bold shadow-md flex items-center gap-1.5 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                            style={{ background: 'var(--system-orange)' }}
+                            title="Guardar todos los cambios y nuevas capturas directamente en este flujo"
+                        >
+                            <Save size={14} />
+                            Guardar en Flujo ({captures.length})
+                        </button>
+                        <button
+                            onClick={() => {
+                                setActiveFlow(null);
+                                toast.success('Flujo desvinculado de Recientes. Tu flujo original en Storage sigue intacto.');
+                            }}
+                            className="px-3 py-1.5 rounded-xl border text-xs font-medium transition-all hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-1.5"
+                            style={{ borderColor: 'var(--separator-opaque)', color: 'var(--label-secondary)' }}
+                            title="Desvincular de este flujo (Tu flujo guardado en Storage no se modificará)"
+                        >
+                            <X size={14} />
+                            <span>Desvincular</span>
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* Filters are now integrated in the header */}
 

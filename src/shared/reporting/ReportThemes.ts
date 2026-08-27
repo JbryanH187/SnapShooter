@@ -71,7 +71,7 @@ import { ReportTemplate } from '../types';
 
 export interface ReportConfig {
     layout: ReportLayout; // Deprecated: use templateId instead
-    templateId?: 'classic' | 'modern' | 'bubble' | 'japanese' | 'custom'; // New template system
+    templateId?: 'slides' | 'classic' | 'modern' | 'bubble' | 'japanese' | 'custom'; // New template system
     theme: keyof typeof REPORT_THEMES;
     title: string;
     titleColor?: string; // Optional custom color for title
@@ -86,5 +86,6 @@ export interface ReportConfig {
     customLogoText?: string | null;
     logoAlignment: LogoAlignment;
     logoGap: LogoGap;
+    slideLayout?: 'hero' | 'dual'; // Presentation slide layout mode
     customTemplate?: ReportTemplate;
 }

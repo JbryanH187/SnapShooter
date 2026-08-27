@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, protocol } from 'electron';
 import * as path from 'path';
 import { autoUpdater } from 'electron-updater';
 import { setupHandlers } from './ipc/handlers';
@@ -6,6 +6,20 @@ import { registerShortcuts } from './shortcuts/GlobalShortcuts';
 import { captureEngine } from './captures/CaptureEngine';
 import { quickFlowEngine } from './captures/QuickFlowEngine';
 import { registerMediaProtocol } from './ipc/MediaProtocol';
+
+// Register custom protocols as privileged before app is ready
+protocol.registerSchemesAsPrivileged([
+    {
+        scheme: 'media',
+        privileges: {
+            secure: true,
+            standard: true,
+            supportFetchAPI: true,
+            corsEnabled: true,
+            bypassCSP: true
+        }
+    }
+]);
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -23,10 +37,20 @@ function createWindow() {
             nodeIntegration: false, // Security best practice
             contextIsolation: true, // Required for contextBridge
             preload: path.join(__dirname, '../preload/index.js'),
+            plugins: true, // Enables internal Chromium PDF viewer
         },
         // Frameless for custom UI if needed, or standard
         titleBarStyle: 'hidden',
         titleBarOverlay: true
+    });
+
+    // Handle external links and windows safely
+    mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+        if (url.startsWith('http:') || url.startsWith('https:')) {
+            require('electron').shell.openExternal(url);
+            return { action: 'deny' };
+        }
+        return { action: 'allow' };
     });
 
     // Setup IPC Handlers
@@ -69,26 +93,6 @@ function createWindow() {
 
 app.whenReady().then(() => {
     console.log('[Main] Application Ready');
-
-    // CSP: Mitigate XSS and restrict sources
-    const { session } = require('electron');
-    session.defaultSession.webRequest.onHeadersReceived((details: any, callback: any) => {
-        callback({
-            responseHeaders: {
-                ...details.responseHeaders,
-                'Content-Security-Policy': [
-                    "default-src 'self';" +
-                    " script-src 'self' 'unsafe-inline';" +
-                    " style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;" +
-                    " font-src 'self' https://fonts.gstatic.com;" +
-                    " img-src 'self' data: media: blob:;" +
-                    " frame-src 'self' blob: data:;" +
-                    " object-src 'self' blob: data:;" +
-                    " connect-src 'self' ws://localhost:* http://localhost:*;"
-                ]
-            }
-        });
-    });
 
     // Register custom protocol 'media'
     registerMediaProtocol();

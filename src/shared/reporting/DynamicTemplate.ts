@@ -15,22 +15,103 @@ export class DynamicTemplate extends TemplateBase {
     }
 
     async renderContent(captures: CaptureItem[]): Promise<void> {
-        const blocks = this.config.customTemplate?.blocks || [];
-        let yPos = 20;
+        const customTemplate = this.config.customTemplate as any;
+        const pages = customTemplate?.pages || [];
+        const flatBlocks = customTemplate?.blocks || [];
 
-        // Draw background on the first page
+        console.log(`[DynamicTemplate:renderContent] START - pages: ${pages.length}, flatBlocks: ${flatBlocks.length}, captures: ${captures?.length || 0}`);
+
+        // If template has pages, render page by page
+        if (pages.length > 0) {
+            for (let pIdx = 0; pIdx < pages.length; pIdx++) {
+                const pageBlocks = pages[pIdx].blocks || [];
+                console.log(`[DynamicTemplate:renderContent] Processing Page #${pIdx + 1} (${pages[pIdx].type || 'content'}) with ${pageBlocks.length} blocks`);
+                if (pIdx > 0) {
+                    await this.addPageWithBackground();
+                } else {
+                    await this.drawBackground();
+                    await this.renderDecorations();
+                }
+
+                let yPos = 20;
+                for (const block of pageBlocks) {
+                    if (block.type !== 'page-break' && block.type !== 'footer' && yPos > this.doc.internal.pageSize.height - 30) {
+                        console.log(`[DynamicTemplate:renderContent] Page overflow at yPos=${yPos.toFixed(1)}, auto-adding page`);
+                        await this.addPageWithBackground();
+                        yPos = 20;
+                    }
+
+                    const startY = yPos;
+                    console.log(`[DynamicTemplate:renderContent] Rendering block "${block.type}" at yPos=${yPos.toFixed(1)}`);
+                    try {
+                        switch (block.type) {
+                            case 'header':
+                                yPos = await this.renderHeaderBlock(block, yPos);
+                                break;
+                            case 'footer':
+                                yPos = await this.renderFooterBlock(block, yPos);
+                                break;
+                            case 'page-break':
+                                await this.addPageWithBackground();
+                                yPos = 20;
+                                break;
+                            case 'text':
+                            case 'summary':
+                            case 'conclusion':
+                            case 'toc':
+                                yPos = await this.renderTextBlock(block, yPos);
+                                break;
+                            case 'logo':
+                                yPos = await this.renderLogoBlock(block, yPos);
+                                break;
+                            case 'table':
+                                yPos = await this.renderTableBlock(block, yPos);
+                                break;
+                            case 'evidence':
+                                yPos = await this.renderCaptureLoop(captures, block, yPos);
+                                break;
+                            case 'grid':
+                                yPos = await this.renderGridBlock(block, yPos);
+                                break;
+                            default:
+                                console.warn(`[DynamicTemplate:renderContent] Unknown block type: "${block.type}"`);
+                        }
+                    } catch (blockErr) {
+                        console.error(`[DynamicTemplate:renderContent] Error rendering block "${block.type}":`, blockErr);
+                    }
+
+                    if (block.settings?.showBorder && block.type !== 'page-break') {
+                        const accentColor = this.config.customTemplate?.settings?.accentColor || '#3b82f6';
+                        const globalBorderWidthPx = this.config.customTemplate?.settings?.blockBorderWidth ?? this.config.customTemplate?.settings?.globalBorderWidth ?? 1;
+                        const borderWidthMm = globalBorderWidthPx * 0.264;
+
+                        const rgb = this.hexToRgb(accentColor);
+                        this.doc.setDrawColor(rgb.r, rgb.g, rgb.b);
+                        this.doc.setLineWidth(borderWidthMm);
+                        this.doc.rect(15, startY - 2, 180, (yPos - startY) + 4);
+                    }
+
+                    if (block.type !== 'page-break') {
+                        yPos += 5;
+                    }
+                }
+            }
+            console.log('[DynamicTemplate:renderContent] Finished rendering all pages.');
+            return;
+        }
+
+        // Fallback for flat blocks
+        let yPos = 20;
         await this.drawBackground();
         await this.renderDecorations();
 
-        for (const block of blocks) {
-            // Auto-page break check (except for page-break block and footer which handles itself)
+        for (const block of flatBlocks) {
             if (block.type !== 'page-break' && block.type !== 'footer' && yPos > this.doc.internal.pageSize.height - 30) {
                 await this.addPageWithBackground();
                 yPos = 20;
             }
 
             const startY = yPos;
-
             switch (block.type) {
                 case 'header':
                     yPos = await this.renderHeaderBlock(block, yPos);
@@ -62,8 +143,6 @@ export class DynamicTemplate extends TemplateBase {
                     break;
             }
 
-            // Draw Border if enabled
-            // @ts-ignore
             if (block.settings?.showBorder && block.type !== 'page-break') {
                 const accentColor = this.config.customTemplate?.settings?.accentColor || '#3b82f6';
                 const globalBorderWidthPx = this.config.customTemplate?.settings?.blockBorderWidth ?? this.config.customTemplate?.settings?.globalBorderWidth ?? 1;
@@ -72,12 +151,9 @@ export class DynamicTemplate extends TemplateBase {
                 const rgb = this.hexToRgb(accentColor);
                 this.doc.setDrawColor(rgb.r, rgb.g, rgb.b);
                 this.doc.setLineWidth(borderWidthMm);
-                // Draw rect around the block content (approximate with padding)
-                // content width typically 170 (20 margin left)
                 this.doc.rect(15, startY - 2, 180, (yPos - startY) + 4);
             }
 
-            // Add spacing between blocks (unless page break)
             if (block.type !== 'page-break') {
                 yPos += 5;
             }
@@ -263,10 +339,8 @@ export class DynamicTemplate extends TemplateBase {
             try {
                 const logoW = 30;
                 const logoH = 15;
-                // In modern variant, maybe logo in white box or just overlay? 
-                // Keeping simple for now
-                this.doc.addImage(logo, 'PNG', 20, currentY, logoW, logoH, undefined, 'FAST');
-                if (variant !== 'modern') currentY += logoH + 5;
+                const loaded = await this.addImage(logo, 20, currentY, logoW, logoH);
+                if (loaded && variant !== 'modern') currentY += logoH + 5;
             } catch (e) {
                 console.error("Failed to render header logo", e);
             }
@@ -306,9 +380,6 @@ export class DynamicTemplate extends TemplateBase {
 
     private async renderFooterBlock(block: any, y: number): Promise<number> {
         const { text } = block.content;
-        // Check if we are near bottom, if so, just put it there. 
-        // Or if 'footer' block means "Insert Footer Here"
-        // Let's draw a separator line
         this.doc.setDrawColor(this.theme.border);
         this.doc.line(20, y, 190, y);
 
@@ -320,30 +391,23 @@ export class DynamicTemplate extends TemplateBase {
     }
 
     private async renderLogoBlock(block: any, y: number): Promise<number> {
-        const { image, width = 150, alignment = 'left' } = block.content;
+        const { image, width = 150, alignment = 'left' } = block.content || {};
 
         if (!image) return y;
 
         try {
-            const imgProps = await this.processImage(image);
-            if (imgProps) {
-                // Determine X based on alignment
-                let x = 20;
-                const availableWidth = 170;
-                // Convert screen width mapping to PDF mm roughly (builder uses pixels, PDF uses mm)
-                // Let's assume 'width' from builder is relative to max 500px -> 170mm
-                const renderWidth = Math.min((width / 500) * 170, 170);
-                const renderHeight = (renderWidth / imgProps.width) * imgProps.height;
+            const renderWidth = Math.min((width / 500) * 170, 170);
+            const renderHeight = (renderWidth / 16) * 9;
+            let x = 20;
 
-                if (alignment === 'center') {
-                    x = (210 - renderWidth) / 2;
-                } else if (alignment === 'right') {
-                    x = 190 - renderWidth;
-                }
-
-                this.doc.addImage(imgProps.data, imgProps.format, x, y, renderWidth, renderHeight, undefined, 'FAST');
-                return y + renderHeight + 5;
+            if (alignment === 'center') {
+                x = (210 - renderWidth) / 2;
+            } else if (alignment === 'right') {
+                x = 190 - renderWidth;
             }
+
+            await this.addImage(image, x, y, renderWidth, renderHeight);
+            return y + renderHeight + 5;
         } catch (e) {
             console.error("Logo block render error", e);
         }
@@ -351,7 +415,7 @@ export class DynamicTemplate extends TemplateBase {
     }
 
     private async renderTableBlock(block: any, y: number): Promise<number> {
-        const { rows = 3, cols = 3 } = block.content;
+        const { rows = 3, cols = 3 } = block.content || {};
         const cellWidth = 170 / cols;
         const cellHeight = 10;
 
@@ -368,9 +432,8 @@ export class DynamicTemplate extends TemplateBase {
     }
 
     private async renderTextBlock(block: any, y: number): Promise<number> {
-        const { text } = block.content;
+        const { text } = block.content || {};
 
-        // Handle different types (Summary/Conclusion/TOC) with slight styling nuances
         if (block.type === 'summary') {
             this.doc.setFontSize(14);
             this.doc.setFont("helvetica", "bold");
@@ -390,7 +453,6 @@ export class DynamicTemplate extends TemplateBase {
             this.doc.setFont("helvetica", "bold");
             this.doc.text("Table of Contents", 20, y);
             y += 10;
-            // Mock TOC items
             this.doc.setFontSize(10);
             this.doc.setFont("helvetica", "normal");
             this.doc.text("1. Executive Summary ................................. 1", 20, y);
@@ -414,7 +476,6 @@ export class DynamicTemplate extends TemplateBase {
         this.doc.setFontSize(10);
         this.doc.setTextColor(this.theme.textLight);
         this.doc.text("[Image Grid Placeholder]", 20, y);
-        // Draw a dummy grid
         this.doc.rect(20, y + 2, 80, 80);
         this.doc.line(60, y + 2, 60, y + 82);
         this.doc.line(20, y + 42, 100, y + 42);
@@ -423,10 +484,21 @@ export class DynamicTemplate extends TemplateBase {
 
     private async renderCaptureLoop(captures: CaptureItem[], block: any, startY: number): Promise<number> {
         const { content } = block;
-        const layout = content.layout || 'split-right';
+        const layout = content?.layout || 'split-right';
         let currentY = startY;
 
-        for (const [index, capture] of captures.entries()) {
+        const effectiveCaptures = captures.length > 0 ? captures : [
+            {
+                id: 'sample-1',
+                title: 'Ejemplo de Captura de Evidencia',
+                description: 'Descripción de prueba para previsualizar el bloque de evidencias en la plantilla.',
+                thumbnail: '',
+                status: 'success',
+                timestamp: Date.now()
+            } as CaptureItem
+        ];
+
+        for (const [index, capture] of effectiveCaptures.entries()) {
             if (currentY > this.doc.internal.pageSize.height - 60) {
                 await this.addPageWithBackground();
                 currentY = 20;
@@ -436,10 +508,10 @@ export class DynamicTemplate extends TemplateBase {
             this.doc.setFontSize(14);
             this.doc.setFont("helvetica", "bold");
             this.doc.setTextColor(this.theme.primary);
-            this.doc.text(`${index + 1}. ${capture.title}`, 20, currentY);
+            this.doc.text(`${index + 1}. ${capture.title || 'Evidencia'}`, 20, currentY);
             currentY += 7;
 
-            // Status Badge (Mock)
+            // Status Badge
             if (capture.status) {
                 const isSuccess = capture.status === 'success';
                 this.doc.setFillColor(isSuccess ? '#dcfce7' : '#fee2e2');
@@ -452,127 +524,73 @@ export class DynamicTemplate extends TemplateBase {
 
             this.doc.setFont("helvetica", "normal");
 
-            try {
-                const imgProps = await this.processImage(capture.thumbnail);
-
-                if (imgProps) {
-                    if (layout === 'top-bottom') {
-                        // Full width image
-                        const maxWidth = 130;
-                        const w = maxWidth;
-                        const h = (w / imgProps.width) * imgProps.height;
-                        this.doc.addImage(imgProps.data, imgProps.format, 40, currentY, w, h, undefined, 'FAST');
-                        currentY += h + 5;
-
-                        // Description below
-                        if (capture.description) {
-                            this.doc.setFontSize(10);
-                            this.doc.setTextColor(this.theme.textMain);
-                            const desc = this.doc.splitTextToSize(capture.description, 170);
-                            this.doc.text(desc, 20, currentY);
-                            currentY += (desc.length * 5);
-                        }
-
-                    } else if (layout === 'split-left') {
-                        // Image Left, Text Right
-                        const w = 80;
-                        const h = (w / imgProps.width) * imgProps.height;
-                        this.doc.addImage(imgProps.data, imgProps.format, 20, currentY, w, h, undefined, 'FAST');
-
-                        // Description Right
-                        if (capture.description) {
-                            this.doc.setFontSize(10);
-                            this.doc.setTextColor(this.theme.textMain);
-                            const desc = this.doc.splitTextToSize(capture.description, 85);
-                            this.doc.text(desc, 105, currentY + 5);
-                        }
-                        currentY += Math.max(h, 20) + 5;
-
-                    } else { // split-right (Default)
-                        const w = 80;
-                        const h = (w / imgProps.width) * imgProps.height;
-
-                        // Description Left
-                        let descHeight = 0;
-                        if (capture.description) {
-                            this.doc.setFontSize(10);
-                            this.doc.setTextColor(this.theme.textMain);
-                            const desc = this.doc.splitTextToSize(capture.description, 80);
-                            this.doc.text(desc, 20, currentY + 5);
-                            descHeight = desc.length * 5;
-                        }
-
-                        // Image Right
-                        this.doc.addImage(imgProps.data, imgProps.format, 110, currentY, w, h, undefined, 'FAST');
-                        currentY += Math.max(h, descHeight) + 5;
-                    }
-
-                } else {
-                    // No image, just text
-                    if (capture.description) {
-                        this.doc.setFontSize(10);
-                        const desc = this.doc.splitTextToSize(capture.description, 170);
-                        this.doc.text(desc, 20, currentY);
-                        currentY += (desc.length * 5);
-                    }
+            if (layout === 'top-bottom') {
+                const maxWidth = 130;
+                const maxHeight = 70;
+                const loaded = await this.addImage(capture.thumbnail, 40, currentY, maxWidth, maxHeight);
+                if (!loaded) {
+                    this.doc.setFillColor(245, 245, 245);
+                    this.doc.roundedRect(40, currentY, maxWidth, maxHeight, 2, 2, 'F');
+                    this.doc.setTextColor(150, 150, 150);
+                    this.doc.setFontSize(10);
+                    this.doc.text('[Captura de Evidencia]', 40 + maxWidth / 2, currentY + maxHeight / 2, { align: 'center' });
                 }
-            } catch (e) {
-                console.error("Image render error", e);
+                currentY += maxHeight + 5;
+
+                if (capture.description) {
+                    this.doc.setFontSize(10);
+                    this.doc.setTextColor(this.theme.textMain);
+                    const desc = this.doc.splitTextToSize(capture.description, 170);
+                    this.doc.text(desc, 20, currentY);
+                    currentY += (desc.length * 5);
+                }
+
+            } else if (layout === 'split-left') {
+                const w = 80;
+                const h = 45;
+                const loaded = await this.addImage(capture.thumbnail, 20, currentY, w, h);
+                if (!loaded) {
+                    this.doc.setFillColor(245, 245, 245);
+                    this.doc.roundedRect(20, currentY, w, h, 2, 2, 'F');
+                    this.doc.setTextColor(150, 150, 150);
+                    this.doc.setFontSize(9);
+                    this.doc.text('[Captura]', 20 + w / 2, currentY + h / 2, { align: 'center' });
+                }
+
+                if (capture.description) {
+                    this.doc.setFontSize(10);
+                    this.doc.setTextColor(this.theme.textMain);
+                    const desc = this.doc.splitTextToSize(capture.description, 85);
+                    this.doc.text(desc, 105, currentY + 5);
+                }
+                currentY += Math.max(h, 20) + 5;
+
+            } else { // split-right
+                const w = 80;
+                const h = 45;
+                let descHeight = 0;
+                if (capture.description) {
+                    this.doc.setFontSize(10);
+                    this.doc.setTextColor(this.theme.textMain);
+                    const desc = this.doc.splitTextToSize(capture.description, 80);
+                    this.doc.text(desc, 20, currentY + 5);
+                    descHeight = desc.length * 5;
+                }
+
+                const loaded = await this.addImage(capture.thumbnail, 110, currentY, w, h);
+                if (!loaded) {
+                    this.doc.setFillColor(245, 245, 245);
+                    this.doc.roundedRect(110, currentY, w, h, 2, 2, 'F');
+                    this.doc.setTextColor(150, 150, 150);
+                    this.doc.setFontSize(9);
+                    this.doc.text('[Captura]', 110 + w / 2, currentY + h / 2, { align: 'center' });
+                }
+                currentY += Math.max(h, descHeight) + 5;
             }
 
             currentY += 10;
         }
         return currentY;
     }
-
-    private async processImage(src: string): Promise<{ data: any, width: number, height: number, format: string } | null> {
-        if (!src) return null;
-
-        // Resolve media:// to data URL via Electron IPC
-        let resolvedSrc = src;
-        try {
-            if (src.startsWith('media://')) {
-                if ((window as any).electron?.readImage) {
-                    const buffer = await (window as any).electron.readImage(src);
-                    const bytes = buffer.buffer ? new Uint8Array(buffer.buffer) : new Uint8Array(buffer);
-                    let binary = '';
-                    for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
-                    resolvedSrc = 'data:image/png;base64,' + btoa(binary);
-                } else {
-                    return null;
-                }
-            }
-
-            // Compress image via canvas: max 1280x960, JPEG 82%
-            const compressed = await new Promise<{ dataUrl: string; width: number; height: number } | null>((resolve) => {
-                const img = new Image();
-                img.crossOrigin = 'anonymous';
-                img.onload = () => {
-                    try {
-                        const maxW = 1280, maxH = 960;
-                        const ratio = Math.min(maxW / img.width, maxH / img.height, 1);
-                        const w = Math.round(img.width * ratio);
-                        const h = Math.round(img.height * ratio);
-                        const canvas = document.createElement('canvas');
-                        canvas.width = w;
-                        canvas.height = h;
-                        const ctx = canvas.getContext('2d')!;
-                        ctx.drawImage(img, 0, 0, w, h);
-                        const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
-                        resolve({ dataUrl, width: w, height: h });
-                    } catch {
-                        resolve({ dataUrl: resolvedSrc, width: img.width, height: img.height });
-                    }
-                };
-                img.onerror = () => resolve(null);
-                img.src = resolvedSrc;
-            });
-
-            if (!compressed) return null;
-            return { data: compressed.dataUrl, width: compressed.width, height: compressed.height, format: 'JPEG' };
-
-        } catch {
-            return null;
-        }
-    }
 }
+

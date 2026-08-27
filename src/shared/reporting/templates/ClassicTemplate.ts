@@ -13,6 +13,7 @@ export class ClassicTemplate extends TemplateBase {
     }
 
     async renderCover(): Promise<void> {
+        console.log('[ClassicTemplate:renderCover] Rendering Classic Corporate cover...');
         const primaryRgb = this.hexToRgb(this.theme.primary);
         const secondaryRgb = this.hexToRgb(this.theme.secondary);
 
@@ -23,10 +24,12 @@ export class ClassicTemplate extends TemplateBase {
         // Logo handling
         let logoXPos = 20;
         if (this.config.showLogoSymbol && this.config.customLogoSymbol) {
+            console.log('[ClassicTemplate:renderCover] Adding logo symbol...');
             const success = await this.addImage(this.config.customLogoSymbol, logoXPos, 12, 15, 15);
             if (success) logoXPos += 18;
         }
         if (this.config.showLogoText && this.config.customLogoText) {
+            console.log('[ClassicTemplate:renderCover] Adding logo text...');
             await this.addImage(this.config.customLogoText, logoXPos, 12, 40, 15);
         }
 
@@ -35,7 +38,7 @@ export class ClassicTemplate extends TemplateBase {
         this.doc.setFontSize(36);
         this.doc.setFont('helvetica', 'bold');
         this.doc.setTextColor(titleColor.r, titleColor.g, titleColor.b);
-        this.doc.text(this.config.title, 105, 100, { align: 'center' });
+        this.doc.text(this.config.title || 'REPORTE DE EVIDENCIA', 105, 100, { align: 'center' });
 
         // Accent line
         this.doc.setFillColor(secondaryRgb.r, secondaryRgb.g, secondaryRgb.b);
@@ -46,7 +49,7 @@ export class ClassicTemplate extends TemplateBase {
         this.doc.setFontSize(18);
         this.doc.setFont('helvetica', 'normal');
         this.doc.setTextColor(subtitleColor.r, subtitleColor.g, subtitleColor.b);
-        this.doc.text(this.config.subtitle, 105, 125, { align: 'center' });
+        this.doc.text(this.config.subtitle || 'PRUEBAS DE CALIDAD', 105, 125, { align: 'center' });
 
         // Info Table
         const tableY = 150;
@@ -71,17 +74,18 @@ export class ClassicTemplate extends TemplateBase {
         const textMainRgb = this.hexToRgb(this.theme.textMain);
         this.doc.setTextColor(textMainRgb.r, textMainRgb.g, textMainRgb.b);
         this.doc.setFont('helvetica', 'bold');
-        this.doc.text(this.config.author, 145, tableY + 15, { align: 'right' });
+        this.doc.text(this.config.author || 'QA Engineer', 145, tableY + 15, { align: 'right' });
         this.doc.text(this.currentDate, 145, tableY + 23, { align: 'right' });
-        this.doc.text(this.config.projectName || '', 145, tableY + 31, { align: 'right' });
+        this.doc.text(this.config.projectName || '-', 145, tableY + 31, { align: 'right' });
 
         // Footer
         this.doc.setFontSize(8);
         this.doc.setTextColor(textLightRgb.r, textLightRgb.g, textLightRgb.b);
-        this.doc.text(`Generado por: ${this.config.author}`, 105, 280, { align: 'center' });
+        this.doc.text(`Generado por: ${this.config.author || 'SnapProof QA'}`, 105, 280, { align: 'center' });
     }
 
     async renderContent(captures: CaptureItem[]): Promise<void> {
+        console.log(`[ClassicTemplate:renderContent] Rendering ${captures.length} captures in Classic format...`);
         this.addPage();
 
         const primaryRgb = this.hexToRgb(this.theme.primary);
@@ -96,13 +100,14 @@ export class ClassicTemplate extends TemplateBase {
 
         this.doc.setFontSize(10);
         this.doc.setTextColor(textLightRgb.r, textLightRgb.g, textLightRgb.b);
-        this.doc.text(this.config.subtitle, 20, 17);
+        this.doc.text(this.config.subtitle || 'Reporte de Evidencias', 20, 17);
         this.doc.text(this.currentDate, 190, 17, { align: 'right' });
 
         let yPos = 35;
 
         for (let idx = 0; idx < captures.length; idx++) {
             const capture = captures[idx];
+            console.log(`[ClassicTemplate:renderContent] Rendering capture #${idx + 1}: "${capture.title || 'Untitled'}" at yPos=${yPos.toFixed(1)}`);
 
             if (yPos > this.pageHeight - 80) {
                 this.addPage();
@@ -170,5 +175,6 @@ export class ClassicTemplate extends TemplateBase {
 
             yPos += imgHeight + 15;
         }
+        console.log('[ClassicTemplate:renderContent] Finished all Classic captures.');
     }
 }

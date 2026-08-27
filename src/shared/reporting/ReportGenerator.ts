@@ -3,7 +3,7 @@ import { saveAs } from 'file-saver';
 import { jsPDF } from 'jspdf';
 import { CaptureItem } from '../types';
 import { REPORT_THEMES, ReportConfig, ColorPalette } from './ReportThemes';
-import { ClassicTemplate, ModernTemplate, BubbleTemplate, JapaneseTemplate, TemplateBase } from './templates';
+import { ClassicTemplate, ModernTemplate, BubbleTemplate, JapaneseTemplate, SlideDeckTemplate, TemplateBase } from './templates';
 import { DynamicTemplate } from './DynamicTemplate';
 
 /**
@@ -49,6 +49,8 @@ function getTemplate(doc: jsPDF, config: ReportConfig): TemplateBase {
     // New templateId takes precedence over legacy layout
     if (config.templateId) {
         switch (config.templateId) {
+            case 'slides':
+                return new SlideDeckTemplate(doc, config);
             case 'classic':
                 return new ClassicTemplate(doc, config);
             case 'modern':
@@ -97,7 +99,8 @@ export class ReportGenerator {
             logoAlignment: config?.logoAlignment || 'split',
             logoGap: config?.logoGap || 'medium',
             customTemplate: config?.customTemplate,
-            projectName: config?.projectName
+            projectName: config?.projectName,
+            slideLayout: config?.slideLayout || 'hero'
         };
 
         if (format === 'pdf') {
@@ -109,16 +112,36 @@ export class ReportGenerator {
 
     // Template-based PDF generation
     static async generatePDF(captures: CaptureItem[], config: ReportConfig, returnBlob = false): Promise<Blob | void> {
-        const doc = new jsPDF();
-        const template = getTemplate(doc, config);
+        console.log(`[ReportGenerator:generatePDF] START - captures: ${captures?.length || 0}, templateId: "${config?.templateId || config?.layout}", theme: "${config?.theme}", returnBlob: ${returnBlob}`);
+        try {
+            const isSlides = config.templateId === 'slides';
+            const doc = isSlides
+                ? new jsPDF({ orientation: 'landscape', unit: 'mm', format: [338.67, 190.5] })
+                : new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+            
+            const template = getTemplate(doc, config);
+            console.log(`[ReportGenerator:generatePDF] Template instance created: ${template.constructor.name}`);
 
-        await template.renderCover();
-        await template.renderContent(captures);
+            console.log('[ReportGenerator:generatePDF] Calling renderCover()...');
+            await template.renderCover();
+            console.log('[ReportGenerator:generatePDF] renderCover() completed.');
 
-        if (returnBlob) {
-            return doc.output('blob');
-        } else {
-            saveAs(doc.output('blob'), `Evidence_Report_${new Date().toISOString().slice(0, 10)}.pdf`);
+            console.log('[ReportGenerator:generatePDF] Calling renderContent()...');
+            await template.renderContent(captures);
+            console.log('[ReportGenerator:generatePDF] renderContent() completed.');
+
+            const blob = doc.output('blob');
+            console.log(`[ReportGenerator:generatePDF] PDF blob generated successfully! Size: ${(blob.size / 1024).toFixed(1)} KB`);
+
+            if (returnBlob) {
+                return blob;
+            } else {
+                saveAs(blob, `Evidence_Report_${new Date().toISOString().slice(0, 10)}.pdf`);
+                console.log('[ReportGenerator:generatePDF] Saved via file-saver');
+            }
+        } catch (err: any) {
+            console.error('[ReportGenerator:generatePDF] FATAL ERROR during PDF generation:', err);
+            throw err;
         }
     }
 
@@ -214,11 +237,17 @@ export class ReportGenerator {
                 // Resolve media:// protocol to a data URL before compression
                 if (capture.thumbnail.startsWith('media://')) {
                     if ((window as any).electron?.readImage) {
-                        const buffer = await (window as any).electron.readImage(capture.thumbnail);
-                        const bytes = buffer.buffer ? new Uint8Array(buffer.buffer) : new Uint8Array(buffer);
-                        let binary = '';
-                        for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
-                        srcForCompression = 'data:image/png;base64,' + btoa(binary);
+                        const result = await (window as any).electron.readImage(capture.thumbnail);
+                        if (typeof result === 'string') {
+                            srcForCompression = result;
+                        } else if (result) {
+                            const bytes = (result as any).buffer ? new Uint8Array((result as any).buffer) : new Uint8Array(result as any);
+                            let binary = '';
+                            for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+                            srcForCompression = 'data:image/png;base64,' + btoa(binary);
+                        } else {
+                            throw new Error('Image not found');
+                        }
                     } else {
                         throw new Error('Read Image capability missing');
                     }

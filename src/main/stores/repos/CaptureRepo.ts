@@ -10,42 +10,54 @@ export class CaptureRepo {
     ) {}
 
     async readImage(pathUrl: string): Promise<string> {
-        console.log(`[CaptureRepo] readImage: ${pathUrl}`);
-        if (pathUrl.startsWith('media://')) {
-            const fileName = pathUrl.replace('media://', '');
-            const decodedName = decodeURIComponent(fileName);
-            const normalizedName = path.normalize(decodedName);
-
-            // Try captures dir first
-            const capturesPath = path.join(this.capturesDir, normalizedName);
-            // Try flows dir
-            const flowsDir = path.join(path.dirname(this.capturesDir), 'flows');
-            const flowsPath = path.join(flowsDir, normalizedName);
-
-            let filePath = '';
-            if (fs.existsSync(capturesPath)) {
-                filePath = capturesPath;
-            } else if (fs.existsSync(flowsPath)) {
-                filePath = flowsPath;
-            } else if (fs.existsSync(normalizedName)) {
-                filePath = normalizedName;
-            }
-
-            if (filePath) {
-                const ext = path.extname(filePath).toLowerCase();
-                let mimeType = 'image/png';
-                if (ext === '.jpg' || ext === '.jpeg') mimeType = 'image/jpeg';
-                if (ext === '.gif') mimeType = 'image/gif';
-                if (ext === '.webp') mimeType = 'image/webp';
-
-                const base64Data = await fs.readFile(filePath, { encoding: 'base64' });
-                return `data:${mimeType};base64,${base64Data}`;
-            } else {
-                console.error(`[CaptureRepo] Image not found: ${normalizedName}`);
-                console.error(`[CaptureRepo] Tried: ${capturesPath} AND ${flowsPath}`);
-            }
+        console.log(`[IPC:CaptureRepo] readImage called for: "${pathUrl?.slice(0, 80)}"`);
+        if (!pathUrl) {
+            console.error('[IPC:CaptureRepo] readImage error: Empty pathUrl');
+            throw new Error('Empty pathUrl');
         }
-        throw new Error('Image not found or invalid protocol');
+        if (pathUrl.startsWith('data:')) {
+            console.log(`[IPC:CaptureRepo] readImage: Direct data URI, length: ${pathUrl.length}`);
+            return pathUrl;
+        }
+
+        let cleanPath = pathUrl.replace(/^media:\/\//i, '').replace(/^file:\/\/\//i, '').replace(/^file:\/\//i, '');
+        // Strip leading and trailing slashes
+        cleanPath = cleanPath.replace(/^[/\\]+/, '').replace(/[/\\]+$/, '');
+        cleanPath = cleanPath.split('?')[0].split('#')[0];
+
+        const decodedName = decodeURIComponent(cleanPath);
+        const normalizedName = path.normalize(decodedName);
+
+        const capturesPath = path.normalize(path.join(this.capturesDir, normalizedName));
+        const flatCapturesPath = path.normalize(path.join(this.capturesDir, path.basename(normalizedName)));
+        const flowsDir = path.join(path.dirname(this.capturesDir), 'flows');
+        const flowsPath = path.normalize(path.join(flowsDir, normalizedName));
+
+        let filePath = '';
+        if (fs.existsSync(normalizedName) && (path.isAbsolute(normalizedName) || normalizedName.includes(':'))) {
+            filePath = normalizedName;
+        } else if (fs.existsSync(capturesPath) && fs.statSync(capturesPath).isFile()) {
+            filePath = capturesPath;
+        } else if (fs.existsSync(flatCapturesPath) && fs.statSync(flatCapturesPath).isFile()) {
+            filePath = flatCapturesPath;
+        } else if (fs.existsSync(flowsPath) && fs.statSync(flowsPath).isFile()) {
+            filePath = flowsPath;
+        }
+
+        if (filePath) {
+            const ext = path.extname(filePath).toLowerCase();
+            let mimeType = 'image/png';
+            if (ext === '.jpg' || ext === '.jpeg') mimeType = 'image/jpeg';
+            if (ext === '.gif') mimeType = 'image/gif';
+            if (ext === '.webp') mimeType = 'image/webp';
+
+            const base64Data = await fs.readFile(filePath, { encoding: 'base64' });
+            console.log(`[IPC:CaptureRepo] readImage SUCCESS: Resolved to "${filePath}", mime: ${mimeType}, base64 len: ${base64Data.length}`);
+            return `data:${mimeType};base64,${base64Data}`;
+        }
+
+        console.warn(`[IPC:CaptureRepo] Image file not found on disk: "${pathUrl}" (checked captures="${capturesPath}", flat="${flatCapturesPath}", flows="${flowsPath}")`);
+        throw new Error(`Image not found: ${pathUrl}`);
     }
 
     async saveCapture(capture: CaptureItem): Promise<CaptureItem> {

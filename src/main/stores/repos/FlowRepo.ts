@@ -134,6 +134,89 @@ export class FlowRepo {
         return flow;
     }
 
+    async updateFlowSession(flowId: string, name: string, captures: CaptureItem[]): Promise<CaptureFlow> {
+        const flows = this.store.get('captureFlows' as any, []) as CaptureFlow[];
+        const flowIndex = flows.findIndex(f => f.id === flowId);
+
+        if (flowIndex === -1) throw new Error('Flow not found');
+
+        const flow = flows[flowIndex];
+
+        let safeName = '';
+        if (flow.captures && flow.captures.length > 0) {
+            const firstImage = flow.captures[0].imagePath.replace('media://', '');
+            const parts = firstImage.split('/');
+            if (parts.length > 0 && parts[0]) {
+                safeName = parts[0];
+            }
+        }
+        if (!safeName) {
+            safeName = (name || flow.name || 'flow').replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        }
+
+        const flowFolder = path.join(this.flowsDir, safeName);
+        const screensFolder = path.join(flowFolder, 'Screens');
+        await fs.ensureDir(screensFolder);
+
+        const flowCaptures: FlowCapture[] = [];
+
+        for (let i = 0; i < captures.length; i++) {
+            const capture = captures[i];
+            const rawThumbnail = (capture.thumbnail || '').replace('media://', '');
+            const baseFileName = path.basename(rawThumbnail) || `capture_${capture.id || i}.png`;
+
+            const sourceInCaptures = path.join(this.capturesDir, baseFileName);
+            const sourceInFlows = path.join(this.flowsDir, rawThumbnail);
+            const destPath = path.join(screensFolder, baseFileName);
+
+            try {
+                if (await fs.pathExists(sourceInCaptures)) {
+                    await fs.copy(sourceInCaptures, destPath, { overwrite: true });
+                } else if (await fs.pathExists(sourceInFlows) && sourceInFlows !== destPath) {
+                    await fs.copy(sourceInFlows, destPath, { overwrite: true });
+                } else if (!await fs.pathExists(destPath)) {
+                    const subdirs = await fs.readdir(this.flowsDir, { withFileTypes: true }).catch(() => []);
+                    for (const dirent of subdirs) {
+                        if (dirent.isDirectory()) {
+                            const p1 = path.join(this.flowsDir, dirent.name, 'Screens', baseFileName);
+                            if (await fs.pathExists(p1)) {
+                                await fs.copy(p1, destPath, { overwrite: true });
+                                break;
+                            }
+                        }
+                    }
+                }
+            } catch (copyErr) {
+                console.warn(`[FlowRepo] Warning copying screen for capture ${capture.id}:`, copyErr);
+            }
+
+            const existingCapture = flow.captures.find(c => c.id === capture.id);
+
+            flowCaptures.push({
+                id: capture.id,
+                imagePath: `media://${safeName}/Screens/${baseFileName}`,
+                title: capture.title ?? existingCapture?.title ?? '',
+                description: capture.description ?? existingCapture?.description ?? '',
+                order: i,
+                createdAt: capture.timestamp || existingCapture?.createdAt || Date.now(),
+                clickPosition: existingCapture?.clickPosition,
+                clickStyle: existingCapture?.clickStyle
+            });
+        }
+
+        flow.name = name || flow.name;
+        flow.captures = flowCaptures;
+        flow.updatedAt = Date.now();
+
+        flows[flowIndex] = flow;
+        this.store.set('captureFlows' as any, flows);
+
+        // Clear workspace
+        this.store.set('captures', []);
+
+        return flow;
+    }
+
     async loadFlow(flowId: string): Promise<CaptureItem[]> {
         const flows = this.store.get('captureFlows' as any, []) as CaptureFlow[];
         const flow = flows.find(f => f.id === flowId);

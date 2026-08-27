@@ -260,29 +260,44 @@ export const ReportBuilderView: React.FC = () => {
 
     // Preview Handler
     const handlePreview = async () => {
-        // In a real app, this would generate the PDF blob and open it.
         if (!activeTemplate) return;
         try {
             const doc = new jsPDF();
-            // Minimal config wrapper for the template
-            // We use 'marketing' as base or 'simple', doesn't matter much as customTemplate overrides
             const template = new DynamicTemplate(doc, {
-                id: 'preview',
-                name: 'Preview',
-                type: 'custom',
+                templateId: 'custom',
                 customTemplate: activeTemplate,
-                sections: [], // Not used by DynamicTemplate?
-                settings: activeTemplate.settings // Pass settings if needed
-            } as any); // Cast to any or ReportConfig mock
+                theme: 'default',
+                title: activeTemplate.name || 'Plantilla Personalizada',
+                subtitle: 'VISTA PREVIA',
+                author: 'SnapProof Builder',
+                reportDate: new Date().toISOString().slice(0, 10),
+                showLogoSymbol: true,
+                showLogoText: true,
+                customLogoSymbol: null,
+                customLogoText: null,
+                logoAlignment: 'split',
+                logoGap: 'medium',
+                projectName: ''
+            });
 
-            // Render with empty captures for layout preview
             await template.renderContent([]);
 
-            const blobUrl = doc.output('bloburl');
+            const blob = doc.output('blob');
+            const arrayBuffer = await blob.arrayBuffer();
+            if (window.electron?.saveReportFile && window.electron?.openPath) {
+                const tempName = `Preview_${Date.now()}.pdf`;
+                const savedPath = await window.electron.saveReportFile(tempName, arrayBuffer);
+                if (savedPath) {
+                    await window.electron.openPath(savedPath);
+                    toast.success('Vista previa abierta en tu visor PDF');
+                    return;
+                }
+            }
+            const blobUrl = URL.createObjectURL(blob);
             window.open(blobUrl, '_blank');
         } catch (error) {
             console.error('Preview error:', error);
-            toast.error('Failed to generate preview PDF');
+            toast.error('Error al generar vista previa del PDF');
         }
     };
 

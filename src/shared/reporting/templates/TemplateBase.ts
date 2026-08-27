@@ -15,9 +15,16 @@ export abstract class TemplateBase {
     constructor(doc: jsPDF, config: ReportConfig) {
         this.doc = doc;
         this.config = config;
-        this.theme = REPORT_THEMES[config.theme];
-        // Use custom reportDate if provided, otherwise default to today
-        const dateSource = config.reportDate ? new Date(config.reportDate + 'T12:00:00') : new Date();
+        this.theme = (config.theme && REPORT_THEMES[config.theme]) || REPORT_THEMES.default;
+        
+        let dateSource = new Date();
+        if (config.reportDate && config.reportDate.trim().length > 0) {
+            const parsed = new Date(config.reportDate.includes('T') ? config.reportDate : config.reportDate + 'T12:00:00');
+            if (!isNaN(parsed.getTime())) {
+                dateSource = parsed;
+            }
+        }
+
         this.currentDate = dateSource.toLocaleDateString('es-ES', {
             year: 'numeric',
             month: 'long',
@@ -38,8 +45,9 @@ export abstract class TemplateBase {
     /**
      * Helper to convert hex color to RGB
      */
-    protected hexToRgb(hex: string): { r: number; g: number; b: number } {
-        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    protected hexToRgb(hex?: string): { r: number; g: number; b: number } {
+        if (!hex) return { r: 0, g: 0, b: 0 };
+        const result = /^#?([a-d\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex) || /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
         return result ? {
             r: parseInt(result[1], 16),
             g: parseInt(result[2], 16),
@@ -51,13 +59,55 @@ export abstract class TemplateBase {
      * Load an image and add it to the PDF
      */
     protected async addImage(src: string, x: number, y: number, maxWidth: number, maxHeight: number): Promise<boolean> {
+        if (!src || typeof src !== 'string' || src.trim().length === 0) {
+            console.warn('[TemplateBase:addImage] Received empty or invalid image src');
+            return false;
+        }
+
+        console.log(`[TemplateBase:addImage] Processing image: "${src.slice(0, 60)}..." (bounds: ${maxWidth}x${maxHeight} at (${x},${y}))`);
+
+        let resolvedSrc = src;
+        if (!resolvedSrc.startsWith('data:')) {
+            try {
+                if (typeof window !== 'undefined' && (window as any).electron?.readImage) {
+                    const result = await (window as any).electron.readImage(src);
+                    if (typeof result === 'string' && result.startsWith('data:')) {
+                        resolvedSrc = result;
+                        console.log(`[TemplateBase:addImage] IPC readImage succeeded, data length: ${resolvedSrc.length}`);
+                    } else {
+                        console.warn('[TemplateBase:addImage] IPC readImage returned non-data URI:', result);
+                    }
+                }
+            } catch (err) {
+                console.warn('[TemplateBase:addImage] IPC readImage error for:', src, err);
+            }
+        }
+
         return new Promise((resolve) => {
+            let finished = false;
+            const finish = (result: boolean) => {
+                if (!finished) {
+                    finished = true;
+                    clearTimeout(safetyTimer);
+                    resolve(result);
+                }
+            };
+
+            // Strict safety timeout (2000ms) to ensure PDF generation never hangs
+            const safetyTimer = setTimeout(() => {
+                console.warn('[TemplateBase:addImage] Safety timeout (2000ms) triggered for:', resolvedSrc.slice(0, 60));
+                finish(false);
+            }, 2000);
+
             const img = new Image();
-            img.crossOrigin = 'anonymous';
+            if (!resolvedSrc.startsWith('data:')) {
+                img.crossOrigin = 'anonymous';
+            }
             img.onload = () => {
                 try {
-                    // Calculate aspect ratio fit (object-fit: contain)
-                    const imgRatio = img.width / img.height;
+                    const naturalW = img.naturalWidth || img.width || 1;
+                    const naturalH = img.naturalHeight || img.height || 1;
+                    const imgRatio = naturalW / naturalH;
                     const maxRatio = maxWidth / maxHeight;
                     
                     let drawWidth = maxWidth;
@@ -75,18 +125,47 @@ export abstract class TemplateBase {
                         drawX = x + (maxWidth - drawWidth) / 2; // Center horizontally
                     }
 
-                    this.doc.addImage(img, 'PNG', drawX, drawY, drawWidth, drawHeight);
-                    resolve(true);
+                    let format = 'PNG';
+                    if (resolvedSrc.includes('image/jpeg') || resolvedSrc.includes('image/jpg')) {
+                        format = 'JPEG';
+                    } else if (resolvedSrc.includes('image/webp')) {
+                        format = 'WEBP';
+                    }
+
+                    console.log(`[TemplateBase:addImage] Drawing image: natural ${naturalW}x${naturalH}, draw ${drawWidth.toFixed(1)}x${drawHeight.toFixed(1)} at (${drawX.toFixed(1)},${drawY.toFixed(1)}), format: ${format}`);
+                    
+                    if (resolvedSrc.startsWith('data:')) {
+                        this.doc.addImage(resolvedSrc, format, drawX, drawY, drawWidth, drawHeight);
+                    } else {
+                        this.doc.addImage(img, format, drawX, drawY, drawWidth, drawHeight);
+                    }
+                    finish(true);
                 } catch (error) {
-                    console.error('Error adding image:', error);
-                    resolve(false);
+                    console.warn('[TemplateBase:addImage] doc.addImage direct failed, trying canvas fallback:', error);
+                    try {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = img.naturalWidth || img.width || 800;
+                        canvas.height = img.naturalHeight || img.height || 600;
+                        const ctx = canvas.getContext('2d');
+                        if (ctx) {
+                            ctx.drawImage(img, 0, 0);
+                            const pngData = canvas.toDataURL('image/png');
+                            this.doc.addImage(pngData, 'PNG', x, y, maxWidth, maxHeight);
+                            console.log('[TemplateBase:addImage] Canvas fallback succeeded');
+                            finish(true);
+                            return;
+                        }
+                    } catch (canvasErr) {
+                        console.error('[TemplateBase:addImage] Canvas fallback also failed:', canvasErr);
+                    }
+                    finish(false);
                 }
             };
-            img.onerror = () => {
-                console.warn('Failed to load image:', src);
-                resolve(false);
+            img.onerror = (e) => {
+                console.warn('[TemplateBase:addImage] HTML Image.onerror failed to load:', resolvedSrc.slice(0, 80), e);
+                finish(false);
             };
-            img.src = src;
+            img.src = resolvedSrc;
         });
     }
 
@@ -94,6 +173,7 @@ export abstract class TemplateBase {
      * Add a new page and reset position
      */
     protected addPage(): void {
+        console.log('[TemplateBase:addPage] Adding new page to PDF');
         this.doc.addPage();
     }
 
@@ -123,6 +203,12 @@ export interface TemplateInfo {
  * Available templates registry
  */
 export const REPORT_TEMPLATES: TemplateInfo[] = [
+    {
+        id: 'slides',
+        name: 'PPTX',
+        description: 'Presentación ejecutiva estilo Bubble con tarjetas flotantes, márgenes limpios y modo dual',
+        previewClass: 'bg-gradient-to-r from-blue-600 via-indigo-600 to-amber-500'
+    },
     {
         id: 'classic',
         name: 'Classic Corporate',

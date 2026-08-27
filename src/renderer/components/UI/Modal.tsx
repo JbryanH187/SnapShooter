@@ -61,6 +61,7 @@ export const Modal: React.FC<ModalProps> = ({
     if (!isOpen) return null;
 
     const accentColor = semanticColors[type];
+    const resolvedMaxWidth = maxWidth.startsWith('max-w-') ? maxWidth : `max-w-${maxWidth}`;
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -78,7 +79,7 @@ export const Modal: React.FC<ModalProps> = ({
             {/* Modal Content with LiquidGlass */}
             <LiquidGlass
                 material="thick"
-                className={`relative w-full ${maxWidth} overflow-hidden transform transition-all scale-100`}
+                className={`relative w-full ${resolvedMaxWidth} overflow-hidden transform transition-all scale-100`}
                 style={{
                     borderRadius: 'var(--radius-modal)',
                     boxShadow: '0 16px 48px rgba(0, 0, 0, 0.2)'
@@ -87,31 +88,36 @@ export const Modal: React.FC<ModalProps> = ({
                 {/* Header Accent Strip removed for cleaner Apple HIG style */}
 
                 <div className="p-6">
-                    {/* Icon Container */}
-                    <div
-                        className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4"
-                        style={{
-                            backgroundColor: 'var(--fill-secondary)',
-                            border: '1px solid var(--separator-non-opaque)'
-                        }}
-                    >
-                        {icons[type]}
-                    </div>
-
-                    <div className="text-center mb-6">
-                        <h3
-                            className="text-xl font-bold mb-2"
-                            style={{ color: 'var(--label-primary)' }}
-                        >
-                            {title}
-                        </h3>
-                        <div
-                            className="text-sm leading-relaxed"
-                            style={{ color: 'var(--label-secondary)' }}
-                        >
-                            {description}
+                    {/* Icon & Title Container */}
+                    {title && (
+                        <div className="text-center mb-6">
+                            {type && (
+                                <div
+                                    className="mx-auto w-14 h-14 rounded-full flex items-center justify-center mb-3"
+                                    style={{
+                                        backgroundColor: 'var(--fill-secondary)',
+                                        border: '1px solid var(--separator-non-opaque)'
+                                    }}
+                                >
+                                    {icons[type]}
+                                </div>
+                            )}
+                            <h3
+                                className="text-xl font-bold mb-1"
+                                style={{ color: 'var(--label-primary)' }}
+                            >
+                                {title}
+                            </h3>
+                            {description && (
+                                <div
+                                    className="text-sm leading-relaxed"
+                                    style={{ color: 'var(--label-secondary)' }}
+                                >
+                                    {description}
+                                </div>
+                            )}
                         </div>
-                    </div>
+                    )}
 
                     {children}
 

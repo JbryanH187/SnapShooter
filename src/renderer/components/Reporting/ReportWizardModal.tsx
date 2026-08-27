@@ -13,6 +13,8 @@ import { logger } from '../../services/Logger';
 import { ExportProgressOverlay, ExportStep } from './ExportProgressOverlay';
 import { useTemplateStore } from '../../stores/templateStore';
 
+import { saveAs } from 'file-saver';
+
 // Modular subcomponents
 import { WizardPreviewPane } from './wizard/WizardPreviewPane';
 import { WizardTemplateSelector } from './wizard/WizardTemplateSelector';
@@ -40,6 +42,7 @@ export const ReportWizardModal: React.FC<ReportWizardModalProps> = ({
     const { templates } = useTemplateStore();
     const [step, setStep] = useState<Step>('config');
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const [previewError, setPreviewError] = useState<string | null>(null);
     const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
     const [exportStep, setExportStep] = useState<ExportStep>('generating');
@@ -69,25 +72,43 @@ export const ReportWizardModal: React.FC<ReportWizardModalProps> = ({
     const previewTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     const updateConfig = (key: keyof ReportConfig, value: any) => {
+        console.log(`[ReportWizardModal] updateConfig: "${key}" ->`, value);
         setConfig(prev => ({ ...prev, [key]: value }));
     };
 
-    const generatePreview = async () => {
-        if (captures.length === 0) return;
+    const previewGenIdRef = useRef(0);
+
+    const generatePreview = async (configToUse?: ReportConfig) => {
+        if (captures.length === 0) {
+            console.warn('[ReportWizardModal:generatePreview] No captures available to generate preview');
+            return;
+        }
+        const currentGenId = ++previewGenIdRef.current;
+        console.log(`[ReportWizardModal:generatePreview] Triggering preview generation #${currentGenId}...`);
         setIsGeneratingPreview(true);
+        setPreviewError(null);
+        const effectiveConfig = configToUse || config;
         try {
-            const blob = await ReportGenerator.generatePDF(captures, config, true);
-            if (blob) {
+            const blob = await ReportGenerator.generatePDF(captures, effectiveConfig, true);
+            if (blob && currentGenId === previewGenIdRef.current) {
                 if (previewUrl) {
                     URL.revokeObjectURL(previewUrl);
                 }
                 const url = URL.createObjectURL(blob);
+                console.log(`[ReportWizardModal:generatePreview] Preview #${currentGenId} successfully ready: ${url}`);
                 setPreviewUrl(url);
+                setPreviewError(null);
             }
-        } catch (error) {
-            logger.error('REPORT', 'Failed to generate preview', { error });
+        } catch (error: any) {
+            console.error(`[ReportWizardModal:generatePreview] Preview generation #${currentGenId} failed:`, error);
+            logger.error('REPORT', 'Failed to generate preview', { error: error?.message || error });
+            if (currentGenId === previewGenIdRef.current) {
+                setPreviewError(error?.message || 'Error desconocido al generar PDF');
+            }
         } finally {
-            setIsGeneratingPreview(false);
+            if (currentGenId === previewGenIdRef.current) {
+                setIsGeneratingPreview(false);
+            }
         }
     };
 
@@ -103,7 +124,6 @@ export const ReportWizardModal: React.FC<ReportWizardModalProps> = ({
                 setDraftId(null);
                 setConfig(prev => ({ ...prev, author: authorName }));
             }
-            generatePreview();
         } else {
             if (previewUrl) {
                 URL.revokeObjectURL(previewUrl);
@@ -111,44 +131,23 @@ export const ReportWizardModal: React.FC<ReportWizardModalProps> = ({
             setPreviewUrl(null);
             setDraftId(null);
         }
-    }, [isOpen, captures, authorName, initialDraft]);
+    }, [isOpen, initialDraft, authorName]);
 
     useEffect(() => {
-        if (step === 'config' && isOpen) {
-            generatePreview();
-        }
-    }, [
-        config.theme,
-        config.layout,
-        config.templateId,
-        config.customTemplate,
-        config.showLogoSymbol,
-        config.showLogoText,
-        config.customLogoSymbol,
-        config.customLogoText,
-        config.logoAlignment,
-        config.logoGap,
-        config.titleColor,
-        config.subtitleColor,
-        step,
-        isOpen
-    ]);
-
-    useEffect(() => {
-        if (step === 'config' && isOpen) {
+        if (step === 'config' && isOpen && captures.length > 0) {
             if (previewTimeoutRef.current) {
                 clearTimeout(previewTimeoutRef.current);
             }
             previewTimeoutRef.current = setTimeout(() => {
-                generatePreview();
-            }, 1500);
+                generatePreview(config);
+            }, 250);
         }
         return () => {
             if (previewTimeoutRef.current) {
                 clearTimeout(previewTimeoutRef.current);
             }
         };
-    }, [config.title, config.subtitle, config.author, config.reportDate, config.projectName]);
+    }, [config, step, isOpen, captures]);
 
     const handleSaveDraft = async () => {
         setIsSavingDraft(true);
@@ -183,39 +182,61 @@ export const ReportWizardModal: React.FC<ReportWizardModalProps> = ({
         setExportStep('generating');
 
         try {
+            console.log('[ReportWizardModal:handleExport] Starting export for format:', exportFormat);
             const blob = await ReportGenerator.generate(captures, config.author, exportFormat, config);
-            if (!blob) throw new Error('Generation failed');
+            if (!blob) throw new Error('No se pudo generar el documento');
+
+            const ext = exportFormat.toLowerCase();
+            const filterName = ext === 'pdf' ? 'PDF Document' : 'Word Document';
+            const fileName = `Reporte_${config.title?.replace(/\s+/g, '_') || 'Evidencia'}_${new Date().toISOString().slice(0, 10)}.${ext}`;
 
             setExportStep('saving');
-            const fileName = `Reporte_${config.title?.replace(/\s+/g, '_') || 'Evidencia'}_${new Date().toISOString().slice(0, 10)}.${exportFormat}`;
 
-            if (window.electron?.saveReportFile) {
-                const buffer = await blob.arrayBuffer();
-                await window.electron.saveReportFile(fileName, buffer);
+            let savedPath: string | null = null;
+            if (window.electron?.showSaveDialog && window.electron?.saveFileToPath) {
+                const targetPath = await window.electron.showSaveDialog({
+                    defaultPath: fileName,
+                    filters: [{ name: filterName, extensions: [ext] }]
+                });
 
-                // Save to history
-                if (window.electron?.saveReportToHistory) {
-                    await window.electron.saveReportToHistory({
-                        id: uuidv4(),
-                        title: config.title || 'Reporte de Evidencia',
-                        format: exportFormat,
-                        createdAt: Date.now(),
-                        captureCount: captures.length
-                    });
+                if (!targetPath) {
+                    console.log('[ReportWizardModal:handleExport] User canceled save dialog');
+                    setIsExporting(false);
+                    return;
                 }
+
+                const buffer = await blob.arrayBuffer();
+                savedPath = await window.electron.saveFileToPath(targetPath, buffer);
+                console.log('[ReportWizardModal:handleExport] Saved to target path:', savedPath);
+            } else {
+                saveAs(blob, fileName);
+                console.log('[ReportWizardModal:handleExport] Saved via file-saver');
+            }
+
+            // Save to history
+            if (window.electron?.saveReportToHistory) {
+                await window.electron.saveReportToHistory({
+                    id: uuidv4(),
+                    title: config.title || 'Reporte de Evidencia',
+                    format: exportFormat,
+                    createdAt: Date.now(),
+                    captureCount: captures.length,
+                    filePath: savedPath || undefined
+                });
             }
 
             setExportStep('complete');
-            toast.success(`Reporte ${exportFormat.toUpperCase()} generado exitosamente`);
-        } catch (error) {
-            logger.error('REPORT', 'Failed to export report', { error });
-            setExportStep('complete');
-            toast.error('Error al generar el reporte');
-        } finally {
+            toast.success(`Reporte ${exportFormat.toUpperCase()} guardado exitosamente`);
             setTimeout(() => {
                 setIsExporting(false);
-                if (exportStep === 'complete') onClose();
-            }, 1000);
+                onClose();
+            }, 800);
+        } catch (error: any) {
+            console.error('[ReportWizardModal:handleExport] Error exporting report:', error);
+            logger.error('REPORT', 'Failed to export report', { error: error?.message || error });
+            setExportStep('complete');
+            toast.error(`Error al generar el reporte: ${error?.message || 'Error desconocido'}`);
+            setIsExporting(false);
         }
     };
 
@@ -278,8 +299,9 @@ export const ReportWizardModal: React.FC<ReportWizardModalProps> = ({
                                     {/* Preview Pane */}
                                     <WizardPreviewPane
                                         previewUrl={previewUrl}
+                                        previewError={previewError}
                                         isGeneratingPreview={isGeneratingPreview}
-                                        onRefresh={generatePreview}
+                                        onRefresh={() => generatePreview(config)}
                                     />
                                 </motion.div>
                             ) : (

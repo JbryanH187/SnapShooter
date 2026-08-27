@@ -13,6 +13,7 @@ export class ModernTemplate extends TemplateBase {
     }
 
     async renderCover(): Promise<void> {
+        console.log('[ModernTemplate:renderCover] Rendering Modern Sidebar cover...');
         const primaryRgb = this.hexToRgb(this.theme.primary);
         const secondaryRgb = this.hexToRgb(this.theme.secondary);
 
@@ -22,6 +23,7 @@ export class ModernTemplate extends TemplateBase {
 
         // Logo in sidebar
         if (this.config.showLogoSymbol && this.config.customLogoSymbol) {
+            console.log('[ModernTemplate:renderCover] Adding logo symbol...');
             await this.addImage(this.config.customLogoSymbol, 10, 12, 20, 20);
         }
 
@@ -34,7 +36,7 @@ export class ModernTemplate extends TemplateBase {
         this.doc.setFontSize(14);
         this.doc.setFont('helvetica', 'normal');
         this.doc.setTextColor(subtitleColor.r, subtitleColor.g, subtitleColor.b);
-        this.doc.text(this.config.subtitle, 10, 50);
+        this.doc.text(this.config.subtitle || 'PRUEBAS DE QA', 10, 50);
 
         // Project name in sidebar
         if (this.config.projectName) {
@@ -48,7 +50,7 @@ export class ModernTemplate extends TemplateBase {
         this.doc.setFontSize(9);
         this.doc.text('AUTOR', 10, 250);
         this.doc.setFontSize(10);
-        this.doc.text(this.config.author, 10, 257);
+        this.doc.text(this.config.author || 'QA Engineer', 10, 257);
         this.doc.text('FECHA', 10, 267);
         this.doc.text(this.currentDate, 10, 274);
 
@@ -58,7 +60,7 @@ export class ModernTemplate extends TemplateBase {
         this.doc.setFontSize(42);
         this.doc.setFont('helvetica', 'bold');
 
-        const titleWords = this.config.title.split(' ');
+        const titleWords = (this.config.title || 'REPORTE DE EVIDENCIA').split(' ');
         let yPos = 100;
         titleWords.forEach(word => {
             this.doc.text(word, 90, yPos);
@@ -80,6 +82,7 @@ export class ModernTemplate extends TemplateBase {
     }
 
     async renderContent(captures: CaptureItem[]): Promise<void> {
+        console.log(`[ModernTemplate:renderContent] Rendering ${captures.length} captures in Modern layout...`);
         this.addPage();
 
         const primaryRgb = this.hexToRgb(this.theme.primary);
@@ -96,6 +99,7 @@ export class ModernTemplate extends TemplateBase {
 
         for (let idx = 0; idx < captures.length; idx++) {
             const capture = captures[idx];
+            console.log(`[ModernTemplate:renderContent] Rendering capture #${idx + 1}: "${capture.title || 'Untitled'}" at yPos=${yPos.toFixed(1)}`);
 
             if (yPos > this.pageHeight - 100) {
                 this.addPage();
@@ -152,5 +156,6 @@ export class ModernTemplate extends TemplateBase {
 
             yPos += imgHeight + 20;
         }
+        console.log('[ModernTemplate:renderContent] Finished all Modern captures.');
     }
 }

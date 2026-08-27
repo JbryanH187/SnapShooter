@@ -2,22 +2,22 @@ import { z } from 'zod';
 
 // Replica of SystemMetadata in src/main/metadata/MetadataCollector.ts
 export const SystemMetadataSchema = z.object({
-    os: z.string(),
-    resolution: z.string(),
-    timestamp: z.number(),
-});
+    os: z.string().optional(),
+    resolution: z.string().optional(),
+    timestamp: z.number().optional(),
+}).passthrough();
 
 // Replica of CaptureItem in src/shared/types.ts
 export const CaptureItemSchema = z.object({
     id: z.string(),
     thumbnail: z.string(),
-    timestamp: z.number(),
-    title: z.string(),
-    description: z.string(),
-    status: z.enum(['pending', 'saved', 'success', 'failure']),
+    timestamp: z.number().optional().default(() => Date.now()),
+    title: z.string().optional().default(''),
+    description: z.string().optional().default(''),
+    status: z.enum(['pending', 'saved', 'success', 'failure']).optional().default('success'),
     metadata: SystemMetadataSchema.optional(),
     tags: z.array(z.string()).optional(),
-});
+}).passthrough();
 
 // Replica of FlowCapture in src/shared/types/FlowTypes.ts
 export const FlowCaptureSchema = z.object({

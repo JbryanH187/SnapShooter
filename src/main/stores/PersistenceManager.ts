@@ -104,6 +104,7 @@ export class PersistenceManager {
     getFlows(): CaptureFlow[] { return this.flows.getFlows(); }
     saveFlow(flow: any): any { return this.flows.saveFlow(flow); }
     saveFlowSession(name: string, captures: CaptureItem[]): Promise<CaptureFlow> { return this.flows.saveFlowSession(name, captures); }
+    updateFlowSession(flowId: string, name: string, captures: CaptureItem[]): Promise<CaptureFlow> { return this.flows.updateFlowSession(flowId, name, captures); }
     addToFlow(flowId: string, captures: CaptureItem[]): Promise<CaptureFlow> { return this.flows.addToFlow(flowId, captures); }
     loadFlow(flowId: string): Promise<CaptureItem[]> { return this.flows.loadFlow(flowId); }
     openFlowFolder(flowId: string): Promise<void> { return this.flows.openFlowFolder(flowId); }
