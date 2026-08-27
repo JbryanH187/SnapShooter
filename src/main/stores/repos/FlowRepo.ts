@@ -199,8 +199,8 @@ export class FlowRepo {
                 description: capture.description ?? existingCapture?.description ?? '',
                 order: i,
                 createdAt: capture.timestamp || existingCapture?.createdAt || Date.now(),
-                clickPosition: existingCapture?.clickPosition,
-                clickStyle: existingCapture?.clickStyle
+                clickPosition: capture.clickPosition || existingCapture?.clickPosition,
+                clickStyle: capture.clickStyle || existingCapture?.clickStyle
             });
         }
 
@@ -272,7 +272,10 @@ export class FlowRepo {
                     os: 'unknown',
                     resolution: 'unknown',
                     timestamp: fc.createdAt
-                }
+                },
+                clickPosition: fc.clickPosition,
+                clickStyle: fc.clickStyle,
+                showClickIndicator: true
             });
         }
 

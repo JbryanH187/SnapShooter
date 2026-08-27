@@ -144,7 +144,11 @@ export class ModernTemplate extends TemplateBase {
                 yPos = 30;
             }
 
-            const imgLoaded = await this.addImage(capture.thumbnail, margin, yPos, imgWidth, imgHeight);
+            const imgLoaded = await this.addImage(capture.thumbnail, margin, yPos, imgWidth, imgHeight, {
+                clickPosition: capture.clickPosition,
+                clickStyle: capture.clickStyle,
+                enabled: capture.showClickIndicator !== false
+            });
             if (!imgLoaded) {
                 this.doc.setDrawColor(200, 200, 200);
                 this.doc.setFillColor(250, 250, 250);

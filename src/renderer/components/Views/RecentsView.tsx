@@ -8,7 +8,7 @@ import { useGlobalModal } from '../../contexts/GlobalModalContext';
 import { FilterBar } from '../UI/FilterBar';
 import { toast, confirm } from '../../utils/toast';
 import { toast as hotToast } from 'react-hot-toast';
-import { Camera, Trash2, Save, SplitSquareVertical, Layers, X, Undo2 } from 'lucide-react';
+import { Camera, Trash2, Save, SplitSquareVertical, Layers, X, Undo2, MousePointer2 } from 'lucide-react';
 import OnlyEyesSnapProof from '../../../assets/OnlyEyesSnapProof.png';
 import { logger } from '../../services/Logger';
 import { useFlowStore } from '../../stores/flowStore';
@@ -333,6 +333,25 @@ export const RecentsView: React.FC = () => {
                             onToggleSortOrder={toggleSortOrder}
                         />
                     )}
+                    {captures.some(c => c.clickPosition) && (
+                        <button
+                            onClick={() => {
+                                const anyActive = captures.some(c => c.clickPosition && c.showClickIndicator !== false);
+                                captures.forEach(c => {
+                                    if (c.clickPosition) {
+                                        updateCapture(c.id, { showClickIndicator: !anyActive });
+                                    }
+                                });
+                                toast.info(anyActive ? 'Punteros de click ocultados' : 'Punteros de click visibles');
+                            }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all hover:bg-amber-50 dark:hover:bg-amber-900/20"
+                            style={{ color: 'var(--system-orange, #f59e0b)' }}
+                            title="Alternar visibilidad de punteros de mouse en evidencias"
+                        >
+                            <MousePointer2 size={16} />
+                            <span className="hidden sm:inline">Punteros</span>
+                        </button>
+                    )}
                     {captures.length >= 2 && (
                         <button
                             onClick={() => setIsDiffModalOpen(true)}
@@ -483,6 +502,12 @@ export const RecentsView: React.FC = () => {
                                             onUpdateStatus={(id, s) => updateCapture(id, { status: s })}
                                             onUploadJira={(capture) => setJiraTargetCapture(capture)}
                                             onUploadADO={(capture) => setAdoTargetCapture(capture)}
+                                            onToggleClickIndicator={(id) => {
+                                                const item = captures.find(cap => cap.id === id);
+                                                if (item) {
+                                                    updateCapture(id, { showClickIndicator: item.showClickIndicator === false ? true : false });
+                                                }
+                                            }}
                                         />
                                     </SortableCaptureCard>
                                 ))}

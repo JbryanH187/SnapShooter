@@ -126,7 +126,11 @@ export class JapaneseTemplate extends TemplateBase {
         const imgWidth = colWidth;
         const imgHeight = 55;
 
-        const imgLoaded = await this.addImage(capture.thumbnail, startX, currentY, imgWidth, imgHeight);
+        const imgLoaded = await this.addImage(capture.thumbnail, startX, currentY, imgWidth, imgHeight, {
+            clickPosition: capture.clickPosition,
+            clickStyle: capture.clickStyle,
+            enabled: capture.showClickIndicator !== false
+        });
         if (!imgLoaded) {
             this.doc.setFillColor(245, 245, 245);
             this.doc.roundedRect(startX, currentY, imgWidth, imgHeight, 5, 5, 'F');

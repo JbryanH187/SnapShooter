@@ -293,8 +293,11 @@ export class SlideDeckTemplate extends TemplateBase {
             // Image Viewport inside card (with 6mm padding for breathing room)
             const imgPadding = 6;
             const imgW = cardW - (imgPadding * 2);
-            const imgH = cardH - (imgPadding * 2);
-            const imgLoaded = await this.addImage(capture.thumbnail, cardX + imgPadding, cardY + imgPadding, imgW, imgH);
+            const imgLoaded = await this.addImage(capture.thumbnail, cardX + imgPadding, cardY + imgPadding, imgW, imgH, {
+                clickPosition: capture.clickPosition,
+                clickStyle: capture.clickStyle,
+                enabled: capture.showClickIndicator !== false
+            });
             if (!imgLoaded) {
                 this.doc.setTextColor(160, 160, 160);
                 this.doc.setFontSize(11);
@@ -444,9 +447,11 @@ export class SlideDeckTemplate extends TemplateBase {
 
         this.doc.setFillColor(248, 250, 252);
         this.doc.setDrawColor(235, 240, 248);
-        this.doc.roundedRect(imgX, imgY, imgW, imgH, 3, 3, 'FD');
-
-        await this.addImage(capture.thumbnail, imgX + 2, imgY + 2, imgW - 4, imgH - 4);
+        await this.addImage(capture.thumbnail, imgX + 2, imgY + 2, imgW - 4, imgH - 4, {
+            clickPosition: capture.clickPosition,
+            clickStyle: capture.clickStyle,
+            enabled: capture.showClickIndicator !== false
+        });
 
         // Description at bottom of card
         const descY = imgY + imgH + 3;

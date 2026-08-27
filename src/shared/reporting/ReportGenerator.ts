@@ -15,7 +15,8 @@ async function compressImageForExport(
     src: string,
     maxW = 1280,
     maxH = 960,
-    quality = 0.82
+    quality = 0.82,
+    cursorOverlay?: { clickPosition?: { x: number; y: number }; clickStyle?: string; enabled?: boolean }
 ): Promise<{ dataUrl: string; width: number; height: number } | null> {
     return new Promise((resolve) => {
         const img = new Image();
@@ -30,6 +31,51 @@ async function compressImageForExport(
                 canvas.height = h;
                 const ctx = canvas.getContext('2d')!;
                 ctx.drawImage(img, 0, 0, w, h);
+
+                // Draw cursor indicator on canvas if present and enabled
+                if (cursorOverlay?.clickPosition && cursorOverlay.enabled !== false) {
+                    const cx = (cursorOverlay.clickPosition.x / 100) * w;
+                    const cy = (cursorOverlay.clickPosition.y / 100) * h;
+
+                    // Outer pulse
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, 18, 0, 2 * Math.PI);
+                    ctx.fillStyle = 'rgba(245, 158, 11, 0.4)';
+                    ctx.fill();
+
+                    // Inner white border
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, 12, 0, 2 * Math.PI);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fill();
+
+                    // Target / Dot / Center
+                    if (cursorOverlay.clickStyle === 'target') {
+                        ctx.beginPath();
+                        ctx.arc(cx, cy, 6, 0, 2 * Math.PI);
+                        ctx.fillStyle = '#ef4444';
+                        ctx.fill();
+                        ctx.strokeStyle = '#ef4444';
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.moveTo(cx - 14, cy);
+                        ctx.lineTo(cx + 14, cy);
+                        ctx.moveTo(cx, cy - 14);
+                        ctx.lineTo(cx, cy + 14);
+                        ctx.stroke();
+                    } else if (cursorOverlay.clickStyle === 'dot') {
+                        ctx.beginPath();
+                        ctx.arc(cx, cy, 8, 0, 2 * Math.PI);
+                        ctx.fillStyle = '#ef4444';
+                        ctx.fill();
+                    } else {
+                        ctx.beginPath();
+                        ctx.arc(cx, cy, 8, 0, 2 * Math.PI);
+                        ctx.fillStyle = '#f59e0b';
+                        ctx.fill();
+                    }
+                }
+
                 const dataUrl = canvas.toDataURL('image/jpeg', quality);
                 resolve({ dataUrl, width: w, height: h });
             } catch (e) {
@@ -253,8 +299,18 @@ export class ReportGenerator {
                     }
                 }
 
-                // Compress the image before embedding
-                const compressed = await compressImageForExport(srcForCompression);
+                // Compress the image before embedding (including click target overlay)
+                const compressed = await compressImageForExport(
+                    srcForCompression,
+                    1280,
+                    960,
+                    0.82,
+                    capture.clickPosition ? {
+                        clickPosition: capture.clickPosition,
+                        clickStyle: capture.clickStyle,
+                        enabled: capture.showClickIndicator !== false
+                    } : undefined
+                );
 
                 if (compressed) {
                     // Calc DOCX dimensions in EMUs: max width = 450px, keep aspect ratio

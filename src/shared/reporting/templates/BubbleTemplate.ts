@@ -102,7 +102,11 @@ export class BubbleTemplate extends TemplateBase {
             const imgX = 25;
             const imgY = 60;
 
-            const imgLoaded = await this.addImage(capture.thumbnail, imgX, imgY, imgWidth, imgHeight);
+            const imgLoaded = await this.addImage(capture.thumbnail, imgX, imgY, imgWidth, imgHeight, {
+                clickPosition: capture.clickPosition,
+                clickStyle: capture.clickStyle,
+                enabled: capture.showClickIndicator !== false
+            });
             if (!imgLoaded) {
                 this.doc.setFillColor(240, 240, 240);
                 this.doc.setDrawColor(200, 200, 200);

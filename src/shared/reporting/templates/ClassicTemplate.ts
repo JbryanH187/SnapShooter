@@ -162,7 +162,11 @@ export class ClassicTemplate extends TemplateBase {
                 yPos = 35;
             }
 
-            const imgLoaded = await this.addImage(capture.thumbnail, margin + 12, yPos, imgWidth, imgHeight);
+            const imgLoaded = await this.addImage(capture.thumbnail, margin + 12, yPos, imgWidth, imgHeight, {
+                clickPosition: capture.clickPosition,
+                clickStyle: capture.clickStyle,
+                enabled: capture.showClickIndicator !== false
+            });
             if (!imgLoaded) {
                 // Placeholder
                 this.doc.setDrawColor(200, 200, 200);

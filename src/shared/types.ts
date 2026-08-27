@@ -11,6 +11,9 @@ export interface CaptureItem {
     tags?: string[];
     path?: string;
     flowId?: string;
+    clickPosition?: { x: number; y: number };
+    clickStyle?: 'hand' | 'target' | 'dot' | 'mouse';
+    showClickIndicator?: boolean;
 }
 
 

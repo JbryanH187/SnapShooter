@@ -56,9 +56,50 @@ export abstract class TemplateBase {
     }
 
     /**
-     * Load an image and add it to the PDF
+     * Draw vector cursor / click target indicator on top of screenshot
      */
-    protected async addImage(src: string, x: number, y: number, maxWidth: number, maxHeight: number): Promise<boolean> {
+    protected drawCursorMarker(x: number, y: number, style = 'hand'): void {
+        try {
+            // 1. Semi-transparent outer pulse halo
+            this.doc.setFillColor(245, 158, 11);
+            this.doc.circle(x, y, 4.5, 'F');
+
+            // 2. White inner border
+            this.doc.setFillColor(255, 255, 255);
+            this.doc.circle(x, y, 3.2, 'F');
+
+            // 3. Center target indicator
+            if (style === 'target') {
+                this.doc.setFillColor(239, 68, 68);
+                this.doc.circle(x, y, 1.8, 'F');
+                this.doc.setDrawColor(239, 68, 68);
+                this.doc.setLineWidth(0.4);
+                this.doc.line(x - 3.8, y, x + 3.8, y);
+                this.doc.line(x, y - 3.8, x, y + 3.8);
+            } else if (style === 'dot') {
+                this.doc.setFillColor(239, 68, 68);
+                this.doc.circle(x, y, 2.2, 'F');
+            } else {
+                // 'hand' / 'mouse' / default amber
+                this.doc.setFillColor(245, 158, 11);
+                this.doc.circle(x, y, 2.2, 'F');
+            }
+        } catch (e) {
+            console.warn('[TemplateBase:drawCursorMarker] Error drawing marker:', e);
+        }
+    }
+
+    /**
+     * Load an image and add it to the PDF with optional cursor click indicator overlay
+     */
+    protected async addImage(
+        src: string,
+        x: number,
+        y: number,
+        maxWidth: number,
+        maxHeight: number,
+        cursorOverlay?: { clickPosition?: { x: number; y: number }; clickStyle?: string; enabled?: boolean }
+    ): Promise<boolean> {
         if (!src || typeof src !== 'string' || src.trim().length === 0) {
             console.warn('[TemplateBase:addImage] Received empty or invalid image src');
             return false;
@@ -139,6 +180,14 @@ export abstract class TemplateBase {
                     } else {
                         this.doc.addImage(img, format, drawX, drawY, drawWidth, drawHeight);
                     }
+
+                    // Render cursor indicator over image if present and enabled
+                    if (cursorOverlay?.clickPosition && cursorOverlay.enabled !== false) {
+                        const markerX = drawX + (cursorOverlay.clickPosition.x / 100) * drawWidth;
+                        const markerY = drawY + (cursorOverlay.clickPosition.y / 100) * drawHeight;
+                        this.drawCursorMarker(markerX, markerY, cursorOverlay.clickStyle);
+                    }
+
                     finish(true);
                 } catch (error) {
                     console.warn('[TemplateBase:addImage] doc.addImage direct failed, trying canvas fallback:', error);
@@ -151,6 +200,11 @@ export abstract class TemplateBase {
                             ctx.drawImage(img, 0, 0);
                             const pngData = canvas.toDataURL('image/png');
                             this.doc.addImage(pngData, 'PNG', x, y, maxWidth, maxHeight);
+                            if (cursorOverlay?.clickPosition && cursorOverlay.enabled !== false) {
+                                const markerX = x + (cursorOverlay.clickPosition.x / 100) * maxWidth;
+                                const markerY = y + (cursorOverlay.clickPosition.y / 100) * maxHeight;
+                                this.drawCursorMarker(markerX, markerY, cursorOverlay.clickStyle);
+                            }
                             console.log('[TemplateBase:addImage] Canvas fallback succeeded');
                             finish(true);
                             return;
